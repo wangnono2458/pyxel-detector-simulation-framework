@@ -291,7 +291,7 @@ def to_calibration(dct: dict) -> "Calibration":
 
 def to_ccd_geometry(dct: dict) -> CCDGeometry:
     """Create a CCDGeometry class from a dictionary."""
-    return CCDGeometry(**dct)
+    return CCDGeometry.from_dict(dct)
 
 
 def to_cmos_geometry(dct: dict) -> CMOSGeometry:

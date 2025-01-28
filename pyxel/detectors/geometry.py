@@ -10,7 +10,9 @@
 from collections.abc import Mapping
 
 import numpy as np
+from typing_extensions import Self
 
+from pyxel.detectors import Channels
 from pyxel.util import get_size
 
 
@@ -65,6 +67,7 @@ class Geometry:
         pixel_vert_size: float | None = None,  # unit: um
         pixel_horz_size: float | None = None,  # unit: um
         pixel_scale: float | None = None,  # unit: arcsec/pixel
+        channels: Channels | None = None,
     ):
         if row <= 0:
             raise ValueError("'row' must be strictly greater than 0.")
@@ -88,6 +91,11 @@ class Geometry:
         self._pixel_horz_size = pixel_horz_size
         self._pixel_scale: float | None = pixel_scale
 
+        # if channels:
+        #     channels.validate(geometry=self)
+
+        self.channels: Channels | None = channels
+
         self._numbytes = 0
 
     def __repr__(self) -> str:
@@ -97,7 +105,8 @@ class Geometry:
             f"total_thickness={self._total_thickness!r}, "
             f"pixel_vert_size={self._pixel_vert_size!r}, "
             f"pixel_horz_size={self._pixel_horz_size}), "
-            f"pixel_scale={self._pixel_scale})"
+            f"pixel_scale={self._pixel_scale},"
+            f"channels={self.channels!r})"
         )
 
     def __eq__(self, other) -> bool:
@@ -108,6 +117,7 @@ class Geometry:
             self._pixel_vert_size,
             self._pixel_horz_size,
             self._pixel_scale,
+            self.channels,
         ) == (
             other.row,
             other.col,
@@ -115,6 +125,7 @@ class Geometry:
             other._pixel_vert_size,
             other._pixel_horz_size,
             other._pixel_scale,
+            other.channels,
         )
 
     # def _repr_html_(self):
@@ -275,10 +286,19 @@ class Geometry:
             "pixel_vert_size": self._pixel_vert_size,
             "pixel_horz_size": self._pixel_horz_size,
             "pixel_scale": self._pixel_scale,
+            "channels": self.channels.to_dict() if self.channels else None,
         }
 
     @classmethod
-    def from_dict(cls, dct: Mapping):
+    def from_dict(cls, dct: Mapping) -> Self:
         """Create a new instance of `Geometry` from a `dict`."""
         # TODO: This is a simplistic implementation. Improve this.
-        return cls(**dct)
+        if "channels" not in dct:
+            return cls(**dct)
+
+        new_dct: dict = dct.copy()
+
+        channels_dct: Mapping = new_dct.pop("channels")
+        channels: Channels = Channels.from_dict(channels_dct)
+
+        return cls(**new_dct, channels=channels)
