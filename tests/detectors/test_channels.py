@@ -5,126 +5,93 @@
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from pyxel.detectors.channels import Channels
 from pyxel.detectors.geometry import Geometry
 
 
-def test_validate():
-    channels = Channels(
-        num_rows=514,
-        num_cols=512,
-        frame_mode="split",
-        output={
-            "channel_1": "right",
-            "channel_2": "right",
-            "channel_3": "right",
-            "channel_4": "right",
-        },
-    )
+def test_channels_valid_initialization():
+    """Test Channels initialization with correct matrix and readout_position."""
+    matrix = [["OP9", "OP13"], ["OP1", "OP5"]]
+    readout_position = {
+        "OP9": "top-left",
+        "OP13": "top-left",
+        "OP1": "bottom-left",
+        "OP5": "bottom-left",
+    }
 
-    # Mock Geometry object with dimensions
-    geometry = Geometry(row=1028, col=1024)
+    # Should not raise an error
+    channels = Channels(matrix=matrix, readout_position=readout_position)
 
-    channels.validate(geometry, full_frame_num_rows=1028, full_frame_num_cols=1024)
-
-
-def test_validate_fail_geometry():
-    # Initialize Channels with invalid num_rows and num_cols
-    channels = Channels(
-        num_rows=514,  # Not a divisor of 1024
-        num_cols=512,
-        frame_mode="split",
-        output={
-            "channel_1": "right",
-            "channel_2": "right",
-            "channel_3": "right",
-            "channel_4": "right",
-        },
-    )
-
-    # Mock Geometry object with dimensions
-    geometry = Geometry(row=1024, col=1024)
-
-    # Validate and expect a ValueError
-    with pytest.raises(ValueError, match="'num_rows' .* must be a divisor of .*"):
-        channels.validate(geometry, full_frame_num_rows=1024, full_frame_num_cols=1024)
+    # Check if attributes are correctly assigned
+    assert channels.matrix.data == matrix
+    assert channels.readout_position.positions == readout_position
 
 
-def test_validate_fail_frame():
+def test_channels_missing_readout_position():
+    """Test Channels raises an error when readout_position is incomplete."""
+    matrix = [["OP9", "OP13"], ["OP1", "OP5"]]
+    readout_position = {
+        "OP9": "top-left",
+        "OP13": "top-left",
+        # Missing OP1 and OP5
+    }
 
     with pytest.raises(
-        ValueError, match="'frame_mode' must be one of 'top', 'bottom', or 'split'."
+        ValueError, match="Readout direction of at least one channel is missing."
     ):
-        Channels(
-            num_rows=514,
-            num_cols=512,
-            frame_mode="center",
-            output={
-                "channel_1": "right",
-                "channel_2": "right",
-                "channel_3": "right",
-                "channel_4": "right",
-            },
-        )
+        Channels(matrix=matrix, readout_position=readout_position)
 
 
-def test_validate_fail_negative_rows_cols():
+def test_channels_mismatched_matrix_and_readout():
+    """Test Channels raises an error when a channel in the matrix is not in readout_position."""
+    matrix = [["OP9", "OP13"], ["OP1", "OP5"]]
+    readout_position = {
+        "OP9": "top-left",
+        "OP13": "top-left",
+        "OP1": "bottom-left",
+        # OP5 is missing
+    }
 
-    with pytest.raises(ValueError, match="'num_rows' must be non-negative."):
-        Channels(num_rows=-1, num_cols=10, frame_mode="top", output={})
-
-    with pytest.raises(ValueError, match="'num_cols' must be non-negative."):
-        Channels(num_rows=10, num_cols=-5, frame_mode="top", output={})
-
-
-def test_invalid_output_value():
-    # Attempt to create a Channels instance with an invalid output direction
-    with pytest.raises(ValueError, match="must be either 'left' or 'right'"):
-        Channels(
-            num_rows=4,
-            num_cols=4,
-            frame_mode="split",
-            output={
-                "channel_1": "left",
-                "channel_2": "up",  # Invalid direction
-            },
-        )
+    with pytest.raises(
+        ValueError, match="Readout direction of at least one channel is missing."
+    ):
+        Channels(matrix=matrix, readout_position=readout_position)
 
 
-def test_validate_output_count_valid():
-    # Test with valid output count
-    channels = Channels(
-        num_rows=512,
-        num_cols=512,
-        frame_mode="split",
-        output={
-            "channel_1": "left",
-            "channel_2": "right",
-            "channel_3": "left",
-            "channel_4": "right",
-        },
-    )
-    geometry = Geometry(row=1024, col=1024)
-    # This should pass as 1024/512 * 1024/512 = 4
-    channels.validate(geometry, full_frame_num_rows=1024, full_frame_num_cols=1024)
+def test_channels_extra_readout_position():
+    """Test Channels raises an error when readout_position has extra keys."""
+    matrix = [["OP9", "OP13"], ["OP1", "OP5"]]
+    readout_position = {
+        "OP9": "top-left",
+        "OP13": "top-left",
+        "OP1": "bottom-left",
+        "OP5": "bottom-left",
+        "OP_EXTRA": "bottom-right",  # Extra key that isn't in matrix
+    }
+
+    with pytest.raises(
+        ValueError,
+        match="Readout position contains extra channels not listed in matrix.",
+    ):
+        Channels(matrix=matrix, readout_position=readout_position)
 
 
-def test_validate_output_count_invalid():
-    # Test with invalid output count
-    invalid_channels = Channels(
-        num_rows=512,
-        num_cols=512,
-        frame_mode="split",
-        output={
-            "channel_1": "left",
-            "channel_2": "right",
-        },  # Only 2 outputs instead of 4
-    )
-    geometry = Geometry(row=1024, col=1024)
+def test_channels_same_count_different_names():
+    """Test Channels raises an error when readout_position has the same count but different names."""
+    matrix = [["OP9", "OP13"], ["OP1", "OP5"]]
+    readout_position = {
+        "X1": "top-left",
+        "X2": "top-left",
+        "X3": "bottom-left",
+        "X4": "bottom-left",
+    }
 
-    with pytest.raises(ValueError, match="must match the number of outputs provided"):
-        invalid_channels.validate(
-            geometry, full_frame_num_rows=1024, full_frame_num_cols=1024
-        )
+    with pytest.raises(
+        ValueError,
+        match="Channel names in the matrix and in the readout directions are not matching.",
+    ):
+        Channels(matrix=matrix, readout_position=readout_position)

@@ -307,6 +307,7 @@ class Detector:
 
         import xarray as xr
 
+        self._characteristics._channels_gain = value
         self._scene = Scene()
         self._photon = Photon(geo=self.geometry)
         self._charge = Charge(geo=self.geometry)

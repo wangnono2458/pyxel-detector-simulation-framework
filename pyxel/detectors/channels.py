@@ -12,50 +12,76 @@ import numpy as np
 from typing_extensions import Self
 
 
+class Matrix:
+    """Class to store and validate the matrix structure."""
+
+    def __init__(self, data: Sequence[Sequence[str]]):
+        if not all(isinstance(row, list) for row in data):
+            raise ValueError("Matrix must be a list of lists.")
+
+        self.data = data
+
+    def flatten(self):
+        """Flatten the matrix into a single list of terms."""
+        return [term for row in self.data for term in row]
+
+    def __len__(self):
+        """Return the total number of elements in the matrix."""
+        return sum(len(row) for row in self.data)
+
+
+class ReadoutPosition:
+    """Class to store and validate readout positions."""
+
+    VALID_POSITIONS = {"top-left", "top-right", "bottom-left", "bottom-right"}
+
+    def __init__(self, positions: Mapping[str | int, str]):
+        if not all(pos in self.VALID_POSITIONS for pos in positions.values()):
+            raise ValueError("Invalid readout position detected.")
+
+        self.positions = positions
+
+    def keys(self):
+        """Return the keys of the readout positions."""
+        return set(self.positions.keys())
+
+    def __len__(self):
+        """Return the number of readout positions."""
+        return len(self.positions)
+
+
 class Channels:
+    """Updated Channels class using Matrix and ReadoutPosition."""
 
     def __init__(
         self,
-        matrix: Sequence,
+        matrix: Sequence[Sequence[str]],
         readout_position: Mapping[
             str | int, Literal["top-left", "top-right", "bottom-left", "bottom-right"]
         ],
     ):
+        self.matrix = Matrix(matrix)
+        self.readout_position = ReadoutPosition(readout_position)
 
-        # TODO: store 'matrix' into a dedicated class ?
-        # TODO: store 'readout_position' into a dedicated class ?
-        # TODO: check that all channels from 'matrix' are available in 'readout_position'
+        # Validate matching counts
+        if len(self.matrix) > len(self.readout_position):
+            raise ValueError("Readout direction of at least one channel is missing.")
 
-        self.matrix = matrix
-        self.readout_position = readout_position
+        # Validate that matrix terms exist in readout positions
+        matrix_terms = set(self.matrix.flatten())
+        readout_keys = self.readout_position.keys()
 
-        # num_rows: int,
-        # num_cols: int,
-        # frame_mode: Literal["top", "bottom", "split"],
-        # readout,
-        # output: Mapping[str, Literal["left", "right"]],
+        if not matrix_terms.issubset(readout_keys):
+            raise ValueError(
+                "Channel names in the matrix and in the readout directions are not matching."
+            )
 
-        # # Validate frame_mode
-        # if frame_mode not in ("top", "bottom", "split"):
-        #     raise ValueError("'frame_mode' must be one of 'top', 'bottom', or 'split'.")
-        #
-        # # Validate num_rows and num_cols are non-negative
-        # if num_rows < 0:
-        #     raise ValueError("'num_rows' must be non-negative.")
-        # if num_cols < 0:
-        #     raise ValueError("'num_cols' must be non-negative.")
-        #
-        # # Validate output dictionary values
-        # for channel, direction in output.items():
-        #     if direction not in ("left", "right"):
-        #         raise ValueError(
-        #             f"The output direction for '{channel}' must be either 'left' or 'right', not '{direction}'."
-        #         )
-        #
-        # self.num_rows: int = num_rows
-        # self.num_cols: int = num_cols
-        # self.frame_mode: Literal["top", "bottom", "split"] = frame_mode
-        # self.output = output
+        # Ensure no extra channels in readout_position
+        extra_keys = readout_keys - matrix_terms
+        if extra_keys:
+            raise ValueError(
+                "Readout position contains extra channels not listed in matrix."
+            )
 
     #
     # def validate(
@@ -105,6 +131,8 @@ class Channels:
         # Should save n array, one for each channel? Or should it have a well-defined structure to identify the channels?
         raise NotImplementedError
 
+    # TODO:Convert matrix into numpy array
+
     # @property
     # def num_rows(self) -> float:
     #     """Get number of rows of the channels."""
@@ -124,12 +152,7 @@ class Channels:
 
     def to_dict(self) -> Mapping:
         """Get the attributes of this instance as a `dict`."""
-        return {
-            "num_rows": self.num_rows,
-            "num_cols": self.num_cols,
-            "frame_mode": self.frame_mode,
-            "output": self.output,
-        }
+        return {"matrix": self.matrix, "readout_position": self.readout_position}
 
     #
     # @classmethod

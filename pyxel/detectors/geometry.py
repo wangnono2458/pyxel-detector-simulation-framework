@@ -8,6 +8,7 @@
 """Geometry class for detector."""
 
 from collections.abc import Mapping
+from copy import deepcopy
 
 import numpy as np
 from typing_extensions import Self
@@ -57,6 +58,8 @@ class Geometry:
         Horizontal dimension of pixel. Unit: um
     pixel_scale : float, optional
         Dimension of how much of the sky is covered by one pixel. Unit: arcsec/pixel
+    channels : Channels, None
+        Channel layout for the detector, including number of channels, position, and readout direction.
     """
 
     def __init__(
@@ -83,6 +86,22 @@ class Geometry:
 
         if pixel_horz_size and not (0.0 <= pixel_horz_size <= 1000.0):
             raise ValueError("'pixel_horz_size' must be between 0.0 and 1000.0.")
+
+        if channels is not None:
+            # Vertical length: number of rows
+            vertical_channels = len(channels.matrix.data)
+            # Horizontal lengths: number of elements in a row
+            horizontal_channels = len(channels.matrix.data[0])
+
+            if vertical_channels > row:
+                raise ValueError(
+                    "Vertical size of the channel must be at least one pixel"
+                )
+
+            if horizontal_channels > col:
+                raise ValueError(
+                    "Horizontal size of the channel must be at least one pixel"
+                )
 
         self._row = row
         self._col = col
@@ -290,15 +309,17 @@ class Geometry:
         }
 
     @classmethod
-    def from_dict(cls, dct: Mapping) -> Self:
+    def from_dict(cls, dct: dict) -> Self:
         """Create a new instance of `Geometry` from a `dict`."""
         # TODO: This is a simplistic implementation. Improve this.
-        if "channels" not in dct:
-            return cls(**dct)
-
         new_dct: dict = dct.copy()
 
-        channels_dct: Mapping = new_dct.pop("channels")
-        channels: Channels = Channels.from_dict(channels_dct)
+        if "channels" not in dct:
+            return cls(**new_dct)
 
-        return cls(**new_dct, channels=channels)
+        else:
+
+            channels_dct: Mapping = new_dct.pop("channels")
+            channels: Channels = Channels.from_dict(channels_dct)
+
+            return cls(**new_dct, channels=channels)

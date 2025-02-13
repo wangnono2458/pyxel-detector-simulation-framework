@@ -11,7 +11,7 @@ from dataclasses import dataclass
 import numpy as np
 import pytest
 
-from pyxel.detectors import CCDGeometry, CMOSGeometry, Geometry
+from pyxel.detectors import CCDGeometry, Channels, CMOSGeometry, Geometry
 
 
 @dataclass
@@ -219,6 +219,56 @@ def test_is_equal(other_obj, is_equal):
         assert obj == other_obj
     else:
         assert obj != other_obj
+
+
+@pytest.mark.parametrize(
+    "matrix, readout_position, row, col, expected_exception, expected_message",
+    [
+        # Matrix has more rows than specified
+        (
+            [["OP9", "OP13"], ["OP1", "OP5"], ["OP2", "OP6"]],
+            {
+                "OP9": "top-left",
+                "OP13": "top-left",
+                "OP1": "bottom-left",
+                "OP5": "bottom-left",
+                "OP2": "bottom-left",
+                "OP6": "bottom-left",
+            },
+            2,
+            2,
+            ValueError,
+            "Vertical size of the channel must be at least one pixel",
+        ),
+        # Matrix has more columns than specified
+        (
+            [["OP9", "OP13", "OP2"], ["OP1", "OP5", "OP6"]],
+            {
+                "OP9": "top-left",
+                "OP13": "top-left",
+                "OP1": "bottom-left",
+                "OP5": "bottom-left",
+                "OP2": "bottom-left",
+                "OP6": "bottom-left",
+            },
+            2,
+            2,
+            ValueError,
+            "Horizontal size of the channel must be at least one pixel",
+        ),
+    ],
+)
+def test_geometry_dimension_exceeding_validation(
+    matrix, readout_position, row, col, expected_exception, expected_message
+):
+    # Setup channels with specific readout positions
+    channels = Channels(matrix=matrix, readout_position=readout_position)
+
+    with pytest.raises(expected_exception) as exc_info:
+        # Create an instance of Geometry with the given parameters
+        geometry = Geometry(row=row, col=col, channels=channels)
+
+    assert str(exc_info.value) == expected_message
 
 
 @pytest.mark.parametrize(

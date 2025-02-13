@@ -36,7 +36,9 @@ class Characteristics:
     def __init__(
         self,
         quantum_efficiency: float | None = None,  # unit: NA
-        charge_to_volt_conversion: float | None = None,  # unit: volt/electron
+        charge_to_volt_conversion: (
+            float | dict[str | int, float] | None
+        ) = None,  # unit: volt/electron
         pre_amplification: float | None = None,  # unit: V/V
         full_well_capacity: float | None = None,  # unit: electron
         adc_bit_resolution: int | None = None,
@@ -44,7 +46,7 @@ class Characteristics:
     ):
         if quantum_efficiency is not None and not (0.0 <= quantum_efficiency <= 1.0):
             raise ValueError("'quantum_efficiency' must be between 0.0 and 1.0.")
-        if charge_to_volt_conversion and not (
+        if isinstance(charge_to_volt_conversion, float) and not (
             0.0 <= charge_to_volt_conversion <= 100.0
         ):
             raise ValueError(
@@ -65,7 +67,10 @@ class Characteristics:
                 raise ValueError("Voltage range must have length of 2.")
 
         self._quantum_efficiency = quantum_efficiency
-        self._charge_to_volt_conversion = charge_to_volt_conversion
+        self._charge_to_volt_conversion: float | dict[str | int, float] | None = (
+            charge_to_volt_conversion
+        )
+        self._channels_gain: float | np.ndarray | None = None
         self._pre_amplification = pre_amplification
         self._full_well_capacity = full_well_capacity
 
@@ -112,14 +117,14 @@ class Characteristics:
         self._quantum_efficiency = value
 
     @property
-    def charge_to_volt_conversion(self) -> float:
+    def charge_to_volt_conversion(self) -> float | np.ndarray:
         """Get charge to volt conversion parameter."""
         if self._charge_to_volt_conversion is None:
             raise ValueError(
                 "'charge_to_volt_conversion' not specified in detector characteristics."
             )
 
-        return self._charge_to_volt_conversion
+        return self._channels_gain
 
     @charge_to_volt_conversion.setter
     def charge_to_volt_conversion(self, value: float) -> None:
@@ -128,7 +133,8 @@ class Characteristics:
             raise ValueError(
                 "'charge_to_volt_conversion' must be between 0.0 and 100.0."
             )
-        self._charge_to_volt_conversion = value
+        raise NotImplementedError
+        # self._charge_to_volt_conversion = value
 
     @property
     def pre_amplification(self) -> float:
