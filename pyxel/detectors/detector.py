@@ -307,7 +307,23 @@ class Detector:
 
         import xarray as xr
 
-        self._characteristics._channels_gain = value
+        if self._characteristics._charge_to_conversion is None or isinstance(
+            self._characteristics._charge_to_conversion, float
+        ):
+            value_1d: float | None = self._characteristics._charge_to_conversion
+            self._characteristics._channels_gain = value_1d
+
+        elif isinstance(self._characteristics._charge_to_conversion, dict):
+
+            # TODO: Get channel(s) from self.geometry.channels
+            # TODO: sanity check
+            # TODO: Create a 2d array for the gain(s)
+            value_2d: np.ndarray = np.array([])
+            self._characteristics._channels_gain = value_2d
+
+        else:
+            raise ValueError
+
         self._scene = Scene()
         self._photon = Photon(geo=self.geometry)
         self._charge = Charge(geo=self.geometry)
