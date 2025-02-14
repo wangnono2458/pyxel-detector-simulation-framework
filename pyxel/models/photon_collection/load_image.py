@@ -69,7 +69,7 @@ def load_image(
     If `include_header` is enabled, the header metadata is extracted from `image_file` and store in the
     detector`s header storage.
     """
-
+    # TODO: Add units
     shape = (detector.geometry.row, detector.geometry.col)
     position_y, position_x = position
 

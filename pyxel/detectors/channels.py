@@ -19,21 +19,13 @@ class Matrix:
         if not all(isinstance(row, list) for row in data):
             raise ValueError("Matrix must be a list of lists.")
 
-        self.data = data
-
-    def flatten(self):
-        """Flatten the matrix into a single list of terms."""
-        return [term for row in self.data for term in row]
-
-    def __len__(self):
-        """Return the total number of elements in the matrix."""
-        return sum(len(row) for row in self.data)
+        self.data = np.array(data)
 
 
 class ReadoutPosition:
     """Class to store and validate readout positions."""
 
-    VALID_POSITIONS = {"top-left", "top-right", "bottom-left", "bottom-right"}
+    VALID_POSITIONS = ("top-left", "top-right", "bottom-left", "bottom-right")
 
     def __init__(self, positions: Mapping[str | int, str]):
         if not all(pos in self.VALID_POSITIONS for pos in positions.values()):
@@ -60,11 +52,11 @@ class Channels:
             str | int, Literal["top-left", "top-right", "bottom-left", "bottom-right"]
         ],
     ):
-        self.matrix = Matrix(matrix)
+        self.matrix: np.ndarray = np.array(matrix)
         self.readout_position = ReadoutPosition(readout_position)
 
         # Validate matching counts
-        if len(self.matrix) > len(self.readout_position):
+        if self.matrix.size > len(self.readout_position):
             raise ValueError("Readout direction of at least one channel is missing.")
 
         # Validate that matrix terms exist in readout positions
@@ -124,9 +116,7 @@ class Channels:
     #                 f"The product of the divisions ({expected_output_count}) must match the number of outputs provided ({len(self.output)})."
     #             )
 
-    def get_channel_coord(self, channel) -> tuple[slice, slice]:
-        raise NotImplementedError
-
+    # TODO: Move
     def build_mask(self) -> np.ndarray:
         # Should save n array, one for each channel? Or should it have a well-defined structure to identify the channels?
         raise NotImplementedError

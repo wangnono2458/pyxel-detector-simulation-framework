@@ -307,19 +307,22 @@ class Detector:
 
         import xarray as xr
 
-        if self._characteristics._charge_to_conversion is None or isinstance(
-            self._characteristics._charge_to_conversion, float
+        if self.characteristics._charge_to_volt_conversion is None or isinstance(
+            self.characteristics._charge_to_volt_conversion, float
         ):
-            value_1d: float | None = self._characteristics._charge_to_conversion
-            self._characteristics._channels_gain = value_1d
+            value_1d: float | None = self.characteristics._charge_to_volt_conversion
+            self.characteristics._channels_gain = value_1d
 
-        elif isinstance(self._characteristics._charge_to_conversion, dict):
-
-            # TODO: Get channel(s) from self.geometry.channels
+        elif isinstance(self.characteristics._charge_to_volt_conversion, dict):
             # TODO: sanity check
-            # TODO: Create a 2d array for the gain(s)
-            value_2d: np.ndarray = np.array([])
-            self._characteristics._channels_gain = value_2d
+            value_2d: np.ndarray = np.zeros(shape=self.geometry.shape, dtype=float)
+            for (
+                channel,
+                gain,
+            ) in self.characteristics._charge_to_volt_conversion.items():
+                slice_y, slice_x = self.geometry.get_channel_coord(channel)
+                value_2d[slice_y, slice_x] = gain
+            self.characteristics._channels_gain = value_2d
 
         else:
             raise ValueError

@@ -110,6 +110,11 @@ def output_node_noise_cmos(
     if readout_noise_std < 0.0:
         raise ValueError("'readout_noise_std' must be positive.")
 
+    if not isinstance(detector.characteristics.charge_to_volt_conversion, float):
+        raise NotImplementedError(
+            f"Expecting a float for {detector.characteristics.charge_to_volt_conversion=}"
+        )
+
     with set_random_seed(seed):
         noise_2d: np.ndarray = create_noise_cmos(
             shape=detector.signal.shape,

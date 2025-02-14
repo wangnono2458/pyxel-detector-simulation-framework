@@ -8,7 +8,6 @@
 """Geometry class for detector."""
 
 from collections.abc import Mapping
-from copy import deepcopy
 
 import numpy as np
 from typing_extensions import Self
@@ -87,11 +86,14 @@ class Geometry:
         if pixel_horz_size and not (0.0 <= pixel_horz_size <= 1000.0):
             raise ValueError("'pixel_horz_size' must be between 0.0 and 1000.0.")
 
+        # TODO: Create a new class in channels to measure the matrix
         if channels is not None:
             # Vertical length: number of rows
-            vertical_channels = len(channels.matrix.data)
+            vertical_channels, horizontal_channels = channels.matrix.shape
+
+            # vertical_channels = channels.matrix.shape[0]
             # Horizontal lengths: number of elements in a row
-            horizontal_channels = len(channels.matrix.data[0])
+            # horizontal_channels = channels.matrix.shape[1]
 
             if vertical_channels > row:
                 raise ValueError(
@@ -283,6 +285,22 @@ class Geometry:
             num_cols=self.col,
             pixel_horizontal_size=self.pixel_horz_size,
         )
+
+    def get_channel_coord(self, channel: int | str) -> tuple[slice, slice]:
+        if self.channels is None:
+            raise ValueError
+
+        vertical_channels, horizontal_channels = self.channels.matrix.shape
+        channel_vertical_size = self.row // vertical_channels
+        channel_horizontal_size = self.col // horizontal_channels
+
+        position_y, position_x = (np.argwhere(self.channels.matrix == channel))[0]
+        start_x = position_x * channel_horizontal_size
+        start_y = position_y * channel_vertical_size
+        stop_x = start_x + channel_horizontal_size
+        stop_y = start_y + channel_vertical_size
+
+        return slice(int(start_y), int(stop_y)), slice(int(start_x), int(stop_x))
 
     @property
     def numbytes(self) -> int:

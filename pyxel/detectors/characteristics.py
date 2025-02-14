@@ -119,7 +119,7 @@ class Characteristics:
     @property
     def charge_to_volt_conversion(self) -> float | np.ndarray:
         """Get charge to volt conversion parameter."""
-        if self._charge_to_volt_conversion is None:
+        if self._channels_gain is None:
             raise ValueError(
                 "'charge_to_volt_conversion' not specified in detector characteristics."
             )
