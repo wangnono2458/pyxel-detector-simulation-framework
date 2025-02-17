@@ -213,10 +213,13 @@ def generate_class(klass: Klass) -> Iterator[str]:
             else:
                 annotation = str(param.annotation)
 
-            annotation = annotation.replace("typing.", "")
-            annotation = annotation.replace(
-                "pyxel.detectors.environment.WavelengthHandling",
-                "WavelengthHandling",
+            annotation = (
+                annotation.replace("typing.", "")
+                .replace(
+                    "pyxel.detectors.environment.WavelengthHandling",
+                    "WavelengthHandling",
+                )
+                .replace("pyxel.detectors.channels.Channels", "Channels")
             )  # TODO: Fix this. See issue #727
 
             yield f"    {name}: {annotation} = field("
@@ -508,6 +511,11 @@ def generate_detectors() -> Iterator[str]:
     yield "    cut_on: float"
     yield "    cut_off: float"
     yield "    resolution: int"
+    yield ""
+    yield "@dataclass"
+    yield "class Channels:"
+    yield "    matrix: Sequence[Sequence[str]]"
+    yield "    readout_position: Mapping[str , Literal['top-left', 'top-right', 'bottom-left', 'bottom-right'],]"
     yield ""
 
     # Generate code based on the dependency graph

@@ -336,7 +336,6 @@ class Geometry:
             return cls(**new_dct)
 
         else:
-
             channels_dct: Mapping = new_dct.pop("channels")
             channels: Channels = Channels.from_dict(channels_dct)
 

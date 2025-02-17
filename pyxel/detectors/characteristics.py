@@ -37,7 +37,7 @@ class Characteristics:
         self,
         quantum_efficiency: float | None = None,  # unit: NA
         charge_to_volt_conversion: (
-            float | dict[str | int, float] | None
+            float | dict[str, float] | None
         ) = None,  # unit: volt/electron
         pre_amplification: float | None = None,  # unit: V/V
         full_well_capacity: float | None = None,  # unit: electron
@@ -67,7 +67,7 @@ class Characteristics:
                 raise ValueError("Voltage range must have length of 2.")
 
         self._quantum_efficiency = quantum_efficiency
-        self._charge_to_volt_conversion: float | dict[str | int, float] | None = (
+        self._charge_to_volt_conversion: float | dict[str, float] | None = (
             charge_to_volt_conversion
         )
         self._channels_gain: float | np.ndarray | None = None

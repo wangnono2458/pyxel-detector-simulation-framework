@@ -27,7 +27,13 @@ class ReadoutPosition:
 
     VALID_POSITIONS = ("top-left", "top-right", "bottom-left", "bottom-right")
 
-    def __init__(self, positions: Mapping[str | int, str]):
+    def __init__(
+        self,
+        positions: Mapping[
+            str,
+            Literal["top-left", "top-right", "bottom-left", "bottom-right"],
+        ],
+    ):
         if not all(pos in self.VALID_POSITIONS for pos in positions.values()):
             raise ValueError("Invalid readout position detected.")
 
@@ -49,7 +55,8 @@ class Channels:
         self,
         matrix: Sequence[Sequence[str]],
         readout_position: Mapping[
-            str | int, Literal["top-left", "top-right", "bottom-left", "bottom-right"]
+            str,
+            Literal["top-left", "top-right", "bottom-left", "bottom-right"],
         ],
     ):
         self.matrix: np.ndarray = np.array(matrix)
