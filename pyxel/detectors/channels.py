@@ -5,6 +5,7 @@
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
 
+import difflib
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
@@ -22,20 +23,57 @@ class Matrix:
         self.data = np.array(data)
 
 
+# TODO: Implement using Abstract Class 'Mapping'
 class ReadoutPosition:
-    """Class to store and validate readout positions."""
+    """Class to store and validate readout positions.
 
+    Examples
+    --------
+    >>> positions = ReadoutPosition(
+    ...     positions={
+    ...         "OP9": "top-left",
+    ...         "OP13": "top-left",
+    ...         "OP1": "bottom-left",
+    ...         "OP5": "bottom-left",
+    ...     }
+    ... )
+
+    >>> len(positions)
+    4
+
+    >>> list(positions)
+    ['OP9', 'OP13', 'OP1', 'OP5']
+
+    >>> positions["OP9"]
+    'top_left'
+    """
+
+    # TODO: Refactor using a 'TypeAlias'
     VALID_POSITIONS = ("top-left", "top-right", "bottom-left", "bottom-right")
 
     def __init__(
         self,
         positions: Mapping[
             str,
-            Literal["top-left", "top-right", "bottom-left", "bottom-right"],
+            Literal[
+                "top-left", "top-right", "bottom-left", "bottom-right"
+            ],  # TODO: Refactor using a 'TypeAlias'
         ],
     ):
-        if not all(pos in self.VALID_POSITIONS for pos in positions.values()):
-            raise ValueError("Invalid readout position detected.")
+        # Validate that all provided 'positions' are correct
+        if not set(positions.values()).issubset(self.VALID_POSITIONS):
+            wrong_positions = set(positions.values()).difference(self.VALID_POSITIONS)
+
+            first_wrong_position, *_ = list(wrong_positions)
+            first_close_match_position, *_ = difflib.get_close_matches(
+                word=first_wrong_position,
+                possibilities=self.VALID_POSITIONS,
+            )
+
+            raise ValueError(
+                f"Invalid readout position {first_wrong_position!r} detected. "
+                f"Did you mean {first_close_match_position!r}?"
+            )
 
         self.positions = positions
 
@@ -49,12 +87,25 @@ class ReadoutPosition:
 
 
 class Channels:
-    """Updated Channels class using Matrix and ReadoutPosition."""
+    """Updated Channels class using Matrix and ReadoutPosition.
+
+    Examples
+    --------
+    >>> channels = Channels(
+    ...     matrix=[["OP9", "OP13"], ["OP1", "OP5"]],
+    ...     readout_position={
+    ...         "OP9": "top-left",
+    ...         "OP13": "top-left",
+    ...         "OP1": "bottom-left",
+    ...         "OP5": "bottom-left",
+    ...     },
+    ... )
+    """
 
     def __init__(
         self,
-        matrix: Sequence[Sequence[str]],
-        readout_position: Mapping[
+        matrix: Sequence[Sequence[str]],  # Use type 'Matrix' ?
+        readout_position: Mapping[  # Use type 'ReadoutPosition' ?
             str,
             Literal["top-left", "top-right", "bottom-left", "bottom-right"],
         ],
