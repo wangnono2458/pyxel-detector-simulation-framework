@@ -205,6 +205,7 @@ def comparison(dct, other_dct):
                         "pixel_horz_size": None,
                         "pixel_vert_size": None,
                         "pixel_scale": None,
+                        "channels": None,
                     },
                     "environment": {"temperature": None},
                     "characteristics": {
@@ -279,6 +280,7 @@ def comparison(dct, other_dct):
                         "pixel_horz_size": 12.4,
                         "pixel_vert_size": 34.5,
                         "pixel_scale": 1.5,
+                        "channels": None,
                     },
                     "environment": {"temperature": 100.1},
                     "characteristics": {
