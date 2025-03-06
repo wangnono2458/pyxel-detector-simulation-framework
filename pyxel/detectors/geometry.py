@@ -332,11 +332,11 @@ class Geometry:
         # TODO: This is a simplistic implementation. Improve this.
         new_dct: dict = dct.copy()
 
-        if "channels" not in dct:
-            return cls(**new_dct)
+        if "channels" in new_dct and new_dct["channels"] is not None:
+            channels_dct: Mapping = new_dct.pop("channels")
+
+            channels: Channels = Channels.from_dict(channels_dct)
+            return cls(**new_dct, channels=channels)
 
         else:
-            channels_dct: Mapping = new_dct.pop("channels")
-            channels: Channels = Channels.from_dict(channels_dct)
-
-            return cls(**new_dct, channels=channels)
+            return cls(**new_dct)
