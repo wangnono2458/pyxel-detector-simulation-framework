@@ -20,7 +20,19 @@ class Matrix:
         if not all(isinstance(row, list) for row in data):
             raise ValueError("Matrix must be a list of lists.")
 
-        self.data = np.array(data)
+        # TODO: Use 'StringDType' if applicable
+        self._data = np.array(data)
+
+    def __array__(self, dtype: np.dtype | None = None) -> np.ndarray:
+        return np.array(self._data, dtype=dtype)
+
+    @property
+    def size(self) -> int:
+        return self._data.size
+
+    @property
+    def shape(self) -> tuple[int, int]:
+        return self._data.shape
 
 
 # TODO: Implement using Abstract Class 'Mapping'
@@ -77,13 +89,13 @@ class ReadoutPosition:
 
         self.positions = positions
 
-    def keys(self):
-        """Return the keys of the readout positions."""
-        return set(self.positions.keys())
-
     def __len__(self):
         """Return the number of readout positions."""
         return len(self.positions)
+
+    def keys(self):
+        """Return the keys of the readout positions."""
+        return set(self.positions.keys())
 
 
 class Channels:
@@ -102,23 +114,16 @@ class Channels:
     ... )
     """
 
-    def __init__(
-        self,
-        matrix: Sequence[Sequence[str]],  # Use type 'Matrix' ?
-        readout_position: Mapping[  # Use type 'ReadoutPosition' ?
-            str,
-            Literal["top-left", "top-right", "bottom-left", "bottom-right"],
-        ],
-    ):
-        self.matrix: np.ndarray = np.array(matrix)
-        self.readout_position = ReadoutPosition(readout_position)
+    def __init__(self, matrix: Matrix, readout_position: ReadoutPosition):
+        self.matrix: Matrix = matrix
+        self.readout_position: ReadoutPosition = readout_position
 
         # Validate matching counts
         if self.matrix.size > len(self.readout_position):
             raise ValueError("Readout direction of at least one channel is missing.")
 
         # Validate that matrix terms exist in readout positions
-        matrix_terms = set(self.matrix.flatten())
+        matrix_terms = set(np.asarray(self.matrix).flatten())
         readout_keys = self.readout_position.keys()
 
         if not matrix_terms.issubset(readout_keys):
@@ -200,7 +205,10 @@ class Channels:
 
     def to_dict(self) -> Mapping:
         """Get the attributes of this instance as a `dict`."""
-        return {"matrix": self.matrix, "readout_position": self.readout_position}
+        return {
+            "matrix": np.asarray(self.matrix).tolist(),
+            "readout_position": dict(self.readout_position.positions),
+        }
 
     #
     # @classmethod
@@ -224,5 +232,9 @@ class Channels:
     def from_dict(cls, dct: Mapping) -> Self:
         """Create a new instance of `Geometry` from a `dict`."""
         # TODO: This is a simplistic implementation. Improve this.
-        obj = cls(**dct)
+
+        obj = cls(
+            matrix=Matrix(dct["matrix"]),
+            readout_position=ReadoutPosition(dct["readout_position"]),
+        )
         return obj
