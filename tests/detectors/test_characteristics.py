@@ -5,11 +5,31 @@
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
 
+import copy
 from copy import deepcopy
+from pathlib import Path
 
+import numpy as np
 import pytest
 
-from pyxel.detectors import Characteristics
+from pyxel.detectors import (
+    APD,
+    CCD,
+    CMOS,
+    MKID,
+    APDCharacteristics,
+    APDGeometry,
+    CCDGeometry,
+    Channels,
+    Characteristics,
+    CMOSGeometry,
+    Detector,
+    Environment,
+    MKIDGeometry,
+    ReadoutProperties,
+)
+from pyxel.detectors.channels import Matrix, ReadoutPosition
+from tests.conftest import environment
 
 
 @pytest.mark.parametrize(
@@ -280,16 +300,172 @@ def test_charge_to_volt_conversion_setter(charge_to_volt_conversion):
     assert obj.charge_to_volt_conversion == charge_to_volt_conversion
 
 
+def test_charge_to_volt_conversion_with_channels():
+    # Setup the detector with geometry and characteristics
+    detector = CCD(
+        geometry=CCDGeometry(
+            row=4,
+            col=4,
+            channels=Channels(
+                matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
+                readout_position=ReadoutPosition(
+                    {
+                        "OP9": "top-left",
+                        "OP13": "top-left",
+                        "OP1": "bottom-left",
+                        "OP5": "bottom-left",
+                    }
+                ),
+            ),
+        ),
+        environment=Environment(),
+        characteristics=Characteristics(),
+    )
+
+    # Initialize detector with geometry to build channel gains
+    detector.characteristics.initialize(detector.geometry)
+
+    # Set charge_to_volt_conversion with dictionary values and validate
+    detector.characteristics.charge_to_volt_conversion = {
+        "OP9": 1,
+        "OP13": 2,
+        "OP1": 3,
+        "OP5": 4,
+    }
+    assert detector.characteristics.charge_to_volt_conversion == {
+        "OP9": 1,
+        "OP13": 2,
+        "OP1": 3,
+        "OP5": 4,
+    }
+
+    # Assert that the channel gains have been set correctly
+    expected_gain_matrix = np.array(
+        [
+            [1.0, 1.0, 2.0, 2.0],
+            [1.0, 1.0, 2.0, 2.0],
+            [3.0, 3.0, 4.0, 4.0],
+            [3.0, 3.0, 4.0, 4.0],
+        ],
+        dtype=float,
+    )
+    np.testing.assert_allclose(
+        detector.characteristics.channels_gain, expected_gain_matrix
+    )
+
+    # Change the values and validate again
+    detector.characteristics.charge_to_volt_conversion = {
+        "OP9": 1.1,
+        "OP13": 2.2,
+        "OP1": 3.3,
+        "OP5": 4.4,
+    }
+    assert detector.characteristics.charge_to_volt_conversion == {
+        "OP9": 1.1,
+        "OP13": 2.2,
+        "OP1": 3.3,
+        "OP5": 4.4,
+    }
+    expected_gain_matrix = np.array(
+        [
+            [1.1, 1.1, 2.2, 2.2],
+            [1.1, 1.1, 2.2, 2.2],
+            [3.3, 3.3, 4.4, 4.4],
+            [3.3, 3.3, 4.4, 4.4],
+        ],
+        dtype=float,
+    )
+    np.testing.assert_allclose(
+        detector.characteristics.channels_gain, expected_gain_matrix
+    )
+
+
+def test_charge_to_volt_conversion_invalid_values():
+    detector = CCD(
+        geometry=CCDGeometry(
+            row=4,
+            col=4,
+            channels=Channels(
+                matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
+                readout_position=ReadoutPosition(
+                    {
+                        "OP9": "top-left",
+                        "OP13": "top-left",
+                        "OP1": "bottom-left",
+                        "OP5": "bottom-left",
+                    }
+                ),
+            ),
+        ),
+        environment=Environment(),
+        characteristics=Characteristics(),
+    )
+
+    # Initialize detector with geometry to build channel gains
+    detector.characteristics.initialize(detector.geometry)
+
+    # Attempt to set charge_to_volt_conversion with invalid dictionary values
+    with pytest.raises(ValueError) as exc_info:
+        detector.characteristics.charge_to_volt_conversion = {
+            "OP9": 1,  # Valid
+            "OP13": 200,  # Invalid: Outside the range 0 to 100
+            "OP1": 3,  # Valid
+            "OP5": -10,  # Invalid: Negative value
+        }
+
+    # Check if the error message is correct
+    assert "must be between 0.0 and 100.0" in str(
+        exc_info.value
+    ), "The error message for out of range values is incorrect or missing"
+
+
+def test_channel_gain_mismatch():
+    # Setup the detector with a discrepancy in the matrix channel count
+    detector = CCD(
+        geometry=CCDGeometry(
+            row=4,
+            col=4,
+            channels=Channels(
+                matrix=Matrix(
+                    [["OP9", "OP13"], ["OP1", "OP5"]]
+                ),  # Only two channels are defined here
+                readout_position=ReadoutPosition(
+                    {
+                        "OP9": "top-left",
+                        "OP13": "top-left",
+                        "OP1": "top-right",  # Valid
+                        "OP5": "top-right",  # Invalid: Negative value
+                    }
+                ),
+            ),
+        ),
+        environment=Environment(),
+        characteristics=Characteristics(),
+    )
+
+    detector.characteristics.initialize(detector.geometry)
+
+    # Intentionally provide mismatched number of channel gains
+    with pytest.raises(ValueError) as exc_info:
+        detector.characteristics.charge_to_volt_conversion = {"OP9": 1, "OP13": 2}
+
+    # Check if the correct error message about mismatched channel counts is raised
+    assert (
+        "Mismatch between the defined channels in geometry and provided channel gains"
+        in str(exc_info.value)
+    )
+
+
 @pytest.mark.parametrize(
     "charge_to_volt_conversion, exp_exc, exp_msg",
     [
         (
-            -0.1,
+            -0.2,
             ValueError,
             r"'charge_to_volt_conversion' must be between 0.0 and 100.0.",
         ),
         (
-            100.1,
+            100.2,
             ValueError,
             r"'charge_to_volt_conversion' must be between 0.0 and 100.0.",
         ),

@@ -10,11 +10,12 @@ from copy import deepcopy
 import numpy as np
 import pytest
 
-from pyxel.detectors.channels import Channels
+from pyxel.detectors.channels import Channels, Matrix, ReadoutPosition
+from pyxel.exposure import Readout
 
 
 @pytest.mark.parametrize(
-    "matrix, readout_position",
+    "matrix, readout_position, exp_matrix",
     [
         pytest.param(
             [["OP9", "OP13"], ["OP1", "OP5"]],
@@ -24,11 +25,13 @@ from pyxel.detectors.channels import Channels
                 "OP1": "bottom-left",
                 "OP5": "bottom-left",
             },
+            [["OP9", "OP13"], ["OP1", "OP5"]],
             id="Grid structure (str)",
         ),
         pytest.param(
             [[9, 13], [1, 5]],
             {9: "top-left", 13: "top-left", 1: "bottom-left", 5: "bottom-left"},
+            [[9, 13], [1, 5]],
             id="Grid structure (int)",
         ),
         pytest.param(
@@ -39,28 +42,33 @@ from pyxel.detectors.channels import Channels
                 1: "bottom-left",
                 "OP5": "bottom-left",
             },
+            [["OP9", 13], [1, "OP5"]],
             id="Grid structure (str and int)",
         ),
         pytest.param(
-            ["OP9", "OP13"],
+            [["OP9", "OP13"]],
             {"OP9": "top-left", "OP13": "top-left"},
+            [["OP9", "OP13"]],
             id="row structure",
         ),
         pytest.param(
             [["OP9"], ["OP1"]],
             {"OP9": "top-left", "OP1": "bottom-left"},
+            [["OP9"], ["OP1"]],
             id="column structure",
         ),
     ],
 )
-def test_channels_valid_initialization(matrix, readout_position):
+def test_channels_valid_initialization(matrix, readout_position, exp_matrix):
     """Test Channels initialization with correct matrix and readout_position."""
     # Should not raise an error
-    channels = Channels(matrix=matrix, readout_position=readout_position)
+    channels = Channels(
+        matrix=Matrix(matrix), readout_position=ReadoutPosition(readout_position)
+    )
 
     # Check if attributes are correctly assigned
-    assert isinstance(channels.matrix, np.ndarray)
-    assert channels.matrix.tolist() == matrix
+    assert isinstance(channels.matrix, Matrix)
+    assert np.array(channels.matrix).tolist() == exp_matrix
     assert channels.readout_position.positions == readout_position
 
 
@@ -96,7 +104,9 @@ def test_channels_valid_initialization(matrix, readout_position):
 def test_channels_missing_readout_position(matrix, readout_position, exp_msg):
     """Test Channels raises an error when readout_position is incomplete."""
     with pytest.raises(ValueError, match=exp_msg):
-        Channels(matrix=matrix, readout_position=readout_position)
+        Channels(
+            matrix=Matrix(matrix), readout_position=ReadoutPosition(readout_position)
+        )
 
 
 @pytest.mark.parametrize(
@@ -115,7 +125,7 @@ def test_channels_missing_readout_position(matrix, readout_position, exp_msg):
             id="Grid - with extra OP_EXTRA",
         ),
         pytest.param(
-            ["OP9", "OP13"],
+            [["OP9", "OP13"]],
             {
                 "OP9": "top-left",
                 "OP13": "top-left",
@@ -141,7 +151,9 @@ def test_channels_missing_readout_position(matrix, readout_position, exp_msg):
 def test_channels_extra_readout_position(matrix, readout_position, exp_msg):
     """Test Channels raises an error when readout_position has extra keys."""
     with pytest.raises(ValueError, match=exp_msg):
-        Channels(matrix=matrix, readout_position=readout_position)
+        Channels(
+            matrix=Matrix(matrix), readout_position=ReadoutPosition(readout_position)
+        )
 
 
 def test_channels_same_count_different_names():
@@ -158,63 +170,91 @@ def test_channels_same_count_different_names():
         ValueError,
         match="Channel names in the matrix and in the readout directions are not matching.",
     ):
-        Channels(matrix=matrix, readout_position=readout_position)
+        Channels(
+            matrix=Matrix(matrix), readout_position=ReadoutPosition(readout_position)
+        )
 
 
 @pytest.mark.parametrize(
-    "matrix, readout_position",
+    "data, error_message",
     [
         pytest.param(
             [["OP9"], ["OP13", "OP1", "OP5"]],
-            {
-                "OP9": "top-left",
-                "OP13": "top-left",
-                "OP1": "bottom-left",
-                "OP5": "bottom-left",
-            },
-            id="Grid structure",
+            "Parameter 'matrix' is malformed: All rows must be of the same length.",
+            id="Mismatched row lengths",
         ),
         pytest.param(
             [["OP9"], ["OP13", "OP1"], ["OP5"]],
-            {
-                "OP9": "top-left",
-                "OP13": "top-left",
-                "OP1": "bottom-left",
-                "OP5": "bottom-left",
-            },
-            id="Grid structure2",
+            "Parameter 'matrix' is malformed: All rows must be of the same length.",
+            id="Each row different lengths",
         ),
         pytest.param(
-            [[9.0, 13.0]],
-            {9.0: "top-left", 13.0: "top-left"},
-            id="Row (float)",
+            ["OP9", "OP13", "OP1", "OP5"],
+            "All rows in the matrix must be sequences and not strings.",
+            id="Single string inputs treated as rows",
         ),
         pytest.param(
-            [[9.9, 13.13]],
-            {9.9: "top-left", 13.13: "top-left"},
-            id="Row2 (float)",
+            [], "Matrix data must contain at least one row.", id="Empty matrix"
+        ),
+        pytest.param(
+            [[9, 13], [1]],
+            "Parameter 'matrix' is malformed: All rows must be of the same length.",
+            id="Numerical row length mismatch",
+        ),
+        pytest.param(
+            [[], []],
+            "Parameter 'matrix' is malformed: Cannot have empty rows.",
+            id="Empty rows but equal length",
         ),
     ],
 )
-def test_channels_bad_matrix(matrix, readout_position):
-    """Test with a malformed 'matrix' parameter."""
-    with pytest.raises(ValueError, match=r"Parameter 'matrix' is malformed"):
-        _ = Channels(matrix=matrix, readout_position=readout_position)
+def test_matrix_initialization(data, error_message):
+    if error_message:
+        with pytest.raises(ValueError, match=error_message):
+            _ = Matrix(data)
+    else:
+        # Expecting successful initialization here
+        matrix = Matrix(data)
+        assert isinstance(
+            matrix, Matrix
+        ), "Matrix instance should be created successfully."
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param(
+            [["OP9"], ["OP13"], ["OP1"], ["OP5"]], id="Uniform row lengths of 1"
+        ),
+        pytest.param([["OP9", "OP13"], ["OP1", "OP5"]], id="Uniform row lengths of 2"),
+        pytest.param([[1, 2], [3, 4]], id="Numerical 2x2 matrix"),
+        pytest.param([["OP9", "OP13", "OP1", "OP5"]], id="Single row"),
+    ],
+)
+def test_matrix_successful_initialization(data):
+    # Test for successful initialization
+    try:
+        matrix = Matrix(data)
+        assert isinstance(
+            matrix, Matrix
+        ), "Matrix should be successfully initialized with valid data."
+    except ValueError:
+        pytest.fail("Matrix initialization should not fail for valid data.")
 
 
 @pytest.mark.parametrize(
     "matrix, readout_position, exp_error",
     [
         pytest.param(
-            ["OP9", "OP13"],
+            [["OP9", "OP13"]],
             {"OP9": "topleft", "OP13": "top-left"},
-            r"Did you mean: \'top-left'\?",
+            r"Invalid readout position 'topleft' detected. Did you mean 'top-left'?",
             id="row",
         ),
         pytest.param(
             [["OP9"], ["OP13"]],
             {"OP9": "top-left", "OP13": "top-Right"},
-            r"Did you mean: \'top-right'\?",
+            r"Invalid readout position 'top-Right' detected. Did you mean 'top-right'?",
             id="column",
         ),
     ],
@@ -222,49 +262,59 @@ def test_channels_bad_matrix(matrix, readout_position):
 def test_channels_bad_readout_position(matrix, readout_position, exp_error):
     """Test with a malformed 'readout_position' parameter."""
     with pytest.raises(ValueError, match=exp_error):
-        _ = Channels(matrix=matrix, readout_position=readout_position)
+        _ = Channels(
+            matrix=Matrix(matrix), readout_position=ReadoutPosition(readout_position)
+        )
 
 
 def test_eq():
     """Test method '__eq__'."""
     channels1_grid = Channels(
-        matrix=[["OP9", "OP13"], ["OP1", "OP5"]],
-        readout_position={
-            "OP9": "top-left",
-            "OP13": "top-left",
-            "OP1": "bottom-left",
-            "OP5": "bottom-left",
-        },
+        matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),  # Wrap list with Matrix
+        readout_position=ReadoutPosition(
+            {
+                "OP9": "top-left",
+                "OP13": "top-left",
+                "OP1": "bottom-left",
+                "OP5": "bottom-left",
+            }
+        ),
     )
 
     channels2_grid = Channels(
-        matrix=[["OP13", "OP9"], ["OP1", "OP5"]],
-        readout_position={
-            "OP9": "top-left",
-            "OP13": "top-left",
-            "OP1": "bottom-left",
-            "OP5": "bottom-left",
-        },
+        matrix=Matrix([["OP13", "OP9"], ["OP1", "OP5"]]),  # Wrap list with Matrix
+        readout_position=ReadoutPosition(
+            {
+                "OP9": "top-left",
+                "OP13": "top-left",
+                "OP1": "bottom-left",
+                "OP5": "bottom-left",
+            }
+        ),
     )
 
     channels1_row = Channels(
-        matrix=["OP9", "OP13", "OP1", "OP5"],
-        readout_position={
-            "OP9": "top-left",
-            "OP13": "top-left",
-            "OP1": "bottom-left",
-            "OP5": "bottom-left",
-        },
+        matrix=Matrix([["OP9", "OP13", "OP1", "OP5"]]),  # Wrap list with Matrix
+        readout_position=ReadoutPosition(
+            {
+                "OP9": "top-left",
+                "OP13": "top-left",
+                "OP1": "bottom-left",
+                "OP5": "bottom-left",
+            }
+        ),
     )
 
     channels1_column = Channels(
-        matrix=[["OP13"], ["OP9"], ["OP1"], ["OP5"]],
-        readout_position={
-            "OP9": "top-left",
-            "OP13": "top-left",
-            "OP1": "bottom-left",
-            "OP5": "bottom-left",
-        },
+        matrix=Matrix([["OP13"], ["OP9"], ["OP1"], ["OP5"]]),  # Wrap list with Matrix
+        readout_position=ReadoutPosition(
+            {
+                "OP9": "top-left",
+                "OP13": "top-left",
+                "OP1": "bottom-left",
+                "OP5": "bottom-left",
+            }
+        ),
     )
 
     assert channels1_grid == deepcopy(channels1_grid)
@@ -282,35 +332,47 @@ def test_eq():
     [
         pytest.param(
             Channels(
-                matrix=[["OP9", "OP13"], ["OP1", "OP5"]],
-                readout_position={
-                    "OP9": "top-left",
-                    "OP13": "top-left",
-                    "OP1": "bottom-left",
-                    "OP5": "bottom-left",
-                },
+                matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
+                readout_position=ReadoutPosition(
+                    (
+                        {
+                            "OP9": "top-left",
+                            "OP13": "top-left",
+                            "OP1": "bottom-left",
+                            "OP5": "bottom-left",
+                        }
+                    ),
+                ),
             ),
             "Channels<4 channels>",
             id="Grid",
         ),
         pytest.param(
             Channels(
-                matrix=["OP9", "OP13"],
-                readout_position={
-                    "OP9": "top-left",
-                    "OP13": "top-left",
-                },
+                matrix=Matrix([["OP9", "OP13"]]),
+                readout_position=ReadoutPosition(
+                    (
+                        {
+                            "OP9": "top-left",
+                            "OP13": "top-left",
+                        }
+                    ),
+                ),
             ),
             "Channels<2 channels>",
             id="Row",
         ),
         pytest.param(
             Channels(
-                matrix=[["OP9"], ["OP1"]],
-                readout_position={
-                    "OP9": "top-left",
-                    "OP1": "bottom-left",
-                },
+                matrix=Matrix([["OP9"], ["OP1"]]),
+                readout_position=ReadoutPosition(
+                    (
+                        {
+                            "OP9": "top-left",
+                            "OP1": "bottom-left",
+                        }
+                    ),
+                ),
             ),
             "Channels<2 channels>",
             id="Column",
@@ -336,7 +398,7 @@ def test_repr(channels, exp_repr):
             id="Grid",
         ),
         pytest.param(
-            ["OP9", "OP13"],
+            [["OP9", "OP13"]],
             {"OP9": "top-left", "OP13": "top-left"},
             id="Row",
         ),
@@ -352,7 +414,9 @@ def test_to_dict(matrix, readout_position):
     exp_dct = deepcopy({"matrix": matrix, "readout_position": readout_position})
 
     # Build a 'Channels' object
-    channels = Channels(matrix=matrix, readout_position=readout_position)
+    channels = Channels(
+        matrix=Matrix(matrix), readout_position=ReadoutPosition(readout_position)
+    )
 
     # Check '.to_dict'
     dct = channels.to_dict()
@@ -375,13 +439,17 @@ def test_to_dict(matrix, readout_position):
                 },
             },
             Channels(
-                matrix=[["OP9", "OP13"], ["OP1", "OP5"]],
-                readout_position={
-                    "OP9": "top-left",
-                    "OP13": "top-left",
-                    "OP1": "bottom-left",
-                    "OP5": "bottom-left",
-                },
+                matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
+                readout_position=ReadoutPosition(
+                    (
+                        {
+                            "OP9": "top-left",
+                            "OP13": "top-left",
+                            "OP1": "bottom-left",
+                            "OP5": "bottom-left",
+                        }
+                    ),
+                ),
             ),
             id="Grid",
         ),

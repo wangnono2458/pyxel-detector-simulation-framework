@@ -16,12 +16,43 @@ from typing_extensions import Self
 class Matrix:
     """Class to store and validate the matrix structure."""
 
-    def __init__(self, data: Sequence[Sequence[str]]):
-        if not all(isinstance(row, list) for row in data):
-            raise ValueError("Matrix must be a list of lists.")
+    def __init__(self, data):
+        # First check to ensure matrix is not empty
+        if not data:
+            raise ValueError("Matrix data must contain at least one row.")
 
-        # TODO: Use 'StringDType' if applicable
-        self._data = np.array(data)
+        # Validate that data is a sequence of sequences and not a string or a sequence of strings
+        if not isinstance(data, Sequence) or isinstance(data, str):
+            raise TypeError(
+                "Matrix must be a sequence of sequences (e.g., list of lists)."
+            )
+
+        # Validate that each item in the data is also a sequence and not a string
+        if any(isinstance(row, str) or not isinstance(row, Sequence) for row in data):
+            raise ValueError(
+                "All rows in the matrix must be sequences and not strings."
+            )
+
+        # Ensure all rows are of the same length
+        row_lengths = [len(row) for row in data]
+        if len(set(row_lengths)) != 1:
+            raise ValueError(
+                "Parameter 'matrix' is malformed: All rows must be of the same length."
+            )
+
+        # Check if rows are empty and the matrix contains more than one row
+        if any(len(row) == 0 for row in data) and len(data) > 1:
+            raise ValueError("Parameter 'matrix' is malformed: Cannot have empty rows.")
+
+        try:
+            self._data = np.array(
+                data, dtype=object
+            )  # Use dtype=object to accommodate different data types
+        except Exception as exc:
+            raise ValueError("Failed to convert input data to a NumPy array: ") from exc
+
+    def __eq__(self, other) -> bool:
+        return type(self) is type(other) and np.allclose(self._data, other._data)
 
     def __array__(self, dtype: np.dtype | None = None) -> np.ndarray:
         return np.array(self._data, dtype=dtype)
@@ -89,6 +120,11 @@ class ReadoutPosition:
 
         self.positions = positions
 
+    def __eq__(self, other):
+        if not isinstance(other, ReadoutPosition):
+            return NotImplemented
+        return self.positions == other.positions
+
     def __len__(self):
         """Return the number of readout positions."""
         return len(self.positions)
@@ -104,28 +140,31 @@ class Channels:
     Examples
     --------
     >>> channels = Channels(
-    ...     matrix=[["OP9", "OP13"], ["OP1", "OP5"]],
-    ...     readout_position={
-    ...         "OP9": "top-left",
-    ...         "OP13": "top-left",
-    ...         "OP1": "bottom-left",
-    ...         "OP5": "bottom-left",
-    ...     },
+    ...     matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
+    ...     readout_position=ReadoutPosition(
+    ...         {
+    ...             "OP9": "top-left",
+    ...             "OP13": "top-left",
+    ...             "OP1": "bottom-left",
+    ...             "OP5": "bottom-left",
+    ...         }
+    ...     ),
     ... )
     """
 
     def __init__(self, matrix: Matrix, readout_position: ReadoutPosition):
-        self.matrix: Matrix = matrix
-        self.readout_position: ReadoutPosition = readout_position
+        self.matrix = matrix
+        self.readout_position = readout_position
 
         # Validate matching counts
-        if self.matrix.size > len(self.readout_position):
+        # Flatten the matrix to count unique elements
+        matrix_terms = {term for row in self.matrix._data for term in row}
+        readout_keys = set(self.readout_position.keys())
+
+        if len(matrix_terms) > len(readout_keys):
             raise ValueError("Readout direction of at least one channel is missing.")
 
-        # Validate that matrix terms exist in readout positions
-        matrix_terms = set(np.asarray(self.matrix).flatten())
-        readout_keys = self.readout_position.keys()
-
+        # Ensure all matrix terms exist in readout positions
         if not matrix_terms.issubset(readout_keys):
             raise ValueError(
                 "Channel names in the matrix and in the readout directions are not matching."
@@ -137,6 +176,21 @@ class Channels:
             raise ValueError(
                 "Readout position contains extra channels not listed in matrix."
             )
+
+    def __eq__(self, other):
+        if not isinstance(other, Channels):
+            return NotImplemented
+
+        # Check equality by comparing both the matrix and the readout positions
+        return (
+            self.matrix == other.matrix
+            and self.readout_position == other.readout_position
+        )
+
+    def __repr__(self):
+        # Count unique channel names by flattening the matrix and getting unique items
+        unique_channels = {term for row in self.matrix._data for term in row}
+        return f"Channels<{len(unique_channels)} channels>"
 
     #
     # def validate(

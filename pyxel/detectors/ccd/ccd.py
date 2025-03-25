@@ -29,7 +29,9 @@ class CCD(Detector):
         characteristics: "Characteristics",
     ):
         self._geometry: CCDGeometry = geometry
+
         self._characteristics: Characteristics = characteristics
+        self._characteristics.initialize(self._geometry)
 
         super().__init__(environment=environment)
         super()._initialize()

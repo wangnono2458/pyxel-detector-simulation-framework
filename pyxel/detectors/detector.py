@@ -307,25 +307,27 @@ class Detector:
 
         import xarray as xr
 
-        if self.characteristics._charge_to_volt_conversion is None or isinstance(
-            self.characteristics._charge_to_volt_conversion, float
-        ):
-            value_1d: float | None = self.characteristics._charge_to_volt_conversion
-            self.characteristics._channels_gain = value_1d
-
-        elif isinstance(self.characteristics._charge_to_volt_conversion, dict):
-            # TODO: sanity check
-            value_2d: np.ndarray = np.zeros(shape=self.geometry.shape, dtype=float)
-            for (
-                channel,
-                gain,
-            ) in self.characteristics._charge_to_volt_conversion.items():
-                slice_y, slice_x = self.geometry.get_channel_coord(channel)
-                value_2d[slice_y, slice_x] = gain
-            self.characteristics._channels_gain = value_2d
-
-        else:
-            raise ValueError
+        #
+        # if self.characteristics._charge_to_volt_conversion is None or isinstance(
+        #     self.characteristics._charge_to_volt_conversion, float
+        # ):
+        #     value_1d: float | None = self.characteristics._charge_to_volt_conversion
+        #     self.characteristics._channels_gain = value_1d
+        #
+        # elif isinstance(self.characteristics._charge_to_volt_conversion, dict):
+        #     # TODO: sanity check
+        #     # TODO: Extract channels from 'self.geometry.channels'
+        #     value_2d: np.ndarray = np.zeros(shape=self.geometry.shape, dtype=float)
+        #     for (
+        #         channel,
+        #         gain,
+        #     ) in self.characteristics._charge_to_volt_conversion.items():
+        #         slice_y, slice_x = self.geometry.get_channel_coord(channel)
+        #         value_2d[slice_y, slice_x] = gain
+        #     self.characteristics._channels_gain = value_2d
+        #
+        # else:
+        #     raise ValueError
 
         self._scene = Scene()
         self._photon = Photon(geo=self.geometry)

@@ -8,9 +8,11 @@
 """TBW."""
 
 from collections.abc import Iterable, Mapping, Sequence
+from multiprocessing.managers import Value
 
 import numpy as np
 
+from pyxel.detectors import Geometry
 from pyxel.util import get_size
 
 
@@ -84,6 +86,9 @@ class Characteristics:
         self._adc_voltage_range = volt_range
         self._adc_bit_resolution = adc_bit_resolution
 
+        # Late binding
+        self._geometry: Geometry | None = None
+
         self._numbytes = 0
 
     def __eq__(self, other) -> bool:
@@ -96,6 +101,55 @@ class Characteristics:
             and self._adc_voltage_range == other._adc_voltage_range
             and self._adc_bit_resolution == other._adc_bit_resolution
         )
+
+    def _build_channels_gain(self, value: float | dict[str, float] | None):
+        if value is None:
+            self._channels_gain = None
+            return
+
+        if isinstance(value, float):
+            if not (0.0 <= value <= 100.0):
+                raise ValueError(
+                    "'charge_to_volt_conversion' must be between 0.0 and 100.0."
+                )
+            self._channels_gain = value
+            return
+
+        if isinstance(value, dict):
+            if self._geometry is None:
+                raise ValueError(
+                    "Geometry must be initialized before setting channel gains."
+                )
+
+            value_2d = np.zeros(shape=self._geometry.shape, dtype=float)
+
+            for channel, gain in value.items():
+                if not (0.0 <= gain <= 100.0):
+                    raise ValueError(
+                        f"Gain for channel {channel} must be between 0.0 and 100.0."
+                    )
+                slice_y, slice_x = self._geometry.get_channel_coord(channel)
+                value_2d[slice_y, slice_x] = gain
+
+            self._channels_gain = value_2d
+
+            # Perform channel mismatch check after processing all gains
+            defined_channels = set(self._geometry.channels.readout_position.keys())
+            input_channels = set(value.keys())
+            if defined_channels != input_channels:
+                raise ValueError(
+                    "Mismatch between the defined channels in geometry and provided channel gains."
+                )
+            return
+
+        raise TypeError(
+            "Invalid type for 'charge_to_volt_conversion'; expected float or dict."
+        )
+
+    def initialize(self, geometry: Geometry):
+        self._geometry = geometry
+
+        self._build_channels_gain(value=self._charge_to_volt_conversion)
 
     @property
     def quantum_efficiency(self) -> float:
@@ -117,24 +171,76 @@ class Characteristics:
         self._quantum_efficiency = value
 
     @property
-    def charge_to_volt_conversion(self) -> float | np.ndarray:
+    def charge_to_volt_conversion(self) -> float | dict[str, float]:
         """Get charge to volt conversion parameter."""
-        if self._channels_gain is None:
+        # if self._channels_gain is None:
+        if self._charge_to_volt_conversion is None:
             raise ValueError(
                 "'charge_to_volt_conversion' not specified in detector characteristics."
             )
 
-        return self._channels_gain
+        return self._charge_to_volt_conversion
 
     @charge_to_volt_conversion.setter
-    def charge_to_volt_conversion(self, value: float) -> None:
+    def charge_to_volt_conversion(self, value: float | dict[str, float]) -> None:
         """Set charge to volt conversion parameter."""
-        if not (0.0 <= value <= 100.0):
-            raise ValueError(
-                "'charge_to_volt_conversion' must be between 0.0 and 100.0."
-            )
-        raise NotImplementedError
-        # self._charge_to_volt_conversion = value
+        # if isinstance(value, dict):
+        #     value_all_channels: dict[str, float] = value
+        #     # TODO: Check that all channels are valid (not yet possible)
+        #     # TODO: Build 'self._channels_gain' based on value missing 'geometry'
+        #
+        #     # TODO: sanity check
+        #     # TODO: Extract channels from 'self.geometry.channels'
+        #     geometry: Geometry = self._geometry
+        #
+        #     if not geometry:
+        #         raise RuntimeError('...')
+        #
+        #
+        #     value_2d: np.ndarray = np.zeros(shape=geometry.shape, dtype=float)
+        #     for channel, gain in self._charge_to_volt_conversion.items():
+        #         slice_y, slice_x = geometry.get_channel_coord(channel)
+        #         value_2d[slice_y, slice_x] = gain
+        #
+        #     self._channels_gain = value_2d
+        #
+        # else:
+        #     value_all_pixels: float = value
+        #
+        # if not (0.0 <= value_all_pixels <= 100.0):
+        #     raise ValueError(
+        #     "'charge_to_volt_conversion' must be between 0.0 and 100.0."
+        #     )
+        #
+        #     # TODO: Build 'self._channels_gain' based on value
+        #     self._channels_gain = value_all_pixels
+        if isinstance(value, float):
+            if not (0.0 <= value <= 100.0):
+                raise ValueError(
+                    "'charge_to_volt_conversion' must be between 0.0 and 100.0."
+                )
+            self._build_channels_gain(value=value)
+            self._charge_to_volt_conversion = value
+
+        elif isinstance(value, dict):
+
+            for channel, gain in value.items():
+
+                if not (0.0 <= gain <= 100.0):
+                    raise ValueError(
+                        f"Gain for channel {channel} must be between 0.0 and 100.0."
+                    )
+
+            self._build_channels_gain(value=value)
+
+            self._charge_to_volt_conversion = value
+
+    @property
+    def channels_gain(self) -> float | np.ndarray:
+        if self._channels_gain is None:
+            raise ValueError
+
+        return self._channels_gain
 
     @property
     def pre_amplification(self) -> float:
@@ -203,12 +309,12 @@ class Characteristics:
         self._full_well_capacity = value
 
     @property
-    def system_gain(self) -> float:
+    def system_gain(self) -> float | np.ndarray:
         """Get system gain."""
         return (
             self.quantum_efficiency
             * self.pre_amplification
-            * self.charge_to_volt_conversion
+            * self.channels_gain
             * 2**self.adc_bit_resolution
         ) / (max(self.adc_voltage_range) - min(self.adc_voltage_range))
 

@@ -12,6 +12,8 @@ import numpy as np
 import pytest
 
 from pyxel.detectors import CCDGeometry, Channels, CMOSGeometry, Geometry
+from pyxel.detectors.channels import Matrix, ReadoutPosition
+from pyxel.exposure import Readout
 
 
 @dataclass
@@ -140,13 +142,15 @@ def test_horizontal_pixel_center_pos(
             None,
             None,
             Channels(
-                matrix=[["OP9", "OP13"], ["OP1", "OP5"]],
-                readout_position={
-                    "OP9": "top-left",
-                    "OP13": "top-left",
-                    "OP1": "bottom-left",
-                    "OP5": "bottom-left",
-                },
+                matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
+                readout_position=(
+                    {
+                        "OP9": "top-left",
+                        "OP13": "top-left",
+                        "OP1": "bottom-left",
+                        "OP5": "bottom-left",
+                    }
+                ),
             ),
             id="Grid - 4 channel(s)",
         ),
@@ -158,8 +162,8 @@ def test_horizontal_pixel_center_pos(
             None,
             None,
             Channels(
-                matrix=["OP9", "OP13"],
-                readout_position={"OP9": "top-left", "OP13": "top-left"},
+                matrix=Matrix([["OP9", "OP13"]]),
+                readout_position=({"OP9": "top-left", "OP13": "top-left"}),
             ),
             id="Row - 2 channel(s)",
         ),
@@ -171,8 +175,8 @@ def test_horizontal_pixel_center_pos(
             None,
             None,
             Channels(
-                matrix=[["OP9"], ["OP1"]],
-                readout_position={"OP9": "top-left", "OP1": "bottom-left"},
+                matrix=Matrix([["OP9"], ["OP1"]]),
+                readout_position=({"OP9": "top-left", "OP1": "bottom-left"}),
             ),
             id="Column - 2 channel(s)",
         ),
@@ -325,11 +329,13 @@ def test_geometry_dimension_exceeding_validation(
     matrix, readout_position, row, col, expected_exception, expected_message
 ):
     # Setup channels with specific readout positions
-    channels = Channels(matrix=matrix, readout_position=readout_position)
+    channels = Channels(
+        matrix=Matrix(matrix), readout_position=ReadoutPosition(readout_position)
+    )
 
     with pytest.raises(expected_exception) as exc_info:
         # Create an instance of Geometry with the given parameters
-        geometry = Geometry(row=row, col=col, channels=channels)
+        _ = Geometry(row=row, col=col, channels=channels)
 
     assert str(exc_info.value) == expected_message
 
@@ -349,13 +355,15 @@ def test_get_channel_coord_4_channels(channel, exp_slices):
         row=2056,
         col=2048,
         channels=Channels(
-            matrix=[["OP9", "OP13"], ["OP1", "OP5"]],
-            readout_position={
-                "OP9": "top-left",
-                "OP13": "top-left",
-                "OP1": "bottom-left",
-                "OP5": "bottom-left",
-            },
+            matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
+            readout_position=ReadoutPosition(
+                {
+                    "OP9": "top-left",
+                    "OP13": "top-left",
+                    "OP1": "bottom-left",
+                    "OP5": "bottom-left",
+                }
+            ),
         ),
     )
 
@@ -367,7 +375,9 @@ def test_get_channel_coord_no_channels():
     """Test method 'get_channel_coord' without channels defined."""
     geometry = Geometry(row=2056, col=2048)
 
-    with pytest.raises(RuntimeError, match="Missing 'channels'"):
+    with pytest.raises(
+        RuntimeError, match="Missing 'channels' in Geometry configuration."
+    ):
         _ = geometry.get_channel_coord("foo")
 
 
@@ -378,13 +388,15 @@ def test_get_channel_coord_bad_channel(channel):
         row=2056,
         col=2048,
         channels=Channels(
-            matrix=[["OP9", "OP13"], ["OP1", "OP5"]],
-            readout_position={
-                "OP9": "top-left",
-                "OP13": "top-left",
-                "OP1": "bottom-left",
-                "OP5": "bottom-left",
-            },
+            matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
+            readout_position=ReadoutPosition(
+                {
+                    "OP9": "top-left",
+                    "OP13": "top-left",
+                    "OP1": "bottom-left",
+                    "OP5": "bottom-left",
+                }
+            ),
         ),
     )
 

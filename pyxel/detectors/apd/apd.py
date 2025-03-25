@@ -29,7 +29,9 @@ class APD(Detector):
         characteristics: "APDCharacteristics",
     ):
         self._geometry: APDGeometry = geometry
+
         self._characteristics: APDCharacteristics = characteristics
+        self._characteristics.initialize(self._geometry)
 
         super().__init__(environment=environment)
         super()._initialize()

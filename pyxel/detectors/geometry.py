@@ -288,19 +288,30 @@ class Geometry:
 
     def get_channel_coord(self, channel: int | str) -> tuple[slice, slice]:
         if self.channels is None:
-            raise ValueError
+            raise RuntimeError("Missing 'channels' in Geometry configuration.")
 
-        vertical_channels, horizontal_channels = self.channels.matrix.shape
+        # Convert the matrix to a NumPy array for easy searching
+        matrix_array = np.array(self.channels.matrix)
+        found_indices = np.argwhere(matrix_array == channel)
+
+        # Check if the channel was found
+        if found_indices.size == 0:
+            raise KeyError(f"Cannot find channel {channel!r}")
+
+        # Extract the first (and should be only) matching index
+        position_y, position_x = found_indices[0]
+        vertical_channels, horizontal_channels = matrix_array.shape
         channel_vertical_size = self.row // vertical_channels
         channel_horizontal_size = self.col // horizontal_channels
 
-        position_y, position_x = (np.argwhere(self.channels.matrix == channel))[0]
+        # Calculate the start and stop positions for the slices
         start_x = position_x * channel_horizontal_size
         start_y = position_y * channel_vertical_size
         stop_x = start_x + channel_horizontal_size
         stop_y = start_y + channel_vertical_size
 
-        return slice(int(start_y), int(stop_y)), slice(int(start_x), int(stop_x))
+        # Return the slices for the y and x dimensions
+        return (slice(int(start_y), int(stop_y)), slice(int(start_x), int(stop_x)))
 
     @property
     def numbytes(self) -> int:
