@@ -406,7 +406,8 @@ pipeline:
 @pytest.fixture
 def folder_data(request: pytest.FixtureRequest) -> Path:
     """Get the folder 'tests'."""
-    filename: Path = request.path / "../../data"
+    folder = Path(request.module.__file__).parent
+    filename: Path = folder / "../data"
     return filename.resolve(strict=True)
 
 

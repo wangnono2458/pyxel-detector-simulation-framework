@@ -110,20 +110,18 @@ class Characteristics:
 
     # TODO: This method exists in class 'Characteristics' and 'APDCharacteristics'
     #       Refactor this
-    def _build_channels_gain(self, value: float | dict[str, float] | None):
+    def _build_channels_gain(self, value: int | float | dict[str, float] | None):
         if value is None:
             self._channels_gain = None
-            return
 
-        if isinstance(value, float):
+        elif isinstance(value, float | int):
             if not (0.0 <= value <= 100.0):
                 raise ValueError(
                     "'charge_to_volt_conversion' must be between 0.0 and 100.0."
                 )
             self._channels_gain = value
-            return
 
-        if isinstance(value, dict):
+        elif isinstance(value, dict):
             if self._geometry is None:
                 raise ValueError(
                     "Geometry must be initialized before setting channel gains."
@@ -151,11 +149,11 @@ class Characteristics:
                 raise ValueError(
                     "Mismatch between the defined channels in geometry and provided channel gains."
                 )
-            return
 
-        raise TypeError(
-            "Invalid type for 'charge_to_volt_conversion'; expected float or dict."
-        )
+        else:
+            raise TypeError(
+                "Invalid type for 'charge_to_volt_conversion'; expected float or dict."
+            )
 
     # TODO: This method is similar in 'APDCharacteristics and 'Characteristics'
     #       Refactor these methods

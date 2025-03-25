@@ -387,7 +387,7 @@ def test_charge_to_volt_conversion_invalid_values():
     detector.characteristics.initialize(detector.geometry)
 
     # Attempt to set charge_to_volt_conversion with invalid dictionary values
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(ValueError, match=r"Gain (.*) must be between") as exc_info:
         detector.characteristics.charge_to_volt_conversion = {
             "OP9": 1,  # Valid
             "OP13": 200,  # Invalid: Outside the range 0 to 100
@@ -428,7 +428,9 @@ def test_channel_gain_mismatch():
     detector.characteristics.initialize(detector.geometry)
 
     # Intentionally provide mismatched number of channel gains
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(
+        ValueError, match=r"Mismatch between the defined channels"
+    ) as exc_info:
         detector.characteristics.charge_to_volt_conversion = {"OP9": 1, "OP13": 2}
 
     # Check if the correct error message about mismatched channel counts is raised

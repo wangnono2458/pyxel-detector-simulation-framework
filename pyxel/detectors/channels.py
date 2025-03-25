@@ -54,7 +54,7 @@ class Matrix:
             raise ValueError("Failed to convert input data to a NumPy array: ") from exc
 
     def __eq__(self, other) -> bool:
-        return type(self) is type(other) and np.allclose(self._data, other._data)
+        return type(self) is type(other) and np.array_equal(self._data, other._data)
 
     def __array__(self, dtype: np.dtype | None = None) -> np.ndarray:
         return np.array(self._data, dtype=dtype)
