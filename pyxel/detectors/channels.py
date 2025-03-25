@@ -5,6 +5,8 @@
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
 
+"""Sub-package to handle and to validated matrix structures and readout positions."""
+
 import difflib
 from collections.abc import Mapping, Sequence
 from typing import Literal

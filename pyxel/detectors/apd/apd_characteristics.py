@@ -30,10 +30,14 @@ current status, in Image Sensing Technologies: Materials, Devices, Systems, and 
 
 import math
 from collections.abc import Mapping
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from pyxel.util import get_size
+
+if TYPE_CHECKING:
+    from pyxel.detectors import APDGeometry
 
 
 class APDCharacteristics:
@@ -140,6 +144,14 @@ class APDCharacteristics:
             capacitance=self.node_capacitance,
             roic_gain=self.roic_gain,
         )
+
+        # TODO: This variable is available in class 'Characteristics' and 'APDCharacteristics'
+        #       Refactor this
+        self._channels_gain: float | np.ndarray | None = None
+
+        # Late binding
+        self._geometry: "APDGeometry" | None = None
+
         self._numbytes = 0
 
     def __eq__(self, other) -> bool:
@@ -153,6 +165,62 @@ class APDCharacteristics:
             and self._pixel_reset_voltage == other._pixel_reset_voltage
             and self._common_voltage == other._common_voltage
         )
+
+    # TODO: This method exists in class 'Characteristics' and 'APDCharacteristics'
+    #       Refactor this
+    def _build_channels_gain(self, value: float | dict[str, float] | None):
+        if value is None:
+            self._channels_gain = None
+            return
+
+        if isinstance(value, float):
+            if not (0.0 <= value <= 100.0):
+                raise ValueError(
+                    "'charge_to_volt_conversion' must be between 0.0 and 100.0."
+                )
+            self._channels_gain = value
+            return
+
+        if isinstance(value, dict):
+            if self._geometry is None:
+                raise ValueError(
+                    "Geometry must be initialized before setting channel gains."
+                )
+
+            if self._geometry.channels is None:
+                raise ValueError("Missing parameter '.channels' in Geometry.")
+
+            value_2d = np.zeros(shape=self._geometry.shape, dtype=float)
+
+            for channel, gain in value.items():
+                if not (0.0 <= gain <= 100.0):
+                    raise ValueError(
+                        f"Gain for channel {channel} must be between 0.0 and 100.0."
+                    )
+                slice_y, slice_x = self._geometry.get_channel_coord(channel)
+                value_2d[slice_y, slice_x] = gain
+
+            self._channels_gain = value_2d
+
+            # Perform channel mismatch check after processing all gains
+            defined_channels = set(self._geometry.channels.readout_position.keys())
+            input_channels = set(value.keys())
+            if defined_channels != input_channels:
+                raise ValueError(
+                    "Mismatch between the defined channels in geometry and provided channel gains."
+                )
+            return
+
+        raise TypeError(
+            "Invalid type for 'charge_to_volt_conversion'; expected float or dict."
+        )
+
+    # TODO: This method is similar in 'APDCharacteristics and 'Characteristics'
+    #       Refactor these methods
+    def initialize(self, geometry: "APDGeometry"):
+        self._geometry = geometry
+
+        self._build_channels_gain(value=self._charge_to_volt_conversion)
 
     @property
     def quantum_efficiency(self) -> float:

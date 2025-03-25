@@ -11,7 +11,6 @@ import numpy as np
 import pytest
 
 from pyxel.detectors.channels import Channels, Matrix, ReadoutPosition
-from pyxel.exposure import Readout
 
 
 @pytest.mark.parametrize(

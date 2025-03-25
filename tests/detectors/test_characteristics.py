@@ -5,31 +5,13 @@
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
 
-import copy
 from copy import deepcopy
-from pathlib import Path
 
 import numpy as np
 import pytest
 
-from pyxel.detectors import (
-    APD,
-    CCD,
-    CMOS,
-    MKID,
-    APDCharacteristics,
-    APDGeometry,
-    CCDGeometry,
-    Channels,
-    Characteristics,
-    CMOSGeometry,
-    Detector,
-    Environment,
-    MKIDGeometry,
-    ReadoutProperties,
-)
+from pyxel.detectors import CCD, CCDGeometry, Channels, Characteristics, Environment
 from pyxel.detectors.channels import Matrix, ReadoutPosition
-from tests.conftest import environment
 
 
 @pytest.mark.parametrize(

@@ -8,12 +8,14 @@
 """TBW."""
 
 from collections.abc import Iterable, Mapping, Sequence
-from multiprocessing.managers import Value
+from typing import TYPE_CHECKING
 
 import numpy as np
 
-from pyxel.detectors import Geometry
 from pyxel.util import get_size
+
+if TYPE_CHECKING:
+    from pyxel.detectors import Geometry
 
 
 class Characteristics:
@@ -72,7 +74,11 @@ class Characteristics:
         self._charge_to_volt_conversion: float | dict[str, float] | None = (
             charge_to_volt_conversion
         )
+
+        # TODO: This variable is available in class 'Characteristics' and 'APDCharacteristics'
+        #       Refactor this
         self._channels_gain: float | np.ndarray | None = None
+
         self._pre_amplification = pre_amplification
         self._full_well_capacity = full_well_capacity
 
@@ -87,7 +93,7 @@ class Characteristics:
         self._adc_bit_resolution = adc_bit_resolution
 
         # Late binding
-        self._geometry: Geometry | None = None
+        self._geometry: "Geometry" | None = None
 
         self._numbytes = 0
 
@@ -102,6 +108,8 @@ class Characteristics:
             and self._adc_bit_resolution == other._adc_bit_resolution
         )
 
+    # TODO: This method exists in class 'Characteristics' and 'APDCharacteristics'
+    #       Refactor this
     def _build_channels_gain(self, value: float | dict[str, float] | None):
         if value is None:
             self._channels_gain = None
@@ -120,6 +128,9 @@ class Characteristics:
                 raise ValueError(
                     "Geometry must be initialized before setting channel gains."
                 )
+
+            if self._geometry.channels is None:
+                raise ValueError("Missing parameter '.channels' in Geometry.")
 
             value_2d = np.zeros(shape=self._geometry.shape, dtype=float)
 
@@ -146,7 +157,9 @@ class Characteristics:
             "Invalid type for 'charge_to_volt_conversion'; expected float or dict."
         )
 
-    def initialize(self, geometry: Geometry):
+    # TODO: This method is similar in 'APDCharacteristics and 'Characteristics'
+    #       Refactor these methods
+    def initialize(self, geometry: "Geometry"):
         self._geometry = geometry
 
         self._build_channels_gain(value=self._charge_to_volt_conversion)

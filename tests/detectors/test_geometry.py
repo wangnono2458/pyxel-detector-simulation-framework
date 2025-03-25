@@ -13,7 +13,6 @@ import pytest
 
 from pyxel.detectors import CCDGeometry, Channels, CMOSGeometry, Geometry
 from pyxel.detectors.channels import Matrix, ReadoutPosition
-from pyxel.exposure import Readout
 
 
 @dataclass
