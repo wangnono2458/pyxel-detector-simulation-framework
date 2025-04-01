@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 
 from pyxel.detectors import CCD, CCDGeometry, Characteristics, Environment
+from pyxel.detectors.channels import Channels, Matrix, ReadoutPosition
 from pyxel.models.charge_measurement import simple_measurement
 
 
@@ -55,6 +56,76 @@ def test_simple_measurement(ccd_5x10: CCD, gain):
             [
                 [0.18186882, 0.25340667, 0.63789237],
                 [0.54100374, 0.31288764, 0.26625114],
+            ],
+        )
+
+    signal = detector.signal.array
+    np.testing.assert_allclose(actual=signal, desired=exp_signal, rtol=1e-6)
+
+
+@pytest.fixture
+def ccd_2x2_with_channels() -> CCD:
+    """Create a valid CCD detector."""
+    detector = CCD(
+        geometry=CCDGeometry(
+            row=2,
+            col=2,
+            total_thickness=40.0,
+            pixel_vert_size=10.0,
+            pixel_horz_size=10.0,
+            channels=Channels(
+                matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
+                readout_position=ReadoutPosition(
+                    {
+                        "OP9": "top-left",
+                        "OP13": "top-left",
+                        "OP1": "bottom-left",
+                        "OP5": "bottom-left",
+                    }
+                ),
+            ),
+        ),
+        environment=Environment(),
+        characteristics=Characteristics(
+            charge_to_volt_conversion={
+                "OP9": 1,
+                "OP13": 2,
+                "OP1": 3,
+                "OP5": 4,
+            }
+        ),
+    )
+    detector.signal.array = np.zeros(detector.geometry.shape, dtype=float)
+    return detector
+
+
+@pytest.mark.parametrize("gain", [None, 0.8])
+def test_simple_measurement_with_channels(ccd_2x2_with_channels: CCD, gain):
+    """Test model 'simple_measurement."""
+    pixel_2d = np.array(
+        [[0.22733602, 0.31675834], [0.67625467, 0.39110955]],
+    )
+
+    detector = ccd_2x2_with_channels
+    detector.pixel.array = pixel_2d.copy()
+    detector.characteristics.charge_to_volt_conversion = (
+        detector.characteristics.charge_to_volt_conversion
+    )
+
+    if gain is None:
+        simple_measurement(detector)
+        exp_signal = np.array(
+            [
+                [0.22733602, 0.63351668],
+                [2.02876401, 1.5644382],
+            ],
+        )
+    else:
+        simple_measurement(detector, gain=gain)
+        exp_signal = np.array(
+            [
+                [0.18186882, 0.25340667],
+                [0.54100374, 0.31288764],
             ],
         )
 

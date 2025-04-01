@@ -48,7 +48,27 @@ def simple_measurement(detector: Detector, gain: float | None = None) -> None:
         Gain to apply. By default, this is the sensitivity of charge readout. Unit: V/e-
     """
     if gain is None:
-        gain = detector.characteristics._channels_gain
+        detector.signal.array = np.zeros_like(detector.pixel.array, dtype=float)
+
+        # If _channels_gain is a single float, apply it uniformly
+        if isinstance(detector.characteristics._charge_to_volt_conversion, float | int):
+            detector.signal.array = (
+                detector.pixel.array
+                * detector.characteristics._charge_to_volt_conversion
+            )
+        else:
+            # Apply channel-specific gains using coordinates
+            for (
+                channel,
+                gain,
+            ) in detector.characteristics.charge_to_volt_conversion.items():
+                slice_y, slice_x = detector.geometry.get_channel_coord(channel)
+                # Apply gain to specific pixels based on the channel coordinates
+                detector.signal.array[slice_y, slice_x] = (
+                    detector.pixel.array[slice_y, slice_x] * gain
+                )
+    else:
+        gain = float(gain)
+        detector.signal.array = np.asarray(detector.pixel.array * gain, dtype=float)
 
     # Apply a gain (in V/e-) to a pixel array (in e-)
-    detector.signal.array = np.asarray(detector.pixel.array * gain, dtype=float)

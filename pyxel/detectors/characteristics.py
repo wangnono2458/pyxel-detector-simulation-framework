@@ -234,9 +234,7 @@ class Characteristics:
             self._charge_to_volt_conversion = value
 
         elif isinstance(value, dict):
-
             for channel, gain in value.items():
-
                 if not (0.0 <= gain <= 100.0):
                     raise ValueError(
                         f"Gain for channel {channel} must be between 0.0 and 100.0."

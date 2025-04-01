@@ -9,6 +9,7 @@
 import numpy as np
 import pytest
 
+from pyxel.data_structure import Signal
 from pyxel.detectors import (
     APD,
     CCD,
@@ -16,15 +17,19 @@ from pyxel.detectors import (
     APDCharacteristics,
     APDGeometry,
     CCDGeometry,
+    Channels,
     Characteristics,
     CMOSGeometry,
     Environment,
+    Geometry,
 )
+from pyxel.detectors.channels import Matrix, ReadoutPosition
 from pyxel.models.charge_measurement import (
     output_node_noise,
     output_node_noise_cmos,
     readout_noise_saphira,
 )
+from tests.conftest import environment
 
 
 @pytest.fixture
@@ -164,6 +169,75 @@ def test_output_node_noise_cmos(cmos_2x3: CMOS):
 
     exp_signal = np.array(
         [[0.228246, 0.319711, 0.804656], [0.688026, 0.403161, 0.318046]]
+    )
+    np.testing.assert_allclose(actual=new_signal, desired=exp_signal, rtol=1e-5)
+
+
+@pytest.fixture
+def cmos_2x3_with_channels():
+    """Fixture to create a CMOS detector with different gains for each channel."""
+    cmos = CMOS(
+        geometry=CMOSGeometry(
+            row=2,
+            col=3,
+            channels=Channels(
+                matrix=Matrix([["OP1", "OP2", "OP3"], ["OP4", "OP5", "OP6"]]),
+                readout_position=ReadoutPosition(
+                    {
+                        "OP1": "top-left",
+                        "OP2": "top-right",
+                        "OP3": "top-right",
+                        "OP4": "bottom-left",
+                        "OP5": "bottom-left",
+                        "OP6": "bottom-right",
+                    }
+                ),
+            ),
+        ),
+        characteristics=Characteristics(
+            charge_to_volt_conversion={
+                "OP1": 1.0,
+                "OP2": 1.5,
+                "OP3": 2.0,
+                "OP4": 2.5,
+                "OP5": 3.0,
+                "OP6": 3.5,
+            }
+        ),
+        environment=Environment(),
+    )
+    cmos.signal.array = np.zeros(cmos.geometry.shape, dtype=float)
+    return cmos
+
+
+def test_output_node_noise_cmos_with_channels(cmos_2x3_with_channels: CMOS):
+    """Test model 'output_node_noise_cmos' with channel-specific conversions."""
+    seed = 12345
+    rng = np.random.default_rng(seed=seed)
+
+    detector = cmos_2x3_with_channels
+    # Create a test pattern based on channel-specific gains:
+    test_pattern = np.array([[1, 1, 1], [1, 1, 1]])
+    # Apply gains to the initial test pattern:
+    for channel, gain in detector.characteristics.charge_to_volt_conversion.items():
+        slice_y, slice_x = detector.geometry.get_channel_coord(channel)
+        # Apply gain to specific pixels based on the channel coordinates
+        detector.signal.array[slice_y, slice_x] = test_pattern[slice_y, slice_x] * gain
+
+    output_node_noise_cmos(
+        detector=detector,
+        readout_noise=1.0,
+        readout_noise_std=0.1,
+        seed=seed,
+    )
+
+    new_signal = detector.signal.array
+
+    exp_signal = np.array(
+        [
+            [1 * 1.0 + 0.01, 1 * 1.5 + 0.01, 1 * 2.0 + 0.01],
+            [1 * 2.5 + 0.01, 1 * 3.0 + 0.01, 1 * 3.5 + 0.01],
+        ]
     )
     np.testing.assert_allclose(actual=new_signal, desired=exp_signal, rtol=1e-5)
 
