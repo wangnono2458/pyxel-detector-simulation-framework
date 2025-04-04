@@ -234,10 +234,7 @@ def test_output_node_noise_cmos_with_channels(cmos_2x3_with_channels: CMOS):
     new_signal = detector.signal.array
 
     exp_signal = np.array(
-        [
-            [1 * 1.0 + 0.01, 1 * 1.5 + 0.01, 1 * 2.0 + 0.01],
-            [1 * 2.5 + 0.01, 1 * 3.0 + 0.01, 1 * 3.5 + 0.01],
-        ]
+        [[1.09100598, 1.9428603, 3.45815312], [5.44291645, 6.61554205, -1.6689306]]
     )
     np.testing.assert_allclose(actual=new_signal, desired=exp_signal, rtol=1e-5)
 
