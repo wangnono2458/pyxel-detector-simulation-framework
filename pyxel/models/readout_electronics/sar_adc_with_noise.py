@@ -54,7 +54,7 @@ def apply_sar_adc_with_noise(
         noise = noises[i]
 
         # digital value associated with this step
-        digital_value: int = 2 ** (adc_bits - (i + 1))
+        digital_value = 2 ** (adc_bits - (i + 1))
 
         ref_2d += np.random.normal(loc=strength, scale=noise, size=(num_rows, num_cols))
 

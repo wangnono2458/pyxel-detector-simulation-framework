@@ -40,7 +40,7 @@ from pyxel.observation import ParameterValues
 from pyxel.pipelines import Processor, ResultId
 
 if TYPE_CHECKING:
-    from numpy.typing import ArrayLike, NDArray
+    from numpy.typing import ArrayLike
 
     from pyxel.exposure import Readout
 
@@ -284,12 +284,8 @@ class ModelFittingDataTree(ProblemSingleObjective):
                 if var.boundaries.ndim == 1:
                     low_val, high_val = var.boundaries
 
-                    low_values: NDArray[np.float64] = np.array(
-                        [low_val] * len(var.values)
-                    )
-                    high_values: NDArray[np.float64] = np.array(
-                        [high_val] * len(var.values)
-                    )
+                    low_values = np.array([low_val] * len(var.values))
+                    high_values = np.array([high_val] * len(var.values))
 
                 elif var.boundaries.ndim == 2:
                     low_values = var.boundaries[:, 0]
@@ -301,8 +297,8 @@ class ModelFittingDataTree(ProblemSingleObjective):
                     low_values = np.log10(low_values)
                     high_values = np.log10(high_values)
 
-                lbd += low_values.tolist()
-                ubd += high_values.tolist()
+                lbd += low_values.tolist()  # type: ignore[arg-type]
+                ubd += high_values.tolist()  # type: ignore[arg-type]
 
             else:
                 raise ValueError(

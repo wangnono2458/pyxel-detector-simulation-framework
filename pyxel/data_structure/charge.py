@@ -237,10 +237,10 @@ class Charge:
         -------
         DataFrame
         """
-        charge_number = array.flatten()
-        where_non_zero = np.where(charge_number > 0.0)
-        charge_number = charge_number[where_non_zero]
-        size: int = charge_number.size
+        charge_number_1d = array.flatten()
+        where_non_zero = np.where(charge_number_1d > 0.0)
+        charge_number_1d = charge_number_1d[where_non_zero]  # type: ignore[assignment]
+        size: int = charge_number_1d.size
 
         vertical_pixel_center_pos_1d = get_vertical_pixel_center_pos(
             num_rows=num_rows,
@@ -260,7 +260,7 @@ class Charge:
         # Create new charges
         return Charge.create_charges(
             particle_type="e",
-            particles_per_cluster=charge_number,
+            particles_per_cluster=charge_number_1d,
             init_energy=np.zeros(size),
             init_ver_position=init_ver_pix_position_1d,
             init_hor_position=init_hor_pix_position_1d,

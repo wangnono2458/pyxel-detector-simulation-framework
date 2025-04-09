@@ -22,6 +22,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 * Fix issue with sphinx 8.2.
   (See [!1031](https://gitlab.com/esa/pyxel/-/merge_requests/1031)
   and [!1032](https://gitlab.com/esa/pyxel/-/merge_requests/1032)).
+* Fix issues when running mypy with numpy 2.2+.
+  (See [!1034](https://gitlab.com/esa/pyxel/-/merge_requests/1034)).
 
 
 ## 2.8.2 / 2025-01-27
