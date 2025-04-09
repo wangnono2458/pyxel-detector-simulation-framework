@@ -40,7 +40,7 @@ from pyxel.observation import ParameterValues
 from pyxel.pipelines import Processor, ResultId
 
 if TYPE_CHECKING:
-    from numpy.typing import ArrayLike, NDArray
+    from numpy.typing import ArrayLike
 
     from pyxel.exposure import Readout
 
