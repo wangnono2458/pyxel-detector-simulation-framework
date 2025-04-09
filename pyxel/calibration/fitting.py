@@ -285,8 +285,8 @@ class ModelFitting(ProblemSingleObjective):
                     low_values = np.log10(low_values)
                     high_values = np.log10(high_values)
 
-                self.lbd += low_values.tolist()
-                self.ubd += high_values.tolist()
+                self.lbd += low_values.tolist()  # type: ignore[arg-type]
+                self.ubd += high_values.tolist()  # type: ignore[arg-type]
 
             else:
                 raise ValueError(

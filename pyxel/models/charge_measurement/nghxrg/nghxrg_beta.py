@@ -292,12 +292,12 @@ class HXRGNoise:
 
         # Also for adding in ACN,  we need a mask that point to just
         # the real pixel in ordered vectors of just the even or odd pixel - BUG FIXED HERE (D.L.)
-        self.m_short = np.zeros(
+        m_short_3d = np.zeros(
             (self.naxis3, (self.naxis2 + self.nfoh) // 2, self.xsize + self.nroh)
         )
-        self.m_short[:, : self.naxis2 // 2, : self.xsize] = 1
-        # self.m_short = np.reshape(self.m_short,  np.size(self.m_short))
-        self.m_short = self.m_short.flatten()
+        m_short_3d[:, : self.naxis2 // 2, : self.xsize] = 1
+        # self.m_short = np.reshape(self.m_short,  np.size(self.m_ lshort))
+        self.m_short_1d = m_short_3d.flatten()
 
         # Define frequency arrays
         self.f1 = np.fft.rfftfreq(
@@ -599,23 +599,23 @@ class HXRGNoise:
             w = self.ref_all
             r = reference_pixel_noise_ratio  # Easier to work with
             for z in np.arange(self.naxis3):
-                here = np.zeros((self.naxis2, self.naxis1))
+                here_2d = np.zeros((self.naxis2, self.naxis1))
 
                 # Noisy reference pixel for each side of detector
                 if w[0] > 0:  # lower
-                    here[: w[0], :] = (
+                    here_2d[: w[0], :] = (
                         r * rd_noise * np.random.standard_normal((w[0], self.naxis1))
                     )
                 if w[1] > 0:  # upper
-                    here[-w[1] :, :] = (
+                    here_2d[-w[1] :, :] = (
                         r * rd_noise * np.random.standard_normal((w[1], self.naxis1))
                     )
                 if w[2] > 0:  # left
-                    here[:, : w[2]] = (
+                    here_2d[:, : w[2]] = (
                         r * rd_noise * np.random.standard_normal((self.naxis2, w[2]))
                     )
                 if w[3] > 0:  # right
-                    here[:, -w[3] :] = (
+                    here_2d[:, -w[3] :] = (
                         r * rd_noise * np.random.standard_normal((self.naxis2, w[3]))
                     )
 
@@ -627,19 +627,18 @@ class HXRGNoise:
                     start_x_idx = w[2]
                     end_x_idx = self.naxis1 - w[3]
 
-                    here[start_y_idx:end_y_idx, start_x_idx:end_x_idx] = (
+                    here_2d[start_y_idx:end_y_idx, start_x_idx:end_x_idx] = (
                         rd_noise
                         * np.random.standard_normal(
                             (self.naxis2 - w[0] - w[1], self.naxis1 - w[2] - w[3])
                         )
                     )
                 else:  # No Ref. pixel,  so add only regular pixel
-                    here = rd_noise * np.random.standard_normal(
-                        (self.naxis2, self.naxis1)
-                    )
+                    noise_2d = np.random.standard_normal((self.naxis2, self.naxis1))
+                    here_2d = rd_noise * noise_2d  # type: ignore[assignment]
 
                 # Add the noise in to the result
-                result[z, :, :] += here
+                result[z, :, :] += here_2d
 
         return result
 
@@ -721,8 +720,8 @@ class HXRGNoise:
                 b = acn * self.pink_noise("acn")
 
                 # Pick out just the real pixel (i.e. ignore the gaps)
-                a = a[np.where(self.m_short == 1)]
-                b = b[np.where(self.m_short == 1)]
+                a = a[np.where(self.m_short_1d == 1)]
+                b = b[np.where(self.m_short_1d == 1)]
 
                 half_ch_pixels = self.naxis1 * self.naxis2 // (2 * self.n_out)
                 if len(a) != half_ch_pixels:
