@@ -5,10 +5,38 @@
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
 
-"""Sub-package to handle and to validated matrix structures and readout positions."""
+"""Sub-package to handle and validate matrix structures and readout positions for multi-channels detectors.
+
+**Example of four channels**
+
+In this example four channels ``OP9``, ``OP13``, ``OP1`` and ``OP5`` are
+defined in a matrix configuration as follows:
+
+.. figure:: _static/channels.png
+    :scale: 70%
+    :alt: Channels
+    :align: center
+
+The corresponding YAML definition could be:
+
+.. code-block:: yaml
+
+
+ geometry:
+    row: 1028
+    col: 1024
+    channels:
+      matrix: [[OP9, OP13],
+               [OP1, OP5 ]]
+      readout_position:
+        - OP9:  top-left
+        - OP13: top-left
+        - OP1:  bottom-left
+        - OP5:  bottom-left
+"""
 
 import difflib
-from collections.abc import Mapping, Sequence
+from collections.abc import Hashable, Mapping, Sequence
 from typing import Literal
 
 import numpy as np
@@ -16,9 +44,18 @@ from typing_extensions import Self
 
 
 class Matrix:
-    """Class to store and validate the matrix structure."""
+    """Class to store and validate the 1D or 2D matrix structure.
 
-    def __init__(self, data):
+    Examples
+    --------
+    >>> matrix = Matrix([["OP9", "OP13"], ["OP1", "OP5"]])
+    >>> matrix.shape
+    (2, 2)
+    >>> matrix.size
+    4
+    """
+
+    def __init__(self, data: Sequence[Sequence[Hashable]]):
         # First check to ensure matrix is not empty
         if not data:
             raise ValueError("Matrix data must contain at least one row.")
@@ -61,16 +98,18 @@ class Matrix:
 
     @property
     def size(self) -> int:
+        """Return number of elements in the matrix."""
         return self._data.size
 
     @property
     def shape(self) -> tuple[int, int]:
-        return self._data.shape
+        """Shape of the matrix."""
+        return self._data.shape  # type: ignore[return-value]
 
 
 # TODO: Implement using Abstract Class 'Mapping'
 class ReadoutPosition:
-    """Class to store and validate readout positions.
+    """Class to store and validate the mapping between channel names and their physical readout positions.
 
     Examples
     --------
@@ -137,7 +176,7 @@ class ReadoutPosition:
 
 
 class Channels:
-    """Updated Channels class using Matrix and ReadoutPosition.
+    """Updated Channels class with their matrix layout and corresponding readout positions.
 
     Examples
     --------
@@ -152,6 +191,8 @@ class Channels:
     ...         }
     ...     ),
     ... )
+    >>> channels
+    Channels<4 channels>
     """
 
     def __init__(self, matrix: Matrix, readout_position: ReadoutPosition):
@@ -194,70 +235,11 @@ class Channels:
         unique_channels = {term for row in self.matrix._data for term in row}
         return f"Channels<{len(unique_channels)} channels>"
 
-    #
-    # def validate(
-    #     self, geometry,
-    #         # full_frame_num_rows: int, full_frame_num_cols: int
-    # ) -> None:
-    #     """
-    #     Validate that num_rows and num_cols are divisors of geometry's dimensions.
-    #
-    #     :param geometry: An instance of the Geometry class.
-    #     :raises ValueError: If row or col are not divisors of geometry's dimensions.
-    #
-    #     Parameters
-    #     ----------
-    #     full_frame_num_cols
-    #     full_frame_num_rows
-    #     """
-    #
-    #     full_frame_num_rows = geometry.row
-    #     full_frame_num_cols = geometry.col
-    #
-    #     if full_frame_num_rows % self.num_rows != 0:
-    #         raise ValueError(
-    #             f"'num_rows' ({self.num_rows}) must be a divisor of full_frame_num_rows ({full_frame_num_rows})."
-    #         )
-    #     if full_frame_num_cols % self.num_cols != 0:
-    #         raise ValueError(
-    #             f"'num_cols' ({self.num_cols}) must be a divisor of full_frame_num_cols ({full_frame_num_cols})."
-    #         )
-    #     if (full_frame_num_rows % self.num_rows == 0) and (
-    #         full_frame_num_cols % self.num_cols == 0
-    #     ):
-    #         # Validate that the product of the divisions equals the number of outputs
-    #         rows_division = full_frame_num_rows // self.num_rows
-    #         cols_division = full_frame_num_cols // self.num_cols
-    #         expected_output_count = rows_division * cols_division
-    #
-    #         if len(self.output) != expected_output_count:
-    #             raise ValueError(
-    #                 f"The product of the divisions ({expected_output_count}) must match the number of outputs provided ({len(self.output)})."
-    #             )
-
     # TODO: Move
     def build_mask(self) -> np.ndarray:
+        """Generate a mask or map for the defined channels."""
         # Should save n array, one for each channel? Or should it have a well-defined structure to identify the channels?
         raise NotImplementedError
-
-    # TODO:Convert matrix into numpy array
-
-    # @property
-    # def num_rows(self) -> float:
-    #     """Get number of rows of the channels."""
-    #     if self.num_rows is None:
-    #         raise ValueError("'num rows' not specified in detector environment.")
-    #
-    #     return self.num_rows
-    #
-    # @num_rows.setter
-    # def num_rows(self, value: int | float) -> None:
-    #     """Set number of rows of the detector."""
-    #     if isinstance(value, (int, float)):
-    #         if value <= 0.0:
-    #             raise ValueError("'num rows' must be strictly positive.")
-    #     elif not isinstance(value):
-    #         raise TypeError("A NumHandling object or a float must be provided.")
 
     def to_dict(self) -> Mapping:
         """Get the attributes of this instance as a `dict`."""
@@ -265,24 +247,6 @@ class Channels:
             "matrix": np.asarray(self.matrix).tolist(),
             "readout_position": dict(self.readout_position.positions),
         }
-
-    #
-    # @classmethod
-    # def from_dict(cls, dct: Mapping) -> Self:
-    #     """Create a new instance of `Geometry` from a `dict`."""
-    #     return cls(**dct)
-    #     value = dct.get("num rows")
-    #
-    #     if value is None:
-    #         num_rows: float | None = None
-    #     elif isinstance(value, (int, float)):
-    #         num_rows = float(value)
-    #     # elif isinstance(value, dict):
-    #     #    num_rows = NumHandling.from_dict(value)
-    #     else:
-    #         raise NotImplementedError
-    #
-    #     return cls(num_rows=num_rows)
 
     @classmethod
     def from_dict(cls, dct: Mapping) -> Self:

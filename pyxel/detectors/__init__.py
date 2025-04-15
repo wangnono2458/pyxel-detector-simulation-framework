@@ -9,7 +9,7 @@
 
 # flake8: noqa
 # Warning: Import order matters
-from .channels import Channels
+from .channels import Channels, Matrix, ReadoutPosition
 from .readout_properties import ReadoutProperties
 from .environment import Environment, WavelengthHandling
 from .detector import Detector
