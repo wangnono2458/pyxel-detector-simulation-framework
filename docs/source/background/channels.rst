@@ -56,8 +56,8 @@ Use in simulation
 =================
 
 Channel configuration is critical for accurately modeling detector behaviour,
-for instance for the [`DC crosstalk`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_measurement_models.html#dc-crosstalk)
-and [`AC crosstalk`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_measurement_models.html#ac-crosstalk)
+for instance for the `DC crosstalk <https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_measurement_models.html#dc-crosstalk>`_
+and `AC crosstalk <https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_measurement_models.html#ac-crosstalk>`_
 models.
 
 Example configuration snippet (YAML)
