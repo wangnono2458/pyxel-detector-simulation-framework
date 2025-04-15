@@ -16,7 +16,8 @@ from pyxel.configuration import copy_config_file
 @pytest.fixture
 def valid_filename(request: pytest.FixtureRequest) -> Path:
     """Get a valid existing YAML filename."""
-    filename: Path = request.path / "../data/exposure1.yaml"
+    folder = Path(request.module.__file__).parent
+    filename: Path = folder / "data/exposure1.yaml"
     return filename.resolve(strict=True)
 
 

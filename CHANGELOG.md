@@ -12,7 +12,17 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 
 ## UNRELEASED
 
+This release brings a number of bug fixes and improvements.
+
+### New class `Channel`
+
+New class to characterize detectors with multi-channels and different readout position.
+
+This class is **provisional** and not yet stable.
+
 ### Core
+* Add [`Channels`](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html).
+  (See [!1033](https://gitlab.com/esa/pyxel/-/merge_requests/1033)).
 
 ### Documentation
 

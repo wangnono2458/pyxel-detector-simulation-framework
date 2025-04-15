@@ -11,7 +11,8 @@ from dataclasses import dataclass
 import numpy as np
 import pytest
 
-from pyxel.detectors import CCDGeometry, CMOSGeometry, Geometry
+from pyxel.detectors import CCDGeometry, Channels, CMOSGeometry, Geometry
+from pyxel.detectors.channels import Matrix, ReadoutPosition
 
 
 @dataclass
@@ -119,11 +120,75 @@ def test_horizontal_pixel_center_pos(
 
 
 @pytest.mark.parametrize(
-    "row, col, total_thickness, pixel_vert_size, pixel_horz_size, pixel_scale",
-    [(1, 1, 0.0, 0.0, 0.0, 0.0), (10000, 10000, 10000.0, 1000.0, 1000.0, 1000.0)],
+    "row, col, total_thickness, pixel_vert_size, pixel_horz_size, pixel_scale, channels",
+    [
+        pytest.param(1, 1, 0.0, 0.0, 0.0, 0.0, None, id="1x1 - No channel(s)"),
+        pytest.param(
+            10000,
+            10000,
+            10000.0,
+            1000.0,
+            1000.0,
+            1000.0,
+            None,
+            id="Big - No Channel(s)",
+        ),
+        pytest.param(
+            2056,
+            2048,
+            None,
+            None,
+            None,
+            None,
+            Channels(
+                matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
+                readout_position=(
+                    {
+                        "OP9": "top-left",
+                        "OP13": "top-left",
+                        "OP1": "bottom-left",
+                        "OP5": "bottom-left",
+                    }
+                ),
+            ),
+            id="Grid - 4 channel(s)",
+        ),
+        pytest.param(
+            2056,
+            2048,
+            None,
+            None,
+            None,
+            None,
+            Channels(
+                matrix=Matrix([["OP9", "OP13"]]),
+                readout_position=({"OP9": "top-left", "OP13": "top-left"}),
+            ),
+            id="Row - 2 channel(s)",
+        ),
+        pytest.param(
+            2056,
+            2048,
+            None,
+            None,
+            None,
+            None,
+            Channels(
+                matrix=Matrix([["OP9"], ["OP1"]]),
+                readout_position=({"OP9": "top-left", "OP1": "bottom-left"}),
+            ),
+            id="Column - 2 channel(s)",
+        ),
+    ],
 )
 def test_create_valid_geometry(
-    row, col, total_thickness, pixel_vert_size, pixel_horz_size, pixel_scale
+    row,
+    col,
+    total_thickness,
+    pixel_vert_size,
+    pixel_horz_size,
+    pixel_scale,
+    channels,
 ):
     """Test when creating a valid `Geometry` object."""
     _ = Geometry(
@@ -133,6 +198,7 @@ def test_create_valid_geometry(
         pixel_vert_size=pixel_vert_size,
         pixel_horz_size=pixel_horz_size,
         pixel_scale=pixel_scale,
+        channels=channels,
     )
 
 
@@ -222,6 +288,122 @@ def test_is_equal(other_obj, is_equal):
 
 
 @pytest.mark.parametrize(
+    "matrix, readout_position, row, col, expected_exception, expected_message",
+    [
+        # Matrix has more rows than specified
+        (
+            [["OP9", "OP13"], ["OP1", "OP5"], ["OP2", "OP6"]],
+            {
+                "OP9": "top-left",
+                "OP13": "top-left",
+                "OP1": "bottom-left",
+                "OP5": "bottom-left",
+                "OP2": "bottom-left",
+                "OP6": "bottom-left",
+            },
+            2,
+            2,
+            ValueError,
+            "Vertical size of the channel must be at least one pixel",
+        ),
+        # Matrix has more columns than specified
+        (
+            [["OP9", "OP13", "OP2"], ["OP1", "OP5", "OP6"]],
+            {
+                "OP9": "top-left",
+                "OP13": "top-left",
+                "OP1": "bottom-left",
+                "OP5": "bottom-left",
+                "OP2": "bottom-left",
+                "OP6": "bottom-left",
+            },
+            2,
+            2,
+            ValueError,
+            "Horizontal size of the channel must be at least one pixel",
+        ),
+    ],
+)
+def test_geometry_dimension_exceeding_validation(
+    matrix, readout_position, row, col, expected_exception, expected_message
+):
+    # Setup channels with specific readout positions
+    channels = Channels(
+        matrix=Matrix(matrix), readout_position=ReadoutPosition(readout_position)
+    )
+
+    with pytest.raises(expected_exception) as exc_info:
+        # Create an instance of Geometry with the given parameters
+        _ = Geometry(row=row, col=col, channels=channels)
+
+    assert str(exc_info.value) == expected_message
+
+
+@pytest.mark.parametrize(
+    "channel, exp_slices",
+    [
+        ("OP9", (slice(0, 1028), slice(0, 1024))),
+        ("OP13", (slice(0, 1028), slice(1024, 2048))),
+        ("OP1", (slice(1028, 2056), slice(0, 1024))),
+        ("OP5", (slice(1028, 2056), slice(1024, 2048))),
+    ],
+)
+def test_get_channel_coord_4_channels(channel, exp_slices):
+    """Test method 'get_channel_coord'."""
+    geometry = Geometry(
+        row=2056,
+        col=2048,
+        channels=Channels(
+            matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
+            readout_position=ReadoutPosition(
+                {
+                    "OP9": "top-left",
+                    "OP13": "top-left",
+                    "OP1": "bottom-left",
+                    "OP5": "bottom-left",
+                }
+            ),
+        ),
+    )
+
+    slices = geometry.get_channel_coord(channel)
+    assert slices == exp_slices
+
+
+def test_get_channel_coord_no_channels():
+    """Test method 'get_channel_coord' without channels defined."""
+    geometry = Geometry(row=2056, col=2048)
+
+    with pytest.raises(
+        RuntimeError, match="Missing 'channels' in Geometry configuration."
+    ):
+        _ = geometry.get_channel_coord("foo")
+
+
+@pytest.mark.parametrize("channel", ["foo", "op9", 9])
+def test_get_channel_coord_bad_channel(channel):
+    """Test method 'get_channel_coord' with a wrong input."""
+    geometry = Geometry(
+        row=2056,
+        col=2048,
+        channels=Channels(
+            matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
+            readout_position=ReadoutPosition(
+                {
+                    "OP9": "top-left",
+                    "OP13": "top-left",
+                    "OP1": "bottom-left",
+                    "OP5": "bottom-left",
+                }
+            ),
+        ),
+    )
+
+    with pytest.raises(KeyError, match=f"Cannot find channel {channel!r}"):
+        _ = geometry.get_channel_coord(channel)
+
+
+@pytest.mark.parametrize(
     "obj, exp_dict",
     [
         (
@@ -240,6 +422,7 @@ def test_is_equal(other_obj, is_equal):
                 "pixel_horz_size": 12.4,
                 "pixel_vert_size": 34.5,
                 "pixel_scale": 1.5,
+                "channels": None,
             },
         ),
     ],

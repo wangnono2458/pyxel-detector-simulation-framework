@@ -3,7 +3,26 @@
 ===================
 Detector properties
 ===================
+
 .. currentmodule:: pyxel.detectors
+
+Top-level functions
+===================
+
+.. autosummary::
+
+    Environment
+    Characteristics
+    Geometry
+    ReadoutProperties
+    Channels
+    Matrix
+    ReadoutPosition
+
+Detector attributes
+===================
+
+.. automodule:: pyxel.detectors
 
 .. autoclass:: Environment
     :members:
@@ -33,9 +52,38 @@ Detector properties
     :show-inheritance:
     :exclude-members:
 
+Channels
+========
+
+.. automodule:: pyxel.detectors.channels
+
+.. autoclass:: Channels
+    :members:
+    :inherited-members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members:
+
+.. autoclass:: Matrix
+    :members:
+    :inherited-members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members:
+
+.. autoclass:: ReadoutPosition
+    :members:
+    :inherited-members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members:
+
+
 CCD specific
 ============
 :term:`CCD` specific classes.
+
+.. currentmodule:: pyxel.detectors
 
 .. autoclass:: CCDGeometry
     :members:

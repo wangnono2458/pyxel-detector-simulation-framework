@@ -181,6 +181,19 @@
       "additionalProperties": false,
       "description": "Geometrical attributes of a :term:`APD`-based detector.",
       "properties": {
+        "channels": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Channels"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Channel layout for the detector, including number of channels, position, and readout direction.",
+          "title": "channels"
+        },
         "col": {
           "description": "Number of pixel columns.",
           "title": "col",
@@ -443,6 +456,19 @@
       "additionalProperties": false,
       "description": "Geometrical attributes of a :term:`CCD` detector.",
       "properties": {
+        "channels": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Channels"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Channel layout for the detector, including number of channels, position, and readout direction.",
+          "title": "channels"
+        },
         "col": {
           "description": "Number of pixel columns.",
           "title": "col",
@@ -541,6 +567,19 @@
       "additionalProperties": false,
       "description": "Geometrical attributes of a :term:`CMOS`-based detector.",
       "properties": {
+        "channels": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Channels"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Channel layout for the detector, including number of channels, position, and readout direction.",
+          "title": "channels"
+        },
         "col": {
           "description": "Number of pixel columns.",
           "title": "col",
@@ -825,6 +864,37 @@
       ],
       "type": "object"
     },
+    "Channels": {
+      "additionalProperties": false,
+      "properties": {
+        "matrix": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "readout_position": {
+          "additionalProperties": {
+            "enum": [
+              "top-left",
+              "top-right",
+              "bottom-left",
+              "bottom-right"
+            ],
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "matrix",
+        "readout_position"
+      ],
+      "type": "object"
+    },
     "Characteristics": {
       "additionalProperties": false,
       "description": "Characteristic attributes of the detector.",
@@ -867,13 +937,23 @@
           ]
         },
         "charge_to_volt_conversion": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
           "default": null,
           "description": "Sensitivity of charge readout. Unit: V/e-",
-          "title": "charge_to_volt_conversion",
-          "type": [
-            "number",
-            "null"
-          ]
+          "title": "charge_to_volt_conversion"
         },
         "full_well_capacity": {
           "default": null,
@@ -1943,6 +2023,19 @@
       "additionalProperties": false,
       "description": "Geometrical attributes of a :term:`MKID`-based detector.",
       "properties": {
+        "channels": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Channels"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Channel layout for the detector, including number of channels, position, and readout direction.",
+          "title": "channels"
+        },
         "col": {
           "description": "Number of pixel columns.",
           "title": "col",

@@ -10,7 +10,9 @@
 from collections.abc import Mapping
 
 import numpy as np
+from typing_extensions import Self
 
+from pyxel.detectors import Channels
 from pyxel.util import get_size
 
 
@@ -55,6 +57,8 @@ class Geometry:
         Horizontal dimension of pixel. Unit: um
     pixel_scale : float, optional
         Dimension of how much of the sky is covered by one pixel. Unit: arcsec/pixel
+    channels : Channels, None
+        Channel layout for the detector, including number of channels, position, and readout direction.
     """
 
     def __init__(
@@ -65,6 +69,7 @@ class Geometry:
         pixel_vert_size: float | None = None,  # unit: um
         pixel_horz_size: float | None = None,  # unit: um
         pixel_scale: float | None = None,  # unit: arcsec/pixel
+        channels: Channels | None = None,
     ):
         if row <= 0:
             raise ValueError("'row' must be strictly greater than 0.")
@@ -81,12 +86,36 @@ class Geometry:
         if pixel_horz_size and not (0.0 <= pixel_horz_size <= 1000.0):
             raise ValueError("'pixel_horz_size' must be between 0.0 and 1000.0.")
 
+        # TODO: Create a new class in channels to measure the matrix
+        if channels is not None:
+            # Vertical length: number of rows
+            vertical_channels, horizontal_channels = channels.matrix.shape
+
+            # vertical_channels = channels.matrix.shape[0]
+            # Horizontal lengths: number of elements in a row
+            # horizontal_channels = channels.matrix.shape[1]
+
+            if vertical_channels > row:
+                raise ValueError(
+                    "Vertical size of the channel must be at least one pixel"
+                )
+
+            if horizontal_channels > col:
+                raise ValueError(
+                    "Horizontal size of the channel must be at least one pixel"
+                )
+
         self._row = row
         self._col = col
         self._total_thickness = total_thickness
         self._pixel_vert_size = pixel_vert_size
         self._pixel_horz_size = pixel_horz_size
         self._pixel_scale: float | None = pixel_scale
+
+        # if channels:
+        #     channels.validate(geometry=self)
+
+        self.channels: Channels | None = channels
 
         self._numbytes = 0
 
@@ -97,7 +126,8 @@ class Geometry:
             f"total_thickness={self._total_thickness!r}, "
             f"pixel_vert_size={self._pixel_vert_size!r}, "
             f"pixel_horz_size={self._pixel_horz_size}), "
-            f"pixel_scale={self._pixel_scale})"
+            f"pixel_scale={self._pixel_scale},"
+            f"channels={self.channels!r})"
         )
 
     def __eq__(self, other) -> bool:
@@ -108,6 +138,7 @@ class Geometry:
             self._pixel_vert_size,
             self._pixel_horz_size,
             self._pixel_scale,
+            self.channels,
         ) == (
             other.row,
             other.col,
@@ -115,6 +146,7 @@ class Geometry:
             other._pixel_vert_size,
             other._pixel_horz_size,
             other._pixel_scale,
+            other.channels,
         )
 
     # def _repr_html_(self):
@@ -254,6 +286,33 @@ class Geometry:
             pixel_horizontal_size=self.pixel_horz_size,
         )
 
+    def get_channel_coord(self, channel: int | str) -> tuple[slice, slice]:
+        if self.channels is None:
+            raise RuntimeError("Missing 'channels' in Geometry configuration.")
+
+        # Convert the matrix to a NumPy array for easy searching
+        matrix_array = np.array(self.channels.matrix)
+        found_indices = np.argwhere(matrix_array == channel)
+
+        # Check if the channel was found
+        if found_indices.size == 0:
+            raise KeyError(f"Cannot find channel {channel!r}")
+
+        # Extract the first (and should be only) matching index
+        position_y, position_x = found_indices[0]
+        vertical_channels, horizontal_channels = matrix_array.shape
+        channel_vertical_size = self.row // vertical_channels
+        channel_horizontal_size = self.col // horizontal_channels
+
+        # Calculate the start and stop positions for the slices
+        start_x = position_x * channel_horizontal_size
+        start_y = position_y * channel_vertical_size
+        stop_x = start_x + channel_horizontal_size
+        stop_y = start_y + channel_vertical_size
+
+        # Return the slices for the y and x dimensions
+        return (slice(int(start_y), int(stop_y)), slice(int(start_x), int(stop_x)))
+
     @property
     def numbytes(self) -> int:
         """Recursively calculates object size in bytes using Pympler library.
@@ -275,10 +334,20 @@ class Geometry:
             "pixel_vert_size": self._pixel_vert_size,
             "pixel_horz_size": self._pixel_horz_size,
             "pixel_scale": self._pixel_scale,
+            "channels": self.channels.to_dict() if self.channels else None,
         }
 
     @classmethod
-    def from_dict(cls, dct: Mapping):
+    def from_dict(cls, dct: dict) -> Self:
         """Create a new instance of `Geometry` from a `dict`."""
         # TODO: This is a simplistic implementation. Improve this.
-        return cls(**dct)
+        new_dct: dict = dct.copy()
+
+        if "channels" in new_dct and new_dct["channels"] is not None:
+            channels_dct: Mapping = new_dct.pop("channels")
+
+            channels: Channels = Channels.from_dict(channels_dct)
+            return cls(**new_dct, channels=channels)
+
+        else:
+            return cls(**new_dct)
