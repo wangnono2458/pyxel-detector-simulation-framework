@@ -9,7 +9,6 @@
 import numpy as np
 import pytest
 
-from pyxel.data_structure import Signal
 from pyxel.detectors import (
     APD,
     CCD,
@@ -21,7 +20,6 @@ from pyxel.detectors import (
     Characteristics,
     CMOSGeometry,
     Environment,
-    Geometry,
 )
 from pyxel.detectors.channels import Matrix, ReadoutPosition
 from pyxel.models.charge_measurement import (
@@ -29,7 +27,6 @@ from pyxel.models.charge_measurement import (
     output_node_noise_cmos,
     readout_noise_saphira,
 )
-from tests.conftest import environment
 
 
 @pytest.fixture
@@ -213,7 +210,6 @@ def cmos_2x3_with_channels():
 def test_output_node_noise_cmos_with_channels(cmos_2x3_with_channels: CMOS):
     """Test model 'output_node_noise_cmos' with channel-specific conversions."""
     seed = 12345
-    rng = np.random.default_rng(seed=seed)
 
     detector = cmos_2x3_with_channels
     # Create a test pattern based on channel-specific gains:
