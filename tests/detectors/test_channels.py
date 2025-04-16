@@ -248,13 +248,19 @@ def test_matrix_successful_initialization(data):
             [["OP9", "OP13"]],
             {"OP9": "topleft", "OP13": "top-left"},
             r"Invalid readout position 'topleft' detected. Did you mean 'top-left'?",
-            id="row",
+            id="bad 'readout_position' 1",
         ),
         pytest.param(
             [["OP9"], ["OP13"]],
             {"OP9": "top-left", "OP13": "top-Right"},
             r"Invalid readout position 'top-Right' detected. Did you mean 'top-right'?",
-            id="column",
+            id="bad 'readout_position' 2",
+        ),
+        pytest.param(
+            [["OP9"], ["OP13"]],
+            {"OP9": "top-left", "OP13": "xxx"},
+            r"Invalid readout position 'xxx' detected.",
+            id="bad 'readout_position' 3",
         ),
     ],
 )
