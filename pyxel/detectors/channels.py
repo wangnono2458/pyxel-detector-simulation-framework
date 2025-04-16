@@ -149,15 +149,20 @@ class ReadoutPosition:
             wrong_positions = set(positions.values()).difference(self.VALID_POSITIONS)
 
             first_wrong_position, *_ = list(wrong_positions)
-            first_close_match_position, *_ = difflib.get_close_matches(
-                word=first_wrong_position,
-                possibilities=self.VALID_POSITIONS,
+            all_close_match_position = difflib.get_close_matches(
+                word=first_wrong_position, possibilities=self.VALID_POSITIONS
             )
 
-            raise ValueError(
-                f"Invalid readout position {first_wrong_position!r} detected. "
-                f"Did you mean {first_close_match_position!r}?"
-            )
+            match all_close_match_position:
+                case [first_close_match_position, *_]:
+                    raise ValueError(
+                        f"Invalid readout position {first_wrong_position!r} detected. "
+                        f"Did you mean {first_close_match_position!r}?"
+                    )
+                case _:
+                    raise ValueError(
+                        f"Invalid readout position {first_wrong_position!r} detected."
+                    )
 
         self.positions = positions
 
