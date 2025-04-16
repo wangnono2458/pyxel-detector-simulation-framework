@@ -22,7 +22,8 @@ This class is **provisional** and not yet stable.
 
 ### Core
 * Add [`Channels`](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html).
-  (See [!1033](https://gitlab.com/esa/pyxel/-/merge_requests/1033)).
+  (See [!1033](https://gitlab.com/esa/pyxel/-/merge_requests/1033) and 
+  [!1037](https://gitlab.com/esa/pyxel/-/merge_requests/1037)).
 
 ### Documentation
 
