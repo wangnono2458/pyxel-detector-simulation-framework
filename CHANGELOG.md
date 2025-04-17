@@ -10,13 +10,31 @@ Minor releases include updated stdlib stubs from typeshed.
 Pyxel doesn't use SemVer anymore, since most minor releases have at least minor backward incompatible changes.
 
 
-## UNRELEASED
+## 2.9 / 2025-04-17
 
 This release brings a number of bug fixes and improvements.
 
-### New class `Channel`
+### 📸 New class `Channel`
 
 New class to characterize detectors with multi-channels and different readout position.
+More information at this [link](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html).
+
+**Example configuration snippet in YAML**
+
+Here’s an example of how channel configuration might appear in a YAML-based file:
+```yaml
+geometry:
+   row: 1028
+   col: 1024
+   channels:
+     matrix: [[OP9, OP13],
+              [OP1, OP5 ]]
+     readout_position:
+       - OP9:  top-left
+       - OP13: top-left
+       - OP1:  bottom-left
+       - OP5:  bottom-left
+ ```
 
 This class is **provisional** and not yet stable.
 
@@ -24,10 +42,6 @@ This class is **provisional** and not yet stable.
 * Add [`Channels`](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html).
   (See [!1033](https://gitlab.com/esa/pyxel/-/merge_requests/1033) and 
   [!1037](https://gitlab.com/esa/pyxel/-/merge_requests/1037)).
-
-### Documentation
-
-### Models
 
 ### Others
 * Fix issue with sphinx 8.2.
