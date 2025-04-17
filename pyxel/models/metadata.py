@@ -1,0 +1,73 @@
+#  Copyright (c) European Space Agency, 2020.
+#
+#  This file is subject to the terms and conditions defined in file 'LICENCE.txt', which
+#  is part of this Pyxel package. No part of the package, including
+#  this file, may be copied, modified, propagated, or distributed except according to
+#  the terms contained in the file ‘LICENCE.txt’.
+
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Literal
+
+from typing_extensions import Self
+
+
+@dataclass
+class MetadataModel:
+    """Store metadata information for a single model."""
+
+    name: str
+    detector: Literal["all", "CCD", "CMOS", "APD", "MKID"] = "all"
+    status: Literal["draft", "validated", None] = None
+    description: str | None = None
+    notes: str | list[str] | None = None
+    config: str | None = None
+    notebooks: list[str] | None = None
+
+
+@dataclass
+class MetadataGroup:
+    """Store metadata information for all models from a Model Group."""
+
+    group: Literal[
+        "scene_generation",
+        "photon_collection",
+        "charge_generation",
+        "charge_collection",
+        "phasing",
+        "charge_transfer",
+        "charge_measurement",
+        "readout_electronics",
+        "data_processing",
+    ]
+    models: list[MetadataModel]
+
+    @classmethod
+    def from_yaml(cls, filename: str | Path) -> Self:
+        """Create a new MetadataGroup from a YAML file."""
+        # TODO: Use JSON Schema to check if filename is valid
+        # TODO: Use YAML to read the content
+        raise NotImplementedError
+
+
+def create_json_schema_file():
+    """Create 'metadata.schema.json' file."""
+    import json
+
+    from apischema.json_schema import (  # pip install apischema
+        JsonSchemaVersion,
+        deserialization_schema,
+    )
+
+    dct = deserialization_schema(
+        MetadataGroup,
+        version=JsonSchemaVersion.DRAFT_2020_12,
+        all_refs=True,
+    )
+
+    with Path("metadata.schema.json").open("w") as fh:
+        json.dump(obj=dct, fp=fh, indent=2, sort_keys=True)
+
+
+if __name__ == "__main__":
+    create_json_schema_file()
