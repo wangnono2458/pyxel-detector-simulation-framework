@@ -33,12 +33,32 @@
     "MetadataModel": {
       "additionalProperties": false,
       "properties": {
-        "config": {
+        "authors": {
           "default": null,
+          "items": {
+            "type": "string"
+          },
           "type": [
-            "string",
+            "array",
             "null"
           ]
+        },
+        "config": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "description": {
           "default": null,
@@ -48,15 +68,31 @@
           ]
         },
         "detector": {
-          "default": "all",
-          "enum": [
-            "all",
-            "CCD",
-            "CMOS",
-            "APD",
-            "MKID"
-          ],
-          "type": "string"
+          "anyOf": [
+            {
+              "enum": [
+                "all",
+                "CCD",
+                "CMOS",
+                "APD",
+                "MKID"
+              ],
+              "type": "string"
+            },
+            {
+              "items": {
+                "enum": [
+                  "all",
+                  "CCD",
+                  "CMOS",
+                  "APD",
+                  "MKID"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ]
         },
         "name": {
           "type": "string"
@@ -98,6 +134,13 @@
           "type": [
             "null",
             "string"
+          ]
+        },
+        "warnings": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
           ]
         }
       },

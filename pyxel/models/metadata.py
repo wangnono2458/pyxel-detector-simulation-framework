@@ -7,9 +7,11 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, TypeAlias
 
 from typing_extensions import Self
+
+DetectorType: TypeAlias = Literal["all", "CCD", "CMOS", "APD", "MKID"]
 
 
 @dataclass
@@ -17,11 +19,13 @@ class MetadataModel:
     """Store metadata information for a single model."""
 
     name: str
-    detector: Literal["all", "CCD", "CMOS", "APD", "MKID"] = "all"
+    detector: DetectorType | list[DetectorType] = "all"
     status: Literal["draft", "validated", None] = None
+    authors: list[str] | None = None
     description: str | None = None
     notes: str | list[str] | None = None
-    config: str | None = None
+    warnings: str | None = None
+    config: str | list[str] | None = None
     notebooks: list[str] | None = None
 
 
