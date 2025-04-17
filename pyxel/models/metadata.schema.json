@@ -1,0 +1,112 @@
+{
+  "$defs": {
+    "MetadataGroup": {
+      "additionalProperties": false,
+      "properties": {
+        "group": {
+          "enum": [
+            "scene_generation",
+            "photon_collection",
+            "charge_generation",
+            "charge_collection",
+            "phasing",
+            "charge_transfer",
+            "charge_measurement",
+            "readout_electronics",
+            "data_processing"
+          ],
+          "type": "string"
+        },
+        "models": {
+          "items": {
+            "$ref": "#/$defs/MetadataModel"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "group",
+        "models"
+      ],
+      "type": "object"
+    },
+    "MetadataModel": {
+      "additionalProperties": false,
+      "properties": {
+        "config": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "detector": {
+          "default": "all",
+          "enum": [
+            "all",
+            "CCD",
+            "CMOS",
+            "APD",
+            "MKID"
+          ],
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "notebooks": {
+          "default": null,
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "status": {
+          "default": null,
+          "enum": [
+            "draft",
+            "validated",
+            null
+          ],
+          "type": [
+            "null",
+            "string"
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/MetadataGroup",
+  "$schema": "http://json-schema.org/draft/2020-12/schema#"
+}
