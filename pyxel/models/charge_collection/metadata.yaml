@@ -1,0 +1,52 @@
+# $schema: ...
+group: charge_collection
+models:
+  - name: simple_collection
+    detector: all
+    status: null
+    description: >
+      Simple collection model is the simplest model of charge collection and
+      necessary to fill up :py:class:`~pyxel.data_structure.Pixel` array when no other collection model is used.
+      If charge inside :py:class:`~pyxel.data_structure.Charge` class is stored in an ``numpy`` array,
+      arrays will be the same. If charge is in the form of ``Pandas`` dataframe and
+      representing 3D point cloud of charges inside the detector,
+      calling ``array`` property of :py:class:`~pyxel.data_structure.Charge`
+      will assign charges to the closest pixel and sum the values.
+    config:
+      - name: simple_collection
+        func: pyxel.models.charge_collection.simple_collection
+        enabled: true
+
+  - name: simple_full_well
+    detector: all
+    status: null
+    description: >
+      This model can be used to limit the amount of charge in :py:class:`~pyxel.data_structure.Pixel` array
+      due to full well capacity. Values will be clipped to the value of the full well capacity.
+      The model uses full well capacity value specified in :py:class:`~pyxel.detectors.Characteristics` of the
+      :py:class:`~pyxel.detectors.Detector`, unless providing an argument ``fwc`` directly as the model argument.
+    config:
+      - name: simple_full_well
+        func: pyxel.models.chargwe_collection.simple_full_well
+        enabled: true
+        arguments:
+            fwc: 1000  # optional
+
+
+
+#version: 1.0
+#status: draft  # validated, deprecated, in review
+#authors:
+#  - xxx <xxx@yyy.com>
+#notebooks:
+#  - xxx
+#history:
+#  - version: xxx
+#    date: xxx
+#    changes: xxx
+#    organization: xxx
+#    authors:
+#      - xxx
+#references:
+#  - https://sksss
+#  - "doi:xxxx"
