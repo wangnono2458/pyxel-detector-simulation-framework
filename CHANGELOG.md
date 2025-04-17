@@ -10,6 +10,17 @@ Minor releases include updated stdlib stubs from typeshed.
 Pyxel doesn't use SemVer anymore, since most minor releases have at least minor backward incompatible changes.
 
 
+## UNRELEASED
+
+### Core
+
+### Documentation
+
+### Models
+
+### Others
+
+
 ## 2.9 / 2025-04-17
 
 This release brings a number of bug fixes and improvements.
