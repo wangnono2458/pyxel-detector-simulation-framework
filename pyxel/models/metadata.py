@@ -5,6 +5,8 @@
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
 
+"""Sub-package for metadata."""
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, TypeAlias
