@@ -297,8 +297,8 @@ class ModelFittingDataTree(ProblemSingleObjective):
                     low_values = np.log10(low_values)
                     high_values = np.log10(high_values)
 
-                lbd += low_values.tolist()  # type: ignore[arg-type]
-                ubd += high_values.tolist()  # type: ignore[arg-type]
+                lbd += low_values.tolist()
+                ubd += high_values.tolist()
 
             else:
                 raise ValueError(

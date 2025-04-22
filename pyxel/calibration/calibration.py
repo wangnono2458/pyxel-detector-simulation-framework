@@ -144,7 +144,7 @@ class Calibration:
 
         if pygmo_seed is None:
             rng = np.random.default_rng()
-            self._pygmo_seed: int = rng.integers(100000)
+            self._pygmo_seed: int = int(rng.integers(100_000))
         else:
             self._pygmo_seed = pygmo_seed
 
