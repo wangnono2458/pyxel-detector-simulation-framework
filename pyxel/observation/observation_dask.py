@@ -274,7 +274,7 @@ def run_pipelines_with_dask(
 
     # Run the pipeline for the first parameter set to extract metadata
     first_param_tuple: tuple = (
-        params_dataarray.head(1)  # type: ignore[assignment] # Get the first parameter
+        params_dataarray.head(1)  # Get the first parameter
         .squeeze()  # Remove all dimensions of length 1
         .to_numpy()  # Convert to a numpy array
         .tolist()  # Convert to a tuple
