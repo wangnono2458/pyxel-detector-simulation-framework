@@ -19,6 +19,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 ### Models
 
 ### Others
+* Fix issues with mypy and numpy 2.2.5.
+  (See [!1040](https://gitlab.com/esa/pyxel/-/merge_requests/1040)).
 
 
 ## 2.9 / 2025-04-17
