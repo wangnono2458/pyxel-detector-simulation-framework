@@ -2,6 +2,7 @@
 group: charge_collection
 models:
   - name: simple_collection
+    full_name: Simple collection
     detector: all
     status: null
     description: >
@@ -18,6 +19,7 @@ models:
         enabled: true
 
   - name: simple_full_well
+    full_name: Simple full well
     detector: all
     status: null
     description: >
@@ -33,6 +35,7 @@ models:
             fwc: 1000  # optional
 
   - name: fixed_pattern_noise
+    full_name: Fixed pattern noise
     detector: all
     status: null
     description: >
@@ -58,6 +61,7 @@ models:
           #fixed_pattern_noise_factor: 0.01
 
   - name: simple_ipc
+    full_name: Inter-pixel capacitance
     detector: all  # for CMOS ??
     status: null
     description: >
@@ -94,6 +98,7 @@ models:
       - :external+pyxel_data:doc:`use_cases/HxRG/h2rg`
 
   - name: simple_persistence
+    full_name: Simple Persistence
     detector: CMOS
     status: null
     description: >
@@ -117,6 +122,7 @@ models:
       - :external+pyxel_data:doc:`use_cases/HxRG/h2rg`
 
   - name: persistence
+    full_name: Persistence
     detector: CMOS
     status: null
     description: >

@@ -5,7 +5,20 @@
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
 
-"""Sub-package for metadata."""
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "apischema",
+#     "typing-extensions",
+# ]
+# ///
+
+"""Sub-package for metadata.
+
+Usage
+-----
+$ uv run metadata.py
+"""
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -21,6 +34,7 @@ class MetadataModel:
     """Store metadata information for a single model."""
 
     name: str
+    full_name: str
     detector: DetectorType | list[DetectorType] = "all"
     status: Literal["draft", "validated", None] = None
     authors: list[str] | None = None
@@ -59,18 +73,21 @@ class MetadataGroup:
 def create_json_schema_file():
     """Create 'metadata.schema.json' file."""
     import json
+    import logging
 
     from apischema.json_schema import (  # pip install apischema
         JsonSchemaVersion,
         deserialization_schema,
     )
 
+    logging.info("Create JSON Schema")
     dct = deserialization_schema(
         MetadataGroup,
         version=JsonSchemaVersion.DRAFT_2020_12,
         all_refs=True,
     )
 
+    logging.info("Save JSON Schema")
     with Path("metadata.schema.json").open("w") as fh:
         json.dump(obj=dct, fp=fh, indent=2, sort_keys=True)
 

@@ -94,6 +94,9 @@
             }
           ]
         },
+        "full_name": {
+          "type": "string"
+        },
         "name": {
           "type": "string"
         },
@@ -132,8 +135,8 @@
             null
           ],
           "type": [
-            "null",
-            "string"
+            "string",
+            "null"
           ]
         },
         "warnings": {
@@ -145,7 +148,8 @@
         }
       },
       "required": [
-        "name"
+        "name",
+        "full_name"
       ],
       "type": "object"
     }

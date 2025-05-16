@@ -2,6 +2,7 @@
 group: charge_generation
 models:
   - name: simple_conversion
+    full_name: Simple photoconversion
     detector: all
     status: null
     description: >
@@ -26,6 +27,7 @@ models:
           quantum_efficiency: 0.8
 
   - name: conversion_with_qe_map
+    full_name: Conversion with custom QE map
     detector: all
     status: null
     description: >
@@ -50,6 +52,7 @@ models:
       - :external+pyxel_data:doc:`use_cases/HxRG/h2rg`
 
   - name: apply_qe_curve
+    full_name: Apply QE curve
     detector: all
     status: null
     description: >
@@ -71,6 +74,7 @@ models:
           qe_col_name: "QE"
 
   - name: conversion_with_3d_qe_map
+    full_name: Conversion with 3D QE map
     detector: all
     status: null
     description: >
@@ -92,6 +96,7 @@ models:
           filename: "qe_map.nc"
 
   - name: exponential_qe
+    full_name: Exponential absorption law
     detector: all
     status: null
     description: >
@@ -170,6 +175,7 @@ models:
       
 
   - name: load_charge
+    full_name: Load charge
     detector: all
     status: null
     description: >
@@ -190,6 +196,7 @@ models:
           position: [0,0]
 
   - name: charge_blocks
+    full_name: Charge injection
     detector: CCD
     status: null
     description: >
@@ -207,6 +214,7 @@ models:
           block_end: 50
 
   - name: charge_deposition
+    full_name: Charge deposition model
     detector: all
     status: null
     description: >
@@ -235,6 +243,7 @@ models:
           stopping_power_curve: data/protons-in-silicon_stopping-power.csv
 
   - name: charge_deposition_in_mct
+    full_name: Charge deposition model in MCT
     detector: all
     status: null
     description: >
@@ -257,6 +266,7 @@ models:
           stopping_power_curve: data/mct-stopping-power.csv
 
   - name: cosmix
+    full_name: CosmiX cosmic ray model
     detector: all
     status: null
     authors:
@@ -342,6 +352,7 @@ models:
       - :external+pyxel_data:doc:`use_cases/HxRG/h2rg`
 
   - name: dark_current
+    full_name: Dark current
     detector: all
     status: null
     description: >
@@ -394,6 +405,7 @@ models:
       - :external+pyxel_data:doc:`examples/models/dark_current/dark_current_Si`
 
   - name: dark_current_rule07
+    full_name: Dark current rule07
     detector:
       - CCD
       - CMOS
@@ -421,6 +433,7 @@ models:
       - :external+pyxel_data:doc:`examples/models/dark_current/dark_current_rule07`
 
   - name: simple_dark_current
+    full_name: Simple dark current
     detector: all
     status: null
     description: With this model you can add dark current to a :py:class:`~pyxel.detectors.Detector` object.
@@ -432,6 +445,7 @@ models:
           dark_rate: 10.0
 
   - name: apd_gain
+    full_name: APD gain
     detector: APD
     status: null
     description: >
@@ -447,6 +461,7 @@ models:
       - :external+pyxel_data:doc:`use_cases/APD/saphira`
         
   - name: dark_current_saphira
+    full_name: Dark current Saphira
     detector: APD
     status: null
     description: >
@@ -467,6 +482,7 @@ models:
       - :external+pyxel_data:doc:`use_cases/APD/saphira`
 
   - name: radiation_induced_dark_current
+    full_name: Radiation induced Dark Current
     detector:
       - CCD
       - CMOS
