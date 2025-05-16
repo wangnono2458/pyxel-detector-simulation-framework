@@ -1,0 +1,63 @@
+# $schema: ../metadata.schema.json
+group: charge_measurement
+models:
+  - name: simple_measurement
+    full_name: Simple charge measurement
+    detector: all
+    status: null
+    description: >
+      Convert the pixels array to the signal array.
+    config: >
+      - name: simple_measurement
+        func: pyxel.models.charge_measurement.simple_measurement
+        enabled: true
+        arguments:
+          noise:
+            - gain: 1.    # Optional
+
+  - name: dc_offset
+    full_name: DC offset
+    detector: all
+    status: null
+    description: >
+      Add a DC offset to signal array of detector.
+    config: >
+      - name: dc_offset
+        func: pyxel.models.charge_measurement.dc_offset
+        enabled: true
+        arguments:
+          offset: 0.1
+
+  - name: output_pixel_reset_voltage_apd
+    full_name: Output pixel reset voltage APD
+    detector: APD
+    status: null
+    description: >
+      Add output pixel reset voltage to the signal array of the :term:`APD` detector.
+    config: >
+      - name: output_pixel_reset_voltage_apd
+        func: pyxel.models.charge_measurement.output_pixel_reset_voltage_apd
+        enabled: true
+        arguments:
+          roic_drop: 3.3
+    notebooks:
+      - use_cases/APD/saphira
+
+  - name: ktc_noise
+    full_name: kTC reset noise
+    detector: APD
+    status: null
+    description: >
+      Add kTC reset noise to the signal array of the detector object.
+    config: >
+      - name: ktc_noise
+        func: pyxel.models.charge_measurement.ktc_noise
+        enabled: true
+        arguments:
+          node_capacitance: 30.e-15
+    notes: >
+      When using with the :term:`APD` detector, node capacitance is calculated from 
+      detector characteristics.
+    notebooks:
+      - use_cases/CMOS/cmos
+      - use_cases/APD/saphira
