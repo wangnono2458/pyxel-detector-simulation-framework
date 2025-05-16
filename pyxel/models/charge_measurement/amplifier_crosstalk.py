@@ -7,14 +7,17 @@
 
 """Amplifier crosstalk model: https://arxiv.org/abs/1808.00790."""
 
+import warnings
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numba
 import numpy as np
+from openpyxl.styles.builtins import warning
 
 from pyxel import load_table
+from pyxel.detectors.geometry import Channels
 
 if TYPE_CHECKING:
     from pyxel.detectors import Detector
@@ -88,6 +91,14 @@ def get_channel_slices(
         slices.append([channel_slice_x, channel_slice_y])
 
     return slices
+
+
+def convert_matrix_crosstalk():
+    raise NotImplementedError
+
+
+def convert_readout_crosstalk():
+    raise NotImplementedError
 
 
 def get_matrix(coupling_matrix: str | Path | Sequence) -> np.ndarray:
@@ -211,8 +222,8 @@ def crosstalk_signal_dc(
 def dc_crosstalk(
     detector: "Detector",
     coupling_matrix: str | Path | Sequence,
-    channel_matrix: Sequence,
-    readout_directions: Sequence,
+    channel_matrix: Sequence | None = None,
+    readout_directions: Sequence | None = None,
 ) -> None:
     """Apply DC crosstalk signal to detector signal.
 
@@ -231,8 +242,42 @@ def dc_crosstalk(
     """
     # Validation and conversion
     cpl_matrix_2d: np.ndarray = get_matrix(coupling_matrix)
-    ch_matrix: np.ndarray = np.array(channel_matrix)
-    directions: np.ndarray = np.array(readout_directions)
+
+    if detector.geometry.channels.matrix:
+        if channel_matrix is None:
+            ch_matrix = convert_matrix_crosstalk(detector.geometry.channels.matrix)
+        else:
+            if detector.geometry.channels.matrix == channel_matrix:
+                ch_matrix = np.ndarray = np.array(channel_matrix)
+            else:
+                raise ValueError("Not coherent channel matrices!")
+    if detector.geometry.channels.matrix is None:
+        if channel_matrix is None:
+            ...
+        else:
+            ch_matrix = np.ndarray = np.array(channel_matrix)
+            warnings.warn(
+                "Channel matrix is not specified in the general geometry of the detector."
+            )
+
+    if detector.geometry.channels.readout_position:
+        if readout_directions is None:
+            directions = convert_readout_crosstalk(
+                detector.geometry.channels.readout_position
+            )
+        else:
+            if detector.geometry.channels.readout_position == readout_directions:
+                directions = detector.geometry.channels.readout_position
+            else:
+                raise ValueError("Not coherent direction matrices!")
+    if detector.geometry.channels.readout_position is None:
+        if readout_directions is None:
+            ...
+        else:
+            directions: np.ndarray = np.array(readout_directions)
+            warnings.warn(
+                "Direction matrix is not specified in the general geometry of the detector."
+            )
 
     if cpl_matrix_2d.ndim != 2:
         raise ValueError("Expecting 2D 'coupling_matrix'.")
@@ -270,8 +315,8 @@ def dc_crosstalk(
 def ac_crosstalk(
     detector: "Detector",
     coupling_matrix: str | Path | Sequence,
-    channel_matrix: Sequence,
-    readout_directions: Sequence,
+    channel_matrix: Sequence | None = None,
+    readout_directions: Sequence | None = None,
 ) -> None:
     """Apply AC crosstalk signal to detector signal.
 
