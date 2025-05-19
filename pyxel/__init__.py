@@ -17,7 +17,14 @@ from .options import options_wrapper
 from .show_versions import show_versions
 from .inputs import load_image, load_table, load_datacube, load_header
 from .configuration import load, loads, copy_config_file, Configuration
-from .run import calibration_mode, exposure_mode, observation_mode, run, run_mode
+from .run import (
+    calibration_mode,
+    exposure_mode,
+    observation_mode,
+    run,
+    run_mode,
+    run_mode_buckets,
+)
 from .notebook import (
     display_detector,
     display_scene,
