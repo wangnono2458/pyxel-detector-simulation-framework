@@ -82,6 +82,8 @@ Example:
   [`dc_crosstalk`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_measurement_models.html#dc-crosstalk)
   from [Charge Measurement](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_measurement_models.html#) groups.
   (See [!1040](https://gitlab.com/esa/pyxel/-/merge_requests/1040)).
+* Add metadata information for all models.
+  (See [!1036](https://gitlab.com/esa/pyxel/-/merge_requests/1036)).
 
 ### Others
 * Fix issues with mypy and numpy 2.2.5.
