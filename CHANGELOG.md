@@ -14,7 +14,7 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 
 This release includes various bug fixes and feature enhancements to improve usability and flexibility.
 
-### Improved error messages for missing parameters
+### 🚨 Improved error messages for missing parameters
 
 Clearer and more informative error messages are now raised when attempting to access uninitialized parameters from the 
 `characteristics`, `geometry` or `environment` sections of a detector
@@ -34,11 +34,28 @@ To fix this issue, you can either:
           pre_amplification:...
 ```
 
+### 🆕 Function `pyxel.run_mode` now accepts `Configuration` objects
+
+The [`pyxel.run_mode`](https://esa.gitlab.io/pyxel/doc/stable/references/api/run.html#pyxel.run_mode) function can noew
+be used directly with a [`Configuration`](https://esa.gitlab.io/pyxel/doc/stable/references/api/configuration.html) object.
+
+Example:
+```python
+>>> cfg = pyxel.load('configuration.yaml')
+>>> cfg.detector.environment.temperature = 100.  # Modify configuration if needed
+
+>>> result = pyxel.run_mode(cfg)  # ✅ NEW: Configuration object support
+>>> result
+<xarray.DataTree> ...
+```
+
 ### Core
 * Add better error message when a parameter from `characteristics`, `geometry` and `environment` is not provided.
   (See [!1043](https://gitlab.com/esa/pyxel/-/merge_requests/1043)).
 * Cannot read simple YAML file.
   (See [!1041](https://gitlab.com/esa/pyxel/-/merge_requests/1041)).
+* Use `Configuration` object directly with `pyxel.run_mode`.
+  (See [!1042](https://gitlab.com/esa/pyxel/-/merge_requests/1042)).
 
 ### Documentation
 
