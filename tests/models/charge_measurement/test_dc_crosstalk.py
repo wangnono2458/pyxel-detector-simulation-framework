@@ -8,8 +8,20 @@
 import numpy as np
 import pytest
 
-from pyxel.detectors import CCD, CCDGeometry, Characteristics, Environment
+from pyxel.detectors import (
+    CCD,
+    CCDGeometry,
+    Channels,
+    Characteristics,
+    Environment,
+    Matrix,
+    ReadoutPosition,
+)
 from pyxel.models.charge_measurement import dc_crosstalk
+from pyxel.models.charge_measurement.amplifier_crosstalk import (
+    convert_matrix_crosstalk,
+    convert_readout_crosstalk,
+)
 
 
 @pytest.fixture
@@ -105,3 +117,74 @@ def test_dc_crosstalk_invalid_params(
             channel_matrix=channel_matrix,
             readout_directions=readout_directions,
         )
+
+
+@pytest.mark.parametrize(
+    "matrix, exp_array",
+    [
+        pytest.param(
+            Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
+            np.array([1, 2, 3, 4], dtype=int),
+            id="2x2",
+        ),
+        pytest.param(
+            Matrix([["OP9", "OP13", "OP1", "OP5"]]),
+            np.array([1, 2, 3, 4], dtype=int),
+            id="1x4",
+        ),
+        pytest.param(
+            Matrix([["OP9"], ["OP13"], ["OP1"], ["OP5"]]),
+            np.array([1, 2, 3, 4], dtype=int),
+            id="4x1",
+        ),
+    ],
+)
+def test_convert_matrix_crosstalk(matrix: Matrix, exp_array: np.ndarray):
+    """Test function 'convert_matrix_crosstalk'."""
+    data = convert_matrix_crosstalk(matrix)
+
+    assert isinstance(data, np.ndarray)
+    np.testing.assert_allclose(data, exp_array)
+
+
+@pytest.mark.parametrize(
+    "channels, exp_array",
+    [
+        pytest.param(
+            Channels(
+                matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
+                readout_position=ReadoutPosition(
+                    {
+                        "OP9": "top-left",
+                        "OP13": "top-right",
+                        "OP1": "bottom-left",
+                        "OP5": "bottom-right",
+                    }
+                ),
+            ),
+            np.array([1, 2, 3, 4]),
+            id="2x2",
+        ),
+        pytest.param(
+            Channels(
+                matrix=Matrix([["OP5", "OP1"], ["OP13", "OP9"]]),
+                readout_position=ReadoutPosition(
+                    {
+                        "OP9": "top-left",
+                        "OP13": "top-right",
+                        "OP1": "bottom-left",
+                        "OP5": "bottom-right",
+                    }
+                ),
+            ),
+            np.array([4, 3, 2, 1]),
+            id="2x2 reversed",
+        ),
+    ],
+)
+def test_convert_readout_crosstalk(channels: Channels, exp_array: np.ndarray):
+    """Test function 'convert_readout_crosstalk'."""
+    data = convert_readout_crosstalk(channels)
+
+    assert isinstance(data, np.ndarray)
+    np.testing.assert_allclose(data, exp_array)
