@@ -30,7 +30,8 @@ def test_environment(temperature, wavelength):
     # Test getter 'Environment.temperature'
     if temperature is None:
         with pytest.raises(
-            ValueError, match=r"'temperature' not specified in detector environment"
+            ValueError,
+            match=r"Missing required parameter 'temperature' in 'environment'",
         ):
             _ = obj.temperature
     else:
@@ -39,7 +40,8 @@ def test_environment(temperature, wavelength):
     # Test getter 'Environment.wavelength'
     if wavelength is None:
         with pytest.raises(
-            ValueError, match=r"'wavelength' not specified in detector environment"
+            ValueError,
+            match=r"Missing required parameter 'wavelength' in 'environment'",
         ):
             _ = obj.wavelength
     else:

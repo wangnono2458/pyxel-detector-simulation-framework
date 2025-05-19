@@ -12,25 +12,10 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from pyxel.util import get_size
+from pyxel.util import get_size, get_uninitialized_error
 
 if TYPE_CHECKING:
     from pyxel.detectors import Geometry
-
-
-def _get_uninitialized_error(name: str, parent_name: str) -> str:
-    return (
-        f"Missing required parameter '{name}' in '{parent_name}'.\n"
-        f"This parameter must be defined in your detector 'detector.{parent_name}.{name}'.\n\n"
-        f"To fix this issue, you can either:\n"
-        f"  - Set the parameter directly in your Python code (see following example):\n"
-        f"      >>> config = pyxel.load_config(...)\n"
-        f"      >>> config.detector.{parent_name}.{name} = ...\n\n"
-        f"  - Or define it directly in your YAML configuration file (see following example):\n"
-        f"      detector:\n"
-        f"        {parent_name}:\n"
-        f"          {name}:..."
-    )
 
 
 class Characteristics:
@@ -182,7 +167,7 @@ class Characteristics:
         """Get Quantum efficiency."""
         if self._quantum_efficiency is None:
             raise ValueError(
-                _get_uninitialized_error(
+                get_uninitialized_error(
                     name="quantum_efficiency",
                     parent_name="characteristics",
                 )
@@ -205,7 +190,7 @@ class Characteristics:
         # if self._channels_gain is None:
         if self._charge_to_volt_conversion is None:
             raise ValueError(
-                _get_uninitialized_error(
+                get_uninitialized_error(
                     name="charge_to_volt_conversion",
                     parent_name="characteristics",
                 )
@@ -269,7 +254,7 @@ class Characteristics:
     def channels_gain(self) -> float | np.ndarray:
         if self._channels_gain is None:
             raise ValueError(
-                _get_uninitialized_error(
+                get_uninitialized_error(
                     name="channels_gain",
                     parent_name="characteristics",
                 )
@@ -282,7 +267,7 @@ class Characteristics:
         """Get voltage pre-amplification gain."""
         if self._pre_amplification is None:
             raise ValueError(
-                _get_uninitialized_error(
+                get_uninitialized_error(
                     name="pre_amplification",
                     parent_name="characteristics",
                 )
@@ -303,7 +288,7 @@ class Characteristics:
         """Get bit resolution of the Analog-Digital Converter."""
         if self._adc_bit_resolution is None:
             raise ValueError(
-                _get_uninitialized_error(
+                get_uninitialized_error(
                     name="adc_bit_resolution",
                     parent_name="characteristics",
                 )
@@ -321,7 +306,7 @@ class Characteristics:
         """Get voltage range of the Analog-Digital Converter."""
         if self._adc_voltage_range is None:
             raise ValueError(
-                _get_uninitialized_error(
+                get_uninitialized_error(
                     name="adc_voltage_range",
                     parent_name="characteristics",
                 )
@@ -339,7 +324,7 @@ class Characteristics:
         """Get Full well capacity."""
         if self._full_well_capacity is None:
             raise ValueError(
-                _get_uninitialized_error(
+                get_uninitialized_error(
                     name="full_well_capacity",
                     parent_name="characteristics",
                 )

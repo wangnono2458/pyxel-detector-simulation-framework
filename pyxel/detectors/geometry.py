@@ -13,7 +13,7 @@ import numpy as np
 from typing_extensions import Self
 
 from pyxel.detectors import Channels
-from pyxel.util import get_size
+from pyxel.util import get_size, get_uninitialized_error
 
 
 def get_vertical_pixel_center_pos(
@@ -105,11 +105,11 @@ class Geometry:
                     "Horizontal size of the channel must be at least one pixel"
                 )
 
-        self._row = row
-        self._col = col
-        self._total_thickness = total_thickness
-        self._pixel_vert_size = pixel_vert_size
-        self._pixel_horz_size = pixel_horz_size
+        self._row: int = row
+        self._col: int = col
+        self._total_thickness: float | None = total_thickness
+        self._pixel_vert_size: float | None = pixel_vert_size
+        self._pixel_horz_size: float | None = pixel_horz_size
         self._pixel_scale: float | None = pixel_scale
 
         # if channels:
@@ -187,10 +187,15 @@ class Geometry:
     @property
     def total_thickness(self) -> float:
         """Get Thickness of detector."""
-        if self._total_thickness:
-            return self._total_thickness
-        else:
-            raise ValueError("'total_thickness' not specified in detector geometry.")
+        if self._total_thickness is None:
+            raise ValueError(
+                get_uninitialized_error(
+                    name="total_thickness",
+                    parent_name="geometry",
+                )
+            )
+
+        return self._total_thickness
 
     @total_thickness.setter
     def total_thickness(self, value: float) -> None:
@@ -203,10 +208,15 @@ class Geometry:
     @property
     def pixel_vert_size(self) -> float:
         """Get Vertical dimension of pixel."""
-        if self._pixel_vert_size:
-            return self._pixel_vert_size
-        else:
-            raise ValueError("'pixel_vert_size' not specified in detector geometry.")
+        if self._pixel_vert_size is None:
+            raise ValueError(
+                get_uninitialized_error(
+                    name="pixel_vert_size",
+                    parent_name="geometry",
+                )
+            )
+
+        return self._pixel_vert_size
 
     @pixel_vert_size.setter
     def pixel_vert_size(self, value: float) -> None:
@@ -219,10 +229,15 @@ class Geometry:
     @property
     def pixel_horz_size(self) -> float:
         """Get Horizontal dimension of pixel."""
-        if self._pixel_horz_size:
-            return self._pixel_horz_size
-        else:
-            raise ValueError("'pixel_horz_size' not specified in detector geometry.")
+        if self._pixel_horz_size is None:
+            raise ValueError(
+                get_uninitialized_error(
+                    name="pixel_horz_size",
+                    parent_name="geometry",
+                )
+            )
+
+        return self._pixel_horz_size
 
     @pixel_horz_size.setter
     def pixel_horz_size(self, value: float) -> None:
@@ -236,8 +251,12 @@ class Geometry:
     def pixel_scale(self) -> float:
         """Get pixel scale."""
         if self._pixel_scale is None:
-            raise ValueError("'pixel_scale' not specified in detector geometry.")
-
+            raise ValueError(
+                get_uninitialized_error(
+                    name="pixel_scale",
+                    parent_name="geometry",
+                )
+            )
         return self._pixel_scale
 
     @pixel_scale.setter

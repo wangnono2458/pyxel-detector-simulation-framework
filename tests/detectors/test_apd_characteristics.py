@@ -156,28 +156,40 @@ def test_valid_initialization(
     if quantum_efficiency is not None:
         assert obj.quantum_efficiency == quantum_efficiency
     else:
-        with pytest.raises(ValueError, match="'quantum_efficiency' not specified"):
+        with pytest.raises(
+            ValueError,
+            match=r"Missing required parameter 'quantum_efficiency' in 'characteristics'",
+        ):
             _ = obj.quantum_efficiency
 
     # Check 'adc_bit_resolution'
     if adc_bit_resolution is not None:
         assert obj.adc_bit_resolution == adc_bit_resolution
     else:
-        with pytest.raises(ValueError, match="'adc_bit_resolution' not specified"):
+        with pytest.raises(
+            ValueError,
+            match=r"Missing required parameter 'adc_bit_resolution' in 'characteristics'",
+        ):
             _ = obj.adc_bit_resolution
 
     # Check 'adc_voltage_range'
     if adc_voltage_range is not None:
         assert obj.adc_voltage_range == adc_voltage_range
     else:
-        with pytest.raises(ValueError, match="'adc_voltage_range' not specified"):
+        with pytest.raises(
+            ValueError,
+            match=r"Missing required parameter 'adc_voltage_range' in 'characteristics'",
+        ):
             _ = obj.adc_voltage_range
 
     # Check 'full_well_capacity'
     if full_well_capacity is not None:
         assert obj.full_well_capacity == full_well_capacity
     else:
-        with pytest.raises(ValueError, match="'full_well_capacity' not specified"):
+        with pytest.raises(
+            ValueError,
+            match=r"Missing required parameter 'full_well_capacity' in 'characteristics'",
+        ):
             _ = obj.full_well_capacity
 
 

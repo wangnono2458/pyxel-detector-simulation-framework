@@ -23,3 +23,4 @@ from .misc import (
     convert_unit,
     get_dtype,
 )
+from .errors import get_uninitialized_error
