@@ -26,23 +26,45 @@ def filename_observation_no_outputs(request: pytest.FixtureRequest) -> Path:
     return filename.resolve(strict=True)
 
 
-def test_exposure_no_outputs(filename_exposure_no_outputs: Path):
+@pytest.mark.parametrize(
+    "run_with_config", ["config_and_args", "config_and_kwargs", "without_config"]
+)
+def test_exposure_no_outputs(run_with_config: str, filename_exposure_no_outputs: Path):
     """Test 'pyxel.run_mode' without outputs."""
     cfg = pyxel.load(filename_exposure_no_outputs)
 
-    _ = pyxel.run_mode(
-        mode=cfg.running_mode,
-        detector=cfg.detector,
-        pipeline=cfg.pipeline,
-    )
+    if run_with_config == "config_and_args":
+        _ = pyxel.run_mode(cfg)
+    elif run_with_config == "config_and_kwargs":
+        _ = pyxel.run_mode(config=cfg)
+    elif run_with_config == "without_config":
+        _ = pyxel.run_mode(
+            mode=cfg.running_mode,
+            detector=cfg.detector,
+            pipeline=cfg.pipeline,
+        )
+    else:
+        raise NotImplementedError
 
 
-def test_observation_no_outputs(filename_observation_no_outputs: Path):
+@pytest.mark.parametrize(
+    "run_with_config", ["config_and_args", "config_and_kwargs", "without_config"]
+)
+def test_observation_no_outputs(
+    run_with_config: str, filename_observation_no_outputs: Path
+):
     """Test 'pyxel.run_mode' without outputs."""
     cfg = pyxel.load(filename_observation_no_outputs)
 
-    _ = pyxel.run_mode(
-        mode=cfg.running_mode,
-        detector=cfg.detector,
-        pipeline=cfg.pipeline,
-    )
+    if run_with_config == "config_and_args":
+        _ = pyxel.run_mode(cfg)
+    elif run_with_config == "config_and_kwargs":
+        _ = pyxel.run_mode(config=cfg)
+    elif run_with_config == "without_config":
+        _ = pyxel.run_mode(
+            mode=cfg.running_mode,
+            detector=cfg.detector,
+            pipeline=cfg.pipeline,
+        )
+    else:
+        raise NotImplementedError

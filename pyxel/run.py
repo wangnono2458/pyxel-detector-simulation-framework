@@ -630,22 +630,28 @@ def _run_exposure_or_calibration_mode(
 
 
 def run_mode(
-    mode: Union[Exposure, Observation, "Calibration"],
-    detector: Detector,
-    pipeline: DetectionPipeline,
+    config: Configuration | None = None,
+    mode: Union[Exposure, Observation, "Calibration"] | None = None,
+    detector: Detector | None = None,
+    pipeline: DetectionPipeline | None = None,
+    *,
     override_dct: Mapping[str, Any] | None = None,
     debug: bool = False,
     with_inherited_coords: bool = False,
 ) -> "xr.DataTree":
-    """Run a pipeline.
+    """Execute a Pyxel simulation pipeline.
+
+    You must provide at least parameter `config` or parameters `mode`, `detector` and `pipeline`.
 
     Parameters
     ----------
-    mode : Exposure, Observation or Calibration
+    config: Configuration, optional
+        Full configuration object, typically loaded via 'pyxel.load(...)'
+    mode : Exposure, Observation or Calibration, optional
         Mode to execute.
-    detector : Detector
+    detector : Detector, optional
         This object is the container for all the data used for the models.
-    pipeline : DetectionPipeline
+    pipeline : DetectionPipeline, optional
         This is the core algorithm of Pyxel. This pipeline contains all the models to run.
     override_dct: dict, optional
         A dictionary of parameter(s) to override during processing.
@@ -656,7 +662,8 @@ def run_mode(
 
     Notes
     -----
-    Parameter ``debug`` and ``with_hiearchical_format`` are not (yet) stable and may change in the future.
+    - Parameter ``debug`` and ``with_hiearchical_format`` are not (yet) stable and may change in the future.
+    - Either `config` or all of (`mode`, `detector`, `pipeline`) must be provided.
 
     Returns
     -------
@@ -665,8 +672,9 @@ def run_mode(
     Raises
     ------
     TypeError
-        Raised if the ``mode`` is not valid.
-
+        Raised if the ``mode`` is not an instance of `Exposure`, `Observation` or `Calibration`.
+    ValueError
+        If one of the required parameters (`mode`, `detector`, `pipeline`) is not provided.
     NotImplementedError
         Raised if parameter ``debug`` is activated and `mode` is not an ``Exposure`` object.
 
@@ -677,9 +685,7 @@ def run_mode(
     >>> import pyxel
     >>> config = pyxel.load("exposure_configuration.yaml")
     >>> data_tree = pyxel.run_mode(
-    ...     mode=config.exposure,
-    ...     detector=config.detector,
-    ...     pipeline=config.pipeline,
+    ...     config,
     ...     with_inherited_coords=True,  # with the new 'provisional' parameter
     ...     override={  # optional
     ...         "exposure.outputs.output_folder": "new_folder",
@@ -895,7 +901,25 @@ def run_mode(
                     Attributes:
                         long_name:  Group: 'simple_adc'
     """
-    # Sanity checks
+    # Input validation
+    if config is None and mode is None and detector is None and pipeline is None:
+        raise ValueError("Missing required argument: 'config'.")
+
+    if config:
+        if mode or detector or pipeline:
+            raise ValueError(
+                "Parameter 'config' is already provided. You cannot provide parameters 'mode', 'detector' or 'pipeline'."
+            )
+
+        mode = config.running_mode
+        detector = config.detector
+        pipeline = config.pipeline
+
+    elif mode is None or detector is None or pipeline is None:
+        raise ValueError(
+            "Parameters 'mode', 'detector' and 'pipeline' must be provided."
+        )
+
     if not isinstance(mode, Exposure) and debug:
         raise NotImplementedError(
             "Parameter 'debug' is not implemented for 'Observation' or 'Calibration' mode."
