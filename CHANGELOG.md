@@ -49,6 +49,19 @@ Example:
 <xarray.DataTree> ...
 ```
 
+### 🆕 New function `pyxel.run_mode_buckets`
+
+A new convenience function `pyxel.run_mode_buckets` is now available.
+It returns only the data buckets (photon, charge, ...) as an `xarray.Dataset` instead of the full `xarray.Datatree`.
+
+Example:
+```python
+>>> cfg = pyxel.load('configuration.yaml')
+>>> result = pyxel.run_mode_buckets(cfg)  # ✅ NEW function
+>>> result
+<xarray.Dataset> ...
+```
+
 ### Core
 * Add better error message when a parameter from `characteristics`, `geometry` and `environment` is not provided.
   (See [!1043](https://gitlab.com/esa/pyxel/-/merge_requests/1043)).
@@ -56,6 +69,8 @@ Example:
   (See [!1041](https://gitlab.com/esa/pyxel/-/merge_requests/1041)).
 * Use `Configuration` object directly with `pyxel.run_mode`.
   (See [!1042](https://gitlab.com/esa/pyxel/-/merge_requests/1042)).
+* Create new function `pyxel.run_simple`.
+  (See [!1044](https://gitlab.com/esa/pyxel/-/merge_requests/1044)).
 
 ### Documentation
 
