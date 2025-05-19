@@ -132,12 +132,25 @@ def test_simple_adc_dtype(readout_times, valid_config_filename: Path):
     assert result["image"].dtype == np.uint16
 
 
-def test_with_debug(valid_config_filename: Path):
+@pytest.mark.parametrize(
+    "run_with_config", ["config_and_args", "config_and_kwargs", "without_config"]
+)
+def test_with_debug(run_with_config: str, valid_config_filename: Path):
     """Test 'pyxel.run_mode' with parameter 'debug' enabled."""
     cfg = pyxel.load(valid_config_filename)
 
-    data_tree = pyxel.run_mode(
-        mode=cfg.running_mode, detector=cfg.detector, pipeline=cfg.pipeline, debug=True
-    )
+    if run_with_config == "config_and_args":
+        data_tree = pyxel.run_mode(cfg)
+    elif run_with_config == "config_and_kwargs":
+        data_tree = pyxel.run_mode(config=cfg)
+    elif run_with_config == "without_config":
+        data_tree = pyxel.run_mode(
+            mode=cfg.running_mode,
+            detector=cfg.detector,
+            pipeline=cfg.pipeline,
+            debug=True,
+        )
+    else:
+        raise NotImplementedError
 
     assert isinstance(data_tree, xr.DataTree)
