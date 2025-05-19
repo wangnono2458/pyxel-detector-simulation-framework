@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 import pyxel
+from pyxel import Configuration
 
 # This is equivalent to 'import freezegun'
 freezegun = pytest.importorskip(
@@ -459,7 +460,7 @@ def test_load_no_detector(config_no_detector: Path):
     with pytest.raises(
         ValueError,
         match=(
-            r"Expecting only one detector: 'ccd_detector', 'cmos_detector',"
+            r"Got no detector. Expected values: 'ccd_detector', 'cmos_detector',"
             r" 'mkid_detector'"
         ),
     ):
@@ -473,8 +474,8 @@ def test_load_two_detectors(config_two_detectors: Path):
     with pytest.raises(
         ValueError,
         match=(
-            r"Expecting only one detector: 'ccd_detector', 'cmos_detector',"
-            r" 'mkid_detector'"
+            r"Expecting only one detector, got 2 detectors. "
+            r"Expected values: 'ccd_detector', 'cmos_detector', 'mkid_detector'"
         ),
     ):
         _ = pyxel.load(filename)
@@ -521,3 +522,122 @@ pipeline:
         ValueError, match=r"Missing entry \'parameters\' in the YAML configuration file"
     ):
         pyxel.load(filename)
+
+
+@pytest.mark.parametrize(
+    "detector_name",
+    ["ccd_detector", "cmos_detector", "mkid_detector"],
+)
+def test_load_exposure_minimalist_config(detector_name: str, tmp_path: Path):
+    """Test function 'pyxel.load' with a minimalist YAML file."""
+    content = f"""
+exposure:
+  readout:
+    times: [1., 3., 5.]
+    non_destructive:  true
+
+    # No 'outputs'.
+
+{detector_name}:
+  geometry:
+    row: 10
+    col: 20
+
+  # No 'environment' and 'characteristics'
+"""
+
+    filename = tmp_path / "exposure_minimalist.yaml"
+    filename.write_text(content)
+
+    cfg = pyxel.load(filename)
+    assert isinstance(cfg, Configuration)
+
+
+def test_load_exposure_minimalist_config_apd(tmp_path: Path):
+    """Test function 'pyxel.load' with a minimalist YAML file."""
+    content = """
+exposure:
+  readout:
+    times: [1., 3., 5.]
+    non_destructive:  true
+
+    # No 'outputs'.
+
+apd_detector:
+  geometry:
+    row: 10
+    col: 20
+
+  characteristics:
+    roic_gain: 1.0
+    avalanche_gain: 1.0
+    common_voltage: 0.0
+
+  # No 'environment'
+"""
+
+    filename = tmp_path / "exposure_minimalist.yaml"
+    filename.write_text(content)
+
+    cfg = pyxel.load(filename)
+    assert isinstance(cfg, Configuration)
+
+
+@pytest.mark.parametrize(
+    "detector_name", ["ccd_detector", "cmos_detector", "mkid_detector"]
+)
+def test_load_exposure_minimalist_config_empty_outputs(
+    detector_name: str, tmp_path: Path
+):
+    """Test function 'pyxel.load' with a minimalist YAML file."""
+    content = f"""
+exposure:
+  readout:
+    times: [1., 3., 5.]
+    non_destructive:  true
+
+  outputs:  # empty
+
+{detector_name}:
+  geometry:
+    row: 10
+    col: 20
+
+  # No 'environment' and 'characteristics'
+"""
+
+    filename = tmp_path / "exposure_minimalist.yaml"
+    filename.write_text(content)
+
+    cfg = pyxel.load(filename)
+    assert isinstance(cfg, Configuration)
+
+
+def test_load_exposure_minimalist_config_empty_outputs_apd(tmp_path: Path):
+    """Test function 'pyxel.load' with a minimalist YAML file."""
+    content = """
+exposure:
+  readout:
+    times: [1., 3., 5.]
+    non_destructive:  true
+
+  outputs:  # empty
+
+apd_detector:
+  geometry:
+    row: 10
+    col: 20
+
+  characteristics:
+    roic_gain: 1.0
+    avalanche_gain: 1.0
+    common_voltage: 0.0
+
+  # No 'environment'
+"""
+
+    filename = tmp_path / "exposure_minimalist.yaml"
+    filename.write_text(content)
+
+    cfg = pyxel.load(filename)
+    assert isinstance(cfg, Configuration)
