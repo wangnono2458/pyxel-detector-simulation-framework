@@ -18,6 +18,21 @@ if TYPE_CHECKING:
     from pyxel.detectors import Geometry
 
 
+def _get_uninitialized_error(name: str, parent_name: str) -> str:
+    return (
+        f"Missing required parameter '{name}' in '{parent_name}'.\n"
+        f"This parameter must be defined in your detector 'detector.{parent_name}.{name}'.\n\n"
+        f"To fix this issue, you can either:\n"
+        f"  - Set the parameter directly in your Python code (see following example):\n"
+        f"      >>> config = pyxel.load_config(...)\n"
+        f"      >>> config.detector.{parent_name}.{name} = ...\n\n"
+        f"  - Or define it directly in your YAML configuration file (see following example):\n"
+        f"      detector:\n"
+        f"        {parent_name}:\n"
+        f"          {name}:..."
+    )
+
+
 class Characteristics:
     """Characteristic attributes of the detector.
 
@@ -167,7 +182,10 @@ class Characteristics:
         """Get Quantum efficiency."""
         if self._quantum_efficiency is None:
             raise ValueError(
-                "'quantum_efficiency' not specified in detector characteristics."
+                _get_uninitialized_error(
+                    name="quantum_efficiency",
+                    parent_name="characteristics",
+                )
             )
 
         return self._quantum_efficiency
@@ -187,7 +205,10 @@ class Characteristics:
         # if self._channels_gain is None:
         if self._charge_to_volt_conversion is None:
             raise ValueError(
-                "'charge_to_volt_conversion' not specified in detector characteristics."
+                _get_uninitialized_error(
+                    name="charge_to_volt_conversion",
+                    parent_name="characteristics",
+                )
             )
 
         return self._charge_to_volt_conversion
@@ -247,7 +268,12 @@ class Characteristics:
     @property
     def channels_gain(self) -> float | np.ndarray:
         if self._channels_gain is None:
-            raise ValueError
+            raise ValueError(
+                _get_uninitialized_error(
+                    name="channels_gain",
+                    parent_name="characteristics",
+                )
+            )
 
         return self._channels_gain
 
@@ -256,7 +282,10 @@ class Characteristics:
         """Get voltage pre-amplification gain."""
         if self._pre_amplification is None:
             raise ValueError(
-                "'pre_amplification' not specified in detector characteristics."
+                _get_uninitialized_error(
+                    name="pre_amplification",
+                    parent_name="characteristics",
+                )
             )
 
         return self._pre_amplification
@@ -274,7 +303,10 @@ class Characteristics:
         """Get bit resolution of the Analog-Digital Converter."""
         if self._adc_bit_resolution is None:
             raise ValueError(
-                "'adc_bit_resolution' not specified in detector characteristics."
+                _get_uninitialized_error(
+                    name="adc_bit_resolution",
+                    parent_name="characteristics",
+                )
             )
 
         return self._adc_bit_resolution
@@ -289,7 +321,10 @@ class Characteristics:
         """Get voltage range of the Analog-Digital Converter."""
         if self._adc_voltage_range is None:
             raise ValueError(
-                "'adc_voltage_range' not specified in detector characteristics."
+                _get_uninitialized_error(
+                    name="adc_voltage_range",
+                    parent_name="characteristics",
+                )
             )
 
         return self._adc_voltage_range
@@ -304,7 +339,10 @@ class Characteristics:
         """Get Full well capacity."""
         if self._full_well_capacity is None:
             raise ValueError(
-                "'full_well_capacity' not specified in detector characteristics."
+                _get_uninitialized_error(
+                    name="full_well_capacity",
+                    parent_name="characteristics",
+                )
             )
 
         return self._full_well_capacity

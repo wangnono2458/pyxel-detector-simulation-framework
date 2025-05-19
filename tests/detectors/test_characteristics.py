@@ -49,7 +49,7 @@ def test_characteristics(
     if quantum_efficiency is None:
         with pytest.raises(
             ValueError,
-            match=r"'quantum_efficiency' not specified in detector characteristics",
+            match=r"Missing required parameter 'quantum_efficiency' in 'characteristics'",
         ):
             _ = obj.quantum_efficiency
     else:
@@ -59,7 +59,7 @@ def test_characteristics(
     if charge_to_volt_conversion is None:
         with pytest.raises(
             ValueError,
-            match=r"'charge_to_volt_conversion' not specified in detector characteristics",
+            match=r"Missing required parameter 'charge_to_volt_conversion' in 'characteristics'",
         ):
             _ = obj.charge_to_volt_conversion
     else:
@@ -69,7 +69,7 @@ def test_characteristics(
     if pre_amplification is None:
         with pytest.raises(
             ValueError,
-            match=r"'pre_amplification' not specified in detector characteristics",
+            match=r"Missing required parameter 'pre_amplification' in 'characteristics'",
         ):
             _ = obj.pre_amplification
     else:
@@ -79,7 +79,7 @@ def test_characteristics(
     if adc_bit_resolution is None:
         with pytest.raises(
             ValueError,
-            match=r"'adc_bit_resolution' not specified in detector characteristics",
+            match=r"Missing required parameter 'adc_bit_resolution' in 'characteristics'",
         ):
             _ = obj.adc_bit_resolution
     else:
@@ -89,7 +89,7 @@ def test_characteristics(
     if adc_voltage_range is None:
         with pytest.raises(
             ValueError,
-            match=r"'adc_voltage_range' not specified in detector characteristics",
+            match=r"Missing required parameter 'adc_voltage_range' in 'characteristics'",
         ):
             _ = obj.adc_voltage_range
     else:
@@ -99,7 +99,7 @@ def test_characteristics(
     if full_well_capacity is None:
         with pytest.raises(
             ValueError,
-            match=r"'full_well_capacity' not specified in detector characteristics",
+            match=r"Missing required parameter 'full_well_capacity' in 'characteristics'",
         ):
             _ = obj.full_well_capacity
     else:
