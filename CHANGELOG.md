@@ -12,7 +12,31 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 
 ## UNRELEASED
 
+This release includes various bug fixes and feature enhancements to improve usability and flexibility.
+
+### Improved error messages for missing parameters
+
+Clearer and more informative error messages are now raised when attempting to access uninitialized parameters from the 
+`characteristics`, `geometry` or `environment` sections of a detector
+
+Examples:
+```python
+>>> detector.characteristics.pre_amplification
+ValueError: Missing required parameter 'pre_amplification' in 'characteristics'.
+This parameter must be defined in your detector 'detector.characteristics.pre_amplification'.
+To fix this issue, you can either:
+  - Set the parameter directly in your Python code (see following example):
+      >>> config = pyxel.load_config(...)
+      >>> config.detector.characteristics.pre_amplification = ...
+  - Or define it directly in your YAML configuration file (see following example):
+      detector:
+        characteristics:
+          pre_amplification:...
+```
+
 ### Core
+* Add better error message when a parameter from `characteristics`, `geometry` and `environment` is not provided.
+  (See [!1043](https://gitlab.com/esa/pyxel/-/merge_requests/1043)).
 
 ### Documentation
 
