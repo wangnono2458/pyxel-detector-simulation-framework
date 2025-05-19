@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from pyxel.util import get_size
+from pyxel.util import get_size, get_uninitialized_error
 
 if TYPE_CHECKING:
     from pyxel.detectors import APDGeometry
@@ -227,7 +227,10 @@ class APDCharacteristics:
         """Get Quantum efficiency."""
         if self._quantum_efficiency is None:
             raise ValueError(
-                "'quantum_efficiency' not specified in detector characteristics."
+                get_uninitialized_error(
+                    name="quantum_efficiency",
+                    parent_name="characteristics",
+                )
             )
 
         return self._quantum_efficiency
@@ -309,7 +312,10 @@ class APDCharacteristics:
         """Get bit resolution of the Analog-Digital Converter."""
         if self._adc_bit_resolution is None:
             raise ValueError(
-                "'adc_bit_resolution' not specified in detector characteristics."
+                get_uninitialized_error(
+                    name="adc_bit_resolution",
+                    parent_name="characteristics",
+                )
             )
 
         return self._adc_bit_resolution
@@ -327,9 +333,11 @@ class APDCharacteristics:
         """Get voltage range of the Analog-Digital Converter."""
         if self._adc_voltage_range is None:
             raise ValueError(
-                "'adc_voltage_range' not specified in detector characteristics."
+                get_uninitialized_error(
+                    name="adc_voltage_range",
+                    parent_name="characteristics",
+                )
             )
-
         return self._adc_voltage_range
 
     @adc_voltage_range.setter
@@ -342,9 +350,11 @@ class APDCharacteristics:
         """Get Full well capacity."""
         if self._full_well_capacity is None:
             raise ValueError(
-                "'full_well_capacity' not specified in detector characteristics."
+                get_uninitialized_error(
+                    name="full_well_capacity",
+                    parent_name="characteristics",
+                )
             )
-
         return self._full_well_capacity
 
     @full_well_capacity.setter

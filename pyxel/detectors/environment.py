@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from typing_extensions import Self
 
-from pyxel.util import get_size
+from pyxel.util import get_size, get_uninitialized_error
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -114,7 +114,12 @@ class Environment:
     def temperature(self) -> float:
         """Get Temperature of the detector."""
         if self._temperature is None:
-            raise ValueError("'temperature' not specified in detector environment.")
+            raise ValueError(
+                get_uninitialized_error(
+                    name="temperature",
+                    parent_name="environment",
+                )
+            )
 
         return self._temperature
 
@@ -130,8 +135,12 @@ class Environment:
     def wavelength(self) -> float | WavelengthHandling:
         """Get wavelength of the detector."""
         if self._wavelength is None:
-            raise ValueError("'wavelength' not specified in detector environment.")
-
+            raise ValueError(
+                get_uninitialized_error(
+                    name="wavelength",
+                    parent_name="environment",
+                )
+            )
         return self._wavelength
 
     @wavelength.setter
