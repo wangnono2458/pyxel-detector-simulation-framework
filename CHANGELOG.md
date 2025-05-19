@@ -37,6 +37,8 @@ To fix this issue, you can either:
 ### Core
 * Add better error message when a parameter from `characteristics`, `geometry` and `environment` is not provided.
   (See [!1043](https://gitlab.com/esa/pyxel/-/merge_requests/1043)).
+* Cannot read simple YAML file.
+  (See [!1041](https://gitlab.com/esa/pyxel/-/merge_requests/1041)).
 
 ### Documentation
 
