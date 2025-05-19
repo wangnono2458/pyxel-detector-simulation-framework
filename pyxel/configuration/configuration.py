@@ -162,9 +162,17 @@ def load_yaml(stream: str | IO) -> Any:
     return result
 
 
-def to_exposure_outputs(dct: dict) -> ExposureOutputs:
+def to_exposure_outputs(dct: dict | None) -> ExposureOutputs:
     """Create a ExposureOutputs class from a dictionary."""
-    return ExposureOutputs(**dct)
+    if dct:
+        new_dct = dct.copy()
+    else:
+        new_dct = {}
+
+    if "output_folder" not in new_dct:
+        new_dct["output_folder"] = Path().cwd().as_posix()
+
+    return ExposureOutputs(**new_dct)
 
 
 def to_readout(dct: dict | None = None) -> Readout:
@@ -340,16 +348,23 @@ def to_mkid_characteristics(dct: dict | None) -> Characteristics:
 def to_apd_characteristics(dct: dict | None) -> APDCharacteristics:
     """Create a APDCharacteristics class from a dictionary."""
     if dct is None:
-        dct = {}
-    return APDCharacteristics(**dct)
+        new_dct = {}
+    else:
+        new_dct = dct.copy()
+
+    if "roic_gain" not in new_dct:
+        raise KeyError("Missing parameter 'roic_gain' in APD Characteristics")
+
+    roic_gain = new_dct.pop("roic_gain")
+    return APDCharacteristics(roic_gain=roic_gain, **new_dct)
 
 
 def to_ccd(dct: dict) -> CCD:
     """Create a CCD class from a dictionary."""
     return CCD(
         geometry=to_ccd_geometry(dct["geometry"]),
-        environment=to_environment(dct["environment"]),
-        characteristics=to_ccd_characteristics(dct["characteristics"]),
+        environment=to_environment(dct.get("environment")),
+        characteristics=to_ccd_characteristics(dct.get("characteristics")),
     )
 
 
@@ -357,8 +372,8 @@ def to_cmos(dct: dict) -> CMOS:
     """Create a :term:`CMOS` class from a dictionary."""
     return CMOS(
         geometry=to_cmos_geometry(dct["geometry"]),
-        environment=to_environment(dct["environment"]),
-        characteristics=to_cmos_characteristics(dct["characteristics"]),
+        environment=to_environment(dct.get("environment")),
+        characteristics=to_cmos_characteristics(dct.get("characteristics")),
     )
 
 
@@ -366,8 +381,8 @@ def to_mkid_array(dct: dict) -> MKID:
     """Create an MKIDarray class from a dictionary."""
     return MKID(
         geometry=to_mkid_geometry(dct["geometry"]),
-        environment=to_environment(dct["environment"]),
-        characteristics=to_mkid_characteristics(dct["characteristics"]),
+        environment=to_environment(dct.get("environment")),
+        characteristics=to_mkid_characteristics(dct.get("characteristics")),
     )
 
 
@@ -375,33 +390,39 @@ def to_apd(dct: dict) -> APD:
     """Create an APDarray class from a dictionary."""
     return APD(
         geometry=to_apd_geometry(dct["geometry"]),
-        environment=to_environment(dct["environment"]),
-        characteristics=to_apd_characteristics(dct["characteristics"]),
+        environment=to_environment(dct.get("environment")),
+        characteristics=to_apd_characteristics(dct.get("characteristics")),
     )
 
 
-def to_model_function(dct: dict) -> ModelFunction:
+def to_model_function(dct: Mapping) -> ModelFunction:
     """Create a ModelFunction class from a dictionary."""
     return ModelFunction(**dct)
 
 
-def to_pipeline(dct: dict) -> DetectionPipeline:
+def to_pipeline(
+    dct: Mapping[str, Sequence[Mapping] | None] | None,
+) -> DetectionPipeline:
     """Create a DetectionPipeline class from a dictionary."""
-    for model_group_name in dct:
-        models_list: Sequence[dict] | None = dct[model_group_name]
+    new_dct = {}
 
-        if models_list is None:
-            models: Sequence[ModelFunction] | None = None
-        else:
-            models = [to_model_function(model_dict) for model_dict in models_list]
+    if dct:
+        for model_group_name, model_group in dct.items():
+            models_list: Sequence[Mapping] | None = model_group
 
-        dct[model_group_name] = models
-    return DetectionPipeline(**dct)
+            if models_list is None:
+                models: Sequence[ModelFunction] | None = None
+            else:
+                models = [to_model_function(model_dict) for model_dict in models_list]
+
+            new_dct[model_group_name] = models
+
+    return DetectionPipeline(**new_dct)
 
 
 def _build_configuration(dct: dict) -> Configuration:
     """Create a Configuration class from a dictionary."""
-    pipeline: DetectionPipeline = to_pipeline(dct["pipeline"])
+    pipeline: DetectionPipeline = to_pipeline(dct.get("pipeline"))
 
     # Sanity checks
     keys_running_mode: Sequence[str] = [
@@ -423,7 +444,14 @@ def _build_configuration(dct: dict) -> Configuration:
     num_detector: int = sum(key in dct for key in keys_detectors)
     if num_detector != 1:
         keys = ", ".join(map(repr, keys_detectors))
-        raise ValueError(f"Expecting only one detector: {keys}")
+
+        if num_detector == 0:
+            raise ValueError(f"Got no detector. Expected values: {keys}")
+        else:
+            raise ValueError(
+                f"Expecting only one detector, got {num_detector} detectors. "
+                f"Expected values: {keys}"
+            )
 
     running_mode: dict[str, Exposure | Observation | "Calibration"] = {}
     if "exposure" in dct:
