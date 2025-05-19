@@ -986,6 +986,29 @@ def run_mode(
     return data_tree
 
 
+def run_mode_buckets(
+    config: Configuration | None = None,
+    mode: Union[Exposure, Observation, "Calibration"] | None = None,
+    detector: Detector | None = None,
+    pipeline: DetectionPipeline | None = None,
+    *,
+    override_dct: Mapping[str, Any] | None = None,
+    debug: bool = False,
+) -> "xr.Dataset":
+    data_tree: "xr.DataTree" = run_mode(
+        config=config,
+        mode=mode,
+        detector=detector,
+        pipeline=pipeline,
+        override_dct=override_dct,
+        debug=debug,
+        with_inherited_coords=True,
+    )
+
+    dataset: "xr.Dataset" = data_tree["/bucket"].to_dataset()
+    return dataset
+
+
 # TODO: Move this function ?
 def get_all_filenames(
     data_tree: "xr.DataTree",
