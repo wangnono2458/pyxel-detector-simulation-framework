@@ -19,7 +19,7 @@ from pyxel import load_table
 from pyxel.detectors import Channels, Matrix
 
 if TYPE_CHECKING:
-    from pyxel.detectors import APD, CCD, CMOS, Detector
+    from pyxel.detectors import APD, CCD, CMOS
 
 
 # TODO: Put more info in documentation
