@@ -75,6 +75,11 @@ Example:
 ### Documentation
 
 ### Models
+* Use ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html) for models
+  [`ac_crosstalk`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_measurement_models.html#ac-crosstalk) and
+  [`dc_crosstalk`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_measurement_models.html#dc-crosstalk)
+  from [Charge Measurement](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_measurement_models.html#) groups.
+  (See [!1040](https://gitlab.com/esa/pyxel/-/merge_requests/1040)).
 
 ### Others
 * Fix issues with mypy and numpy 2.2.5.
