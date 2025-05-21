@@ -169,6 +169,7 @@ strict_equality = true
 [[tool.mypy.overrides]]
 module = [
     "pyxel._version",
+    "apischema.json_schema.*",
     "arcticpy.*",
     "asdf.*",
     "astropy.*",

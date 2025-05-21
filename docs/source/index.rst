@@ -131,6 +131,7 @@ to look for certain things:
    howto/new_model.rst
    howto/detector_import_export.ipynb
    howto/json_schema.md
+   howto/metadata.md
 
 .. toctree::
    :caption: Background / Explanations

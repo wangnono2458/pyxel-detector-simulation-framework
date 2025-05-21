@@ -194,7 +194,7 @@ Output node noise model for :term:`CMOS` detectors where readout is statisticall
 .. code-block:: yaml
 
     - name: output_noise
-      func: pyxel.models.charge_measurement.output_node_noise
+      func: pyxel.models.charge_measurement.output_node_noise_cmos
       enabled: true
       arguments:
         readout_noise: 1.0
