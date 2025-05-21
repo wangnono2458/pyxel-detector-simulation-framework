@@ -996,7 +996,7 @@ def run_mode_dataset(
     override_dct: Mapping[str, Any] | None = None,
     debug: bool = False,
 ) -> "xr.Dataset":
-    """Execute a Pyxel simulation pipeline and return the 'photon', 'signal',... in a simple xarray Dataset
+    """Execute a Pyxel simulation pipeline and return the 'photon', 'signal',... in a simple xarray Dataset.
 
     Parameters
     ----------
