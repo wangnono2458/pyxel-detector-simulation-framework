@@ -3855,8 +3855,13 @@
           "additionalProperties": false,
           "properties": {
             "channel_matrix": {
+              "default": null,
+              "description": "Mapping from pixel positions to amplifier channels. If not provided it is taken from the detector geometry.",
               "title": "channel_matrix",
-              "type": "array"
+              "type": [
+                "array",
+                "null"
+              ]
             },
             "coupling_matrix": {
               "anyOf": [
@@ -3871,17 +3876,21 @@
                   "type": "array"
                 }
               ],
+              "description": "2D matrix defining the signal coupling between amplifier channels. Can be a filename (to be loaded) or directly an array.",
               "title": "coupling_matrix"
             },
             "readout_directions": {
+              "default": null,
+              "description": "Array indicating the readout direction per channel. If not provided it is taken from the detector geometry.",
               "title": "readout_directions",
-              "type": "array"
+              "type": [
+                "array",
+                "null"
+              ]
             }
           },
           "required": [
-            "coupling_matrix",
-            "channel_matrix",
-            "readout_directions"
+            "coupling_matrix"
           ],
           "title": "Parameters",
           "type": "object"
@@ -3914,8 +3923,13 @@
           "additionalProperties": false,
           "properties": {
             "channel_matrix": {
+              "default": null,
+              "description": "Mapping from pixel positions to amplifier channels. If not provided it is taken from the detector geometry.",
               "title": "channel_matrix",
-              "type": "array"
+              "type": [
+                "array",
+                "null"
+              ]
             },
             "coupling_matrix": {
               "anyOf": [
@@ -3930,17 +3944,21 @@
                   "type": "array"
                 }
               ],
+              "description": "2D matrix defining the signal coupling between amplifier channels. Can be a filename (to be loaded) or directly an array.",
               "title": "coupling_matrix"
             },
             "readout_directions": {
+              "default": null,
+              "description": "Array indicating the readout direction per channel. If not provided it is taken from the detector geometry.",
               "title": "readout_directions",
-              "type": "array"
+              "type": [
+                "array",
+                "null"
+              ]
             }
           },
           "required": [
-            "coupling_matrix",
-            "channel_matrix",
-            "readout_directions"
+            "coupling_matrix"
           ],
           "title": "Parameters",
           "type": "object"
