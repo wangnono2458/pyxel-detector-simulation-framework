@@ -10,7 +10,7 @@ Minor releases include updated stdlib stubs from typeshed.
 Pyxel doesn't use SemVer anymore, since most minor releases have at least minor backward incompatible changes.
 
 
-## UNRELEASED
+## 2.10 / 2025-05-22
 
 This release includes various bug fixes and feature enhancements to improve usability and flexibility.
 
@@ -51,8 +51,10 @@ Example:
 
 ### 🆕 New function `pyxel.run_mode_dataset`
 
-A new convenience function `pyxel.run_mode_dataset` is now available.
-It returns only the data buckets (photon, charge, ...) as an `xarray.Dataset` instead of the full `xarray.Datatree`.
+A new convenience function [`pyxel.run_mode_dataset`](https://esa.gitlab.io/pyxel/doc/stable/references/api/run.html#pyxel.run_mode_dataset) 
+is now available.
+It returns only the data buckets (photon, charge, ...) as an [`xarray.Dataset`](https://docs.xarray.dev/en/latest/user-guide/data-structures.html#dataset)
+instead of the full [`xarray.Datatree`](https://docs.xarray.dev/en/latest/user-guide/data-structures.html#datatree).
 
 Example:
 
@@ -62,6 +64,12 @@ Example:
 >> > result
 < xarray.Dataset > ...
 ```
+
+### 🆕 New metadata files
+
+Each Pyxel model is decribed in a `metadata.yaml` file with structured information about its name, description, status, 
+documentation, ... .
+See the [metadata](https://esa.gitlab.io/pyxel/doc/latest/howto/metadata.html) page for more information.
 
 ### Core
 * Add better error message when a parameter from `characteristics`, `geometry` and `environment` is not provided.
@@ -73,8 +81,6 @@ Example:
 * Create new function [`pyxel.run_mode_dataset`](https://esa.gitlab.io/pyxel/doc/stable/references/api/run.html#pyxel.run_mode_dataset).
   (See [!1044](https://gitlab.com/esa/pyxel/-/merge_requests/1044)
   and https://gitlab.com/esa/pyxel/-/merge_requests/1046).
-
-### Documentation
 
 ### Models
 * Use ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html) for models
