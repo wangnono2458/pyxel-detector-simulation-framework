@@ -1,9 +1,12 @@
 {
   "$defs": {
-    "MetadataGroup": {
+    "GroupInfo": {
       "additionalProperties": false,
       "properties": {
-        "group": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
           "enum": [
             "scene_generation",
             "photon_collection",
@@ -16,6 +19,19 @@
             "data_processing"
           ],
           "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "description"
+      ],
+      "type": "object"
+    },
+    "MetadataGroup": {
+      "additionalProperties": false,
+      "properties": {
+        "group": {
+          "$ref": "#/$defs/GroupInfo"
         },
         "models": {
           "items": {

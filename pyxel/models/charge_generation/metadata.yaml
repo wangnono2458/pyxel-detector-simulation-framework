@@ -1,5 +1,15 @@
 # $schema: ../metadata.schema.json
-group: charge_generation
+group:
+  name: charge_generation
+  description: >
+    Charge generation models are used to add to and manipulate data in :py:class:`~pyxel.data_structure.Charge` array
+    inside the :py:class:`~pyxel.detectors.Detector` object.
+    The values in the :py:class:`~pyxel.data_structure.Charge` array represent charge in electron.
+    If the :ref:`photon collection <photon_collection>` model group
+    is used, a model like :ref:`Simple photoconversion` needs to be enabled in the pipeline to make the conversion from
+    :guilabel:`Photon` to :guilabel:`Charge`.
+    Otherwise, a model like :ref:`Load charge` needs to be enabled to initialize the
+    :py:class:`~pyxel.data_structure.Charge` array.
 models:
   - name: simple_conversion
     full_name: Simple photoconversion

@@ -46,10 +46,10 @@ class MetadataModel:
 
 
 @dataclass
-class MetadataGroup:
-    """Store metadata information for all models from a Model Group."""
+class GroupInfo:
+    """Store metadata for a Model Group."""
 
-    group: Literal[
+    name: Literal[
         "scene_generation",
         "photon_collection",
         "charge_generation",
@@ -60,6 +60,14 @@ class MetadataGroup:
         "readout_electronics",
         "data_processing",
     ]
+    description: str
+
+
+@dataclass
+class MetadataGroup:
+    """Store metadata information for all models from a Model Group."""
+
+    group: GroupInfo
     models: list[MetadataModel]
 
     @classmethod
