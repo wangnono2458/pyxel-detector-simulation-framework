@@ -88,6 +88,8 @@ Example:
 ### Others
 * Fix issues with mypy and numpy 2.2.5.
   (See [!1040](https://gitlab.com/esa/pyxel/-/merge_requests/1040)).
+* Use [PEP 639](https://peps.python.org/pep-0639/) to update the License information.
+  (See [!1047](https://gitlab.com/esa/pyxel/-/merge_requests/1047)).
 
 
 ## 2.9 / 2025-04-17
