@@ -147,7 +147,7 @@ Example of the configuration file:
 
 .. _Usaf illumination:
 
-Usaf illumination
+USAF illumination
 =================
 
 :guilabel:`Photon` → :guilabel:`Photon`

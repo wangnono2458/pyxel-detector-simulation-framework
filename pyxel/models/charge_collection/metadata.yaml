@@ -103,8 +103,8 @@ models:
             diagonal_coupling: 0.05
             anisotropic_coupling: 0.03
     notebooks:
-      - :external+pyxel_data:doc:`examples/models/inter_pixel_capacitance/ipc`
-      - :external+pyxel_data:doc:`use_cases/HxRG/h2rg`
+      - examples/models/inter_pixel_capacitance/ipc
+      - use_cases/HxRG/h2rg
 
   - name: simple_persistence
     full_name: Simple Persistence
@@ -128,7 +128,7 @@ models:
           trap_densities: [0.307, 0.175]
           trap_capacities: [100., 100.]  # optional
     notebooks:
-      - :external+pyxel_data:doc:`use_cases/HxRG/h2rg`
+      - use_cases/HxRG/h2rg
 
   - name: persistence
     full_name: Persistence

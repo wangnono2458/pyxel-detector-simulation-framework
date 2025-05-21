@@ -59,7 +59,7 @@ models:
         arguments:
           filename: data/qe_map.npy
     notebooks:
-      - :external+pyxel_data:doc:`use_cases/HxRG/h2rg`
+      - use_cases/HxRG/h2rg
 
   - name: apply_qe_curve
     full_name: Apply QE curve
@@ -357,9 +357,9 @@ models:
               thickness: 100.0   # um
               filename:  pyxel/models/charge_generation/cosmix/data/stepsize_proton_100MeV_100um_Si_10k.ascii
     notebooks:
-      - :external+pyxel_data:doc:`use_cases/CCD/ccd`
-      - :external+pyxel_data:doc:`use_cases/CMOS/cmos`
-      - :external+pyxel_data:doc:`use_cases/HxRG/h2rg`
+      - use_cases/CCD/ccd
+      - use_cases/CMOS/cmos
+      - use_cases/HxRG/h2rg
 
   - name: dark_current
     full_name: Dark current
@@ -412,7 +412,7 @@ models:
           spatial_noise_factor: 0.1
           temporal_noise: false
     notebooks:
-      - :external+pyxel_data:doc:`examples/models/dark_current/dark_current_Si`
+      - examples/models/dark_current/dark_current_Si
 
   - name: dark_current_rule07
     full_name: Dark current rule07
@@ -440,7 +440,7 @@ models:
           spatial_noise_factor: 0.1
           temporal_noise: true
     notebooks:
-      - :external+pyxel_data:doc:`examples/models/dark_current/dark_current_rule07`
+      - examples/models/dark_current/dark_current_rule07
 
   - name: simple_dark_current
     full_name: Simple dark current
@@ -468,7 +468,7 @@ models:
         func: pyxel.models.charge_generation.apd_gain
         enabled: true
     notebooks:
-      - :external+pyxel_data:doc:`use_cases/APD/saphira`
+      - use_cases/APD/saphira
         
   - name: dark_current_saphira
     full_name: Dark current Saphira
@@ -489,7 +489,7 @@ models:
         func: pyxel.models.charge_generation.dark_current_saphira
         enabled: true
     notebooks:
-      - :external+pyxel_data:doc:`use_cases/APD/saphira`
+      - use_cases/APD/saphira
 
   - name: radiation_induced_dark_current
     full_name: Radiation induced Dark Current
@@ -515,4 +515,4 @@ models:
           displacement_dose:  50  # TeV/g
           shot_noise: false
     notebooks:
-      - :external+pyxel_data:doc:`examples/models/dark_current_induced/dark_current_induced`
+      - examples/models/dark_current_induced/dark_current_induced
