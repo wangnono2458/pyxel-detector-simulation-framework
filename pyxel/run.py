@@ -668,6 +668,7 @@ def run_mode(
     Returns
     -------
     DataTree
+        An xarray `DataTree` containing simulation results.
 
     Raises
     ------
@@ -986,7 +987,7 @@ def run_mode(
     return data_tree
 
 
-def run_mode_buckets(
+def run_mode_dataset(
     config: Configuration | None = None,
     mode: Union[Exposure, Observation, "Calibration"] | None = None,
     detector: Detector | None = None,
@@ -995,6 +996,64 @@ def run_mode_buckets(
     override_dct: Mapping[str, Any] | None = None,
     debug: bool = False,
 ) -> "xr.Dataset":
+    """Execute a Pyxel simulation pipeline and return the 'photon', 'signal',... in a simple xarray Dataset.
+
+    Parameters
+    ----------
+    config: Configuration, optional
+        Full configuration object, typically loaded via 'pyxel.load(...)'
+    mode : Exposure, Observation or Calibration, optional
+        Mode to execute.
+    detector : Detector, optional
+        This object is the container for all the data used for the models.
+    pipeline : DetectionPipeline, optional
+        This is the core algorithm of Pyxel. This pipeline contains all the models to run.
+    override_dct: dict, optional
+        A dictionary of parameter(s) to override during processing.
+    debug : bool, default: False
+        Add all intermediate steps into the results as a ``DataTree``. This mode is used for debugging.
+
+    Returns
+    -------
+    Dataset
+        An xarray `Dataset` containing simulation results.
+
+    Raises
+    ------
+    TypeError
+        Raised if the ``mode`` is not an instance of `Exposure`, `Observation` or `Calibration`.
+    ValueError
+        If one of the required parameters (`mode`, `detector`, `pipeline`) is not provided.
+    NotImplementedError
+        Raised if parameter ``debug`` is activated and `mode` is not an ``Exposure`` object.
+
+    Examples
+    --------
+    Run an 'Exposure' pipeline
+
+    >>> import pyxel
+    >>> config = pyxel.load("exposure_configuration.yaml")
+    >>> result = pyxel.run_mode_dataset(
+    ...     config,
+    ...     override={  # optional
+    ...         "exposure.outputs.output_folder": "new_folder",
+    ...         "pipeline.photon_collection.load_image.arguments.image_file": "new_image.fits",
+    ...     },
+    ... )
+    >>> result
+    <xarray.Dataset>
+    Dimensions:  (time: 54, y: 100, x: 100)
+    Coordinates:
+      * time     (time) float64 0.02 0.06 0.12 0.2 0.3 ... 113.0 117.8 122.7 127.7
+      * y        (y) int64 0 1 2 3 4 5 6 7 8 9 10 ... 90 91 92 93 94 95 96 97 98 99
+      * x        (x) int64 0 1 2 3 4 5 6 7 8 9 10 ... 90 91 92 93 94 95 96 97 98 99
+    Data variables:
+        photon   (time, y, x) float64 4MB 85.0 120.0 109.0 ... 2.533e+04 2.51e+04
+        charge   (time, y, x) float64 4MB 201.0 196.0 202.0 ... 2.543e+04 2.52e+04
+        pixel    (time, y, x) float64 4MB 77.38 110.0 99.09 ... 2.406e+04 2.406e+04
+        signal   (time, y, x) float64 4MB 0.0009377 0.001322 0.00133 ... 0.2968 0.2968
+        image    (time, y, x) float64 4MB 16.0 22.0 22.0 ... 4.863e+03 4.863e+03
+    """
     data_tree: "xr.DataTree" = run_mode(
         config=config,
         mode=mode,

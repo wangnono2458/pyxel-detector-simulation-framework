@@ -7,6 +7,8 @@ Run
 
 .. autofunction:: run_mode
 
+.. autofunction:: run_mode_dataset
+
 .. autofunction:: exposure_mode
 
 .. autofunction:: observation_mode

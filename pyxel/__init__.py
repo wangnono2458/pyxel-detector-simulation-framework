@@ -23,7 +23,7 @@ from .run import (
     observation_mode,
     run,
     run_mode,
-    run_mode_buckets,
+    run_mode_dataset,
 )
 from .notebook import (
     display_detector,

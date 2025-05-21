@@ -15,6 +15,7 @@ Top-level functions
 
     load
     run_mode
+    run_mode_dataset
     run
     show_versions
 
