@@ -106,7 +106,7 @@ Check the current version of the latest Pyxel release by entering:
 .. code-block:: bash
 
     $ uvx --python 3.12 pyxel-sim --version
-    pyxel-sim, version 2.9
+    pyxel-sim, version 2.10
     Python (CPython) 3.12.10
 
 
@@ -142,7 +142,7 @@ Alternatively, start Jupyter Lab server with a specific version of Pyxel and Pyt
 .. code-block:: bash
 
     $ cd pyxel-examples
-    $ uvx --python 3.12 --with "pyxel-sim[model]==2.9" jupyter lab
+    $ uvx --python 3.12 --with "pyxel-sim[model]==2.10" jupyter lab
 
 
 or with the current Pyxel development code in Gitlab
@@ -205,22 +205,22 @@ commands in the terminal:
 
     .. code-block:: bash
 
-        curl -O https://esa.gitlab.io/pyxel/doc/latest/pyxel-2.9-environment.yaml
-        conda env create -f pyxel-2.9-environment.yaml
+        curl -O https://esa.gitlab.io/pyxel/doc/latest/pyxel-2.10-environment.yaml
+        conda env create -f pyxel-2.10-environment.yaml
 
 .. tab:: Windows (Powershell)
 
     .. code-block:: bash
 
-        wget https://esa.gitlab.io/pyxel/doc/latest/pyxel-2.9-environment.yaml -outfile "pyxel-2.9-environment.yaml"
-        conda env create -f pyxel-2.9-environment.yaml
+        wget https://esa.gitlab.io/pyxel/doc/latest/pyxel-2.10-environment.yaml -outfile "pyxel-2.10-environment.yaml"
+        conda env create -f pyxel-2.10-environment.yaml
 
 
 Once the conda environment has been created you can active it using:
 
 .. code-block:: bash
 
-    conda activate pyxel-2.9
+    conda activate pyxel-2.10
 
 You can now proceed to download the Pyxel tutorial notebooks.
 The total size to download is ~200 MB.
