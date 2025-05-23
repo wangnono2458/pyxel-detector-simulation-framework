@@ -637,7 +637,7 @@ def run_mode(
     *,
     override_dct: Mapping[str, Any] | None = None,
     debug: bool = False,
-    with_inherited_coords: bool = False,
+    with_inherited_coords: bool = True,
 ) -> "xr.DataTree":
     """Execute a Pyxel simulation pipeline.
 
@@ -687,7 +687,6 @@ def run_mode(
     >>> config = pyxel.load("exposure_configuration.yaml")
     >>> data_tree = pyxel.run_mode(
     ...     config,
-    ...     with_inherited_coords=True,  # with the new 'provisional' parameter
     ...     override={  # optional
     ...         "exposure.outputs.output_folder": "new_folder",
     ...         "pipeline.photon_collection.load_image.arguments.image_file": "new_image.fits",
@@ -903,6 +902,13 @@ def run_mode(
                         long_name:  Group: 'simple_adc'
     """
     # Input validation
+    if with_inherited_coords is False:
+        warnings.warn(
+            "Parameter 'with_inherited_coords' is deprecated",
+            DeprecationWarning,
+            stacklevel=1,
+        )
+
     if config is None and mode is None and detector is None and pipeline is None:
         raise ValueError("Missing required argument: 'config'.")
 
