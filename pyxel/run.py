@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     )
 
 
+@deprecated("This function will be removed")
 def exposure_mode(
     exposure: "Exposure",
     detector: Detector,
@@ -114,6 +115,7 @@ def exposure_mode(
     return result
 
 
+@deprecated("This function will be removed")
 def _run_exposure_mode_without_datatree(
     exposure: "Exposure",
     processor: Processor,
@@ -146,6 +148,7 @@ def _run_exposure_mode_without_datatree(
     )
 
 
+@deprecated("This function will be removed")
 def _run_exposure_mode(
     exposure: "Exposure",
     processor: Processor,
@@ -220,6 +223,7 @@ def _run_exposure_mode(
     return result
 
 
+@deprecated("This function will be removed")
 def observation_mode(
     observation: "Observation",
     detector: Detector,
@@ -288,6 +292,7 @@ def observation_mode(
     return result
 
 
+@deprecated("This function will be removed")
 def calibration_mode(
     calibration: "Calibration",
     detector: Detector,
@@ -449,6 +454,7 @@ def calibration_mode(
     return result
 
 
+@deprecated("This function will be removed")
 def _run_calibration_mode_without_datatree(
     calibration: "Calibration",
     processor: Processor,
@@ -969,8 +975,7 @@ def run_mode(
 
     match mode:
         case Exposure():
-            data_tree = _run_exposure_mode(
-                exposure=mode,
+            data_tree = mode.run_exposure(
                 processor=processor,
                 debug=debug,
                 with_inherited_coords=with_inherited_coords,
