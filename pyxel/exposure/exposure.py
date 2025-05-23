@@ -441,10 +441,14 @@ def run_pipeline(
         # The detector should be reset before exposure
         detector.empty()
 
-        if progress_bar:
+        if progress_bar is not None:
+            num_total_steps = (
+                detector.readout_properties.num_steps * processor.num_steps()
+            )
+
             progress_bar.set_description_str(desc="Run pipeline: ")
             progress_bar.set_postfix({"size": format_bytes(0)})
-            progress_bar.reset(total=detector.readout_properties.num_steps)
+            progress_bar.reset(total=num_total_steps)
 
         buckets_data_tree: xr.DataTree = xr.DataTree()
 
@@ -471,7 +475,7 @@ def run_pipeline(
             detector.empty(is_destructive_readout)
 
             # Execute the pipeline for this step.
-            processor.run_pipeline(debug=debug)
+            processor.run_pipeline(debug=debug, progress_bar=progress_bar)
 
             # Extract the results from the 'detector' into a partial 'DataTree'
             partial_datatree_2d: xr.DataTree = _extract_datatree_2d(detector=detector)
@@ -497,7 +501,7 @@ def run_pipeline(
                     )
 
             # Update the progress bar after each step.
-            if progress_bar:
+            if progress_bar is not None:
                 num_bytes = buckets_data_tree.nbytes
                 num_bytes += detector.scene.data.nbytes
 
@@ -507,7 +511,6 @@ def run_pipeline(
                 if detector._data is not None:
                     num_bytes += detector.data.nbytes
 
-                progress_bar.update(1)
                 progress_bar.set_postfix({"size": format_bytes(num_bytes)})
 
         # Prepare the final dictionary to construct the `DataTree`.
