@@ -11,7 +11,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from shutil import copy2
-from typing import IO, TYPE_CHECKING, Any, Optional, Union
+from typing import IO, TYPE_CHECKING, Any, Literal, Optional, Union
 
 from pyxel import __version__ as version
 from pyxel.detectors import (
@@ -160,6 +160,70 @@ def load_yaml(stream: str | IO) -> Any:
 
     result = yaml.load(stream, Loader=yaml.SafeLoader)
     return result
+
+
+def build_configuration(
+    detector_type: Literal["CCD", "CMOS", "MKID", "APD"],
+    num_rows: int,
+    num_cols: int,
+) -> Configuration:
+    match detector_type:
+        case "CCD":
+            config = Configuration(
+                exposure=Exposure(readout=Readout()),
+                ccd_detector=CCD(
+                    geometry=CCDGeometry(row=num_rows, col=num_cols),
+                    environment=Environment(),
+                    characteristics=Characteristics(
+                        quantum_efficiency=0.8,
+                        charge_to_volt_conversion=1e-6,
+                        pre_amplification=100.0,
+                        adc_bit_resolution=16,
+                        adc_voltage_range=(0.0, 10.0),
+                    ),
+                ),
+                pipeline=DetectionPipeline(
+                    photon_collection=[
+                        ModelFunction(
+                            name="usaf_illumination",
+                            func="pyxel.models.photon_collection.usaf_illumination",
+                        )
+                    ],
+                    charge_generation=[
+                        ModelFunction(
+                            name="simple_conversion",
+                            func="pyxel.models.charge_generation.simple_conversion",
+                        )
+                    ],
+                    charge_collection=[
+                        ModelFunction(
+                            name="simple_collection",
+                            func="pyxel.models.charge_collection.simple_collection",
+                        )
+                    ],
+                    charge_measurement=[
+                        ModelFunction(
+                            name="simple_measurement",
+                            func="pyxel.models.charge_measurement.simple_measurement",
+                        )
+                    ],
+                    readout_electronics=[
+                        ModelFunction(
+                            name="simple_amplifier",
+                            func="pyxel.models.readout_electronics.simple_amplifier",
+                        ),
+                        ModelFunction(
+                            name="simple_adc",
+                            func="pyxel.models.readout_electronics.simple_adc",
+                        ),
+                    ],
+                ),
+            )
+
+        case _:
+            raise NotImplementedError
+
+    return config
 
 
 def to_exposure_outputs(dct: dict | None) -> ExposureOutputs:

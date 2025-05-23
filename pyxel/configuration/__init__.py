@@ -8,5 +8,11 @@
 """TBW."""
 
 # flake8: noqa
-from .configuration import load, loads, Configuration, copy_config_file
+from .configuration import (
+    load,
+    loads,
+    Configuration,
+    copy_config_file,
+    build_configuration,
+)
 from .configuration import _build_configuration
