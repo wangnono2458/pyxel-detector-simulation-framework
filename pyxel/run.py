@@ -1005,7 +1005,6 @@ def run_mode_dataset(
     pipeline: DetectionPipeline | None = None,
     *,
     override_dct: Mapping[str, Any] | None = None,
-    debug: bool = False,
 ) -> "xr.Dataset":
     """Execute a Pyxel simulation pipeline and return the 'photon', 'signal',... in a simple xarray Dataset.
 
@@ -1021,8 +1020,6 @@ def run_mode_dataset(
         This is the core algorithm of Pyxel. This pipeline contains all the models to run.
     override_dct: dict, optional
         A dictionary of parameter(s) to override during processing.
-    debug : bool, default: False
-        Add all intermediate steps into the results as a ``DataTree``. This mode is used for debugging.
 
     Returns
     -------
@@ -1071,7 +1068,7 @@ def run_mode_dataset(
         detector=detector,
         pipeline=pipeline,
         override_dct=override_dct,
-        debug=debug,
+        debug=False,
         with_inherited_coords=True,
     )
 
