@@ -96,7 +96,7 @@ def _run_pipelines_array_to_datatree(
     readout: Readout,
     outputs: Optional["ObservationOutputs"],
     pipeline_seed: int | None,
-    progressbar: bool,
+    progress_bar,
 ) -> "xr.DataTree":
     """Execute a single pipeline to generate a DataTree output.
 
@@ -109,7 +109,7 @@ def _run_pipelines_array_to_datatree(
     readout
     outputs
     pipeline_seed
-    progressbar
+    progress_bar
 
     Returns
     -------
@@ -183,7 +183,7 @@ def _run_pipelines_array_to_datatree(
         pipeline_seed=pipeline_seed,
         debug=False,  # Debug not supported in Observation mode
         with_inherited_coords=True,  # Ensure inherited coordinates
-        progressbar=progressbar,
+        progress_bar=progress_bar,
     )
 
     return data_tree
@@ -209,7 +209,7 @@ def _run_pipelines_tuple_to_array(
         outputs=outputs,
         output_filename_suffix=output_filename_suffixes,
         pipeline_seed=pipeline_seed,
-        progressbar=False,
+        progress_bar=None,
     )
 
     # Extract numpy arrays from the DataTree
@@ -283,6 +283,8 @@ def run_pipelines_with_dask(
     # Extract metadata from 'first_param'
     with TemporaryDirectory() as temp_folder:
         # Late import
+        from tqdm.auto import tqdm
+
         from pyxel.outputs import ObservationOutputs
 
         # Create new temporary outputs
@@ -295,6 +297,8 @@ def run_pipelines_with_dask(
 
             temp_outputs.create_output_folder()
 
+        progress_bar = tqdm()
+
         first_data_tree: xr.DataTree = _run_pipelines_array_to_datatree(
             params_tuple=first_param_tuple,
             output_filename_suffix=None,
@@ -303,7 +307,7 @@ def run_pipelines_with_dask(
             readout=readout,
             outputs=temp_outputs,  # TODO: Create a new temporary outputs only for here
             pipeline_seed=pipeline_seed,
-            progressbar=True,
+            progress_bar=progress_bar,
         )
 
     # Extract output dimensions metadata
