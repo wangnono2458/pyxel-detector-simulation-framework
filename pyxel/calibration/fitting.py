@@ -148,7 +148,7 @@ class ModelFitting(ProblemSingleObjective):
                     )
 
                     step.current = value
-                    new_processor.set(key=step.key, value=step.current)
+                    new_processor.set(key=step.key, value=step.current)  # type: ignore[arg-type]
                 self.param_processor_list += [new_processor]
         else:
             self.param_processor_list = [deepcopy(self.processor)]
