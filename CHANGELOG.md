@@ -10,6 +10,19 @@ Minor releases include updated stdlib stubs from typeshed.
 Pyxel doesn't use SemVer anymore, since most minor releases have at least minor backward incompatible changes.
 
 
+## UNRELEASED
+
+### Core
+
+### Documentation
+
+### Models
+
+### Others
+* Fix issues found by mypy 1.16.
+  (See [!1050](https://gitlab.com/esa/pyxel/-/merge_requests/1050)).
+
+
 ## 2.10 / 2025-05-22
 
 This release includes various bug fixes and feature enhancements to improve usability and flexibility.

@@ -196,7 +196,6 @@ module = [
     "pympler.*",
     "PIL",
     "IPython.*",
-    "scipy.*",
     "scopesim.*",
     "toolz.*",
     "tqdm.*",
@@ -384,6 +383,7 @@ test = [
 ]
 static-analysis = [
     "mypy[faster-cache]>=1.13.0",
+    "scipy-stubs",
     "types-pyyaml>=6.0.12.20240917",
     "types-requests>=2.32.0.20241016",
 ]

@@ -71,7 +71,7 @@ def build_processors(
             value: Literal["_"] | str | Number | tuple[Number, ...] = step.values[i]
 
             step.current = value
-            new_processor.set(key=step.key, value=step.current)
+            new_processor.set(key=step.key, value=step.current)  # type: ignore[arg-type]
 
         processors.append(new_processor)
 

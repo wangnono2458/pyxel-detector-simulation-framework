@@ -205,7 +205,7 @@ def integrate_flux(
     _, all_poles = compute_bandwidth(psf_wavelength)
 
     # Cumulative count
-    cum_sum = cumulative_trapezoid(y=flux, x=wavelength, initial=0.0)
+    cum_sum = cumulative_trapezoid(y=flux, x=wavelength, initial=0)
 
     # self.wavelength has to quantity: value and units
     # interpolate over psf wavelength
