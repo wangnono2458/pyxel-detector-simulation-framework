@@ -304,7 +304,7 @@ def to_ccd_geometry(dct: dict) -> CCDGeometry:
 
 def to_cmos_geometry(dct: dict) -> CMOSGeometry:
     """Create a CMOSGeometry class from a dictionary."""
-    return CMOSGeometry(**dct)
+    return CMOSGeometry.from_dict(dct)
 
 
 def to_mkid_geometry(dct: dict) -> MKIDGeometry:
@@ -314,7 +314,7 @@ def to_mkid_geometry(dct: dict) -> MKIDGeometry:
 
 def to_apd_geometry(dct: dict) -> APDGeometry:
     """Create a APDGeometry class from a dictionary."""
-    return APDGeometry(**dct)
+    return APDGeometry.from_dict(dct)
 
 
 def to_environment(dct: dict | None) -> Environment:

@@ -13,15 +13,22 @@ import xarray as xr
 import pyxel
 
 
-@pytest.fixture
-def content_exposure_with_channels() -> str:
+@pytest.fixture(
+    params=[
+        "ccd_detector",
+        "cmos_detector",
+        # 'apd_detector',
+    ]
+)
+def content_exposure_with_channels(request) -> str:
     """Create YAML exposure content."""
-    return """
+    detector: str = request.param
+    return f"""
 exposure:
   readout:
     times: [1]
 
-ccd_detector:
+{detector}:
 
   geometry:
     row: 100               # pixel
