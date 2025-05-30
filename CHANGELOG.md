@@ -12,7 +12,12 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 
 ## UNRELEASED
 
+This release includes various bug fixes and feature enhancements to improve usability and flexibility.
+
 ### Core
+* ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html) not working for 
+  CMOS and APD detector(s).
+  (See [!1051](https://gitlab.com/esa/pyxel/-/merge_requests/1051)).
 
 ### Documentation
 
