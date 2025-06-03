@@ -118,8 +118,8 @@ Example of the configuration file.
         trap_densities: [0.307, 0.175]
         sigma: [1.e-15, 1.e-15]
         beta: 0.3
-        max_electron_volume: 1.e-10,
-        transfer_period: float = 1.e-4,
+        max_electron_volume: 1.e-10
+        transfer_period: 1.e-4
         charge_injection: true  # only used for parallel mode
         full_well_capacity: 1000.  # optional (otherwise one from detector characteristics is used)
 
