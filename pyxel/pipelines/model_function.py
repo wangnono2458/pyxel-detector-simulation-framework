@@ -112,6 +112,9 @@ class Arguments(MutableMapping):
     #     """TBW."""
     #     return Arguments(deepcopy(self._arguments))
 
+    def dump(self) -> Mapping[str, Any]:
+        return {"arguments": self._arguments}
+
 
 # TODO: Improve this class. See issue #132.
 class ModelFunction:
@@ -232,6 +235,14 @@ class ModelFunction:
         # TODO: Implement this a context manager
         detector.current_running_model_name = self.name
         self.func(detector, **self.arguments)
+
+    def dump(self) -> Mapping[str, Any]:
+        return {
+            "func": self._func_name,
+            "name": self._name,
+            "arguments": self._arguments.dump() if self._arguments else None,
+            "enabled": self.enabled,
+        }
 
 
 class FitnessFunction:

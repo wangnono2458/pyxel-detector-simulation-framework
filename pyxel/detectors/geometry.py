@@ -8,6 +8,7 @@
 """Geometry class for detector."""
 
 from collections.abc import Mapping
+from typing import Any
 
 import numpy as np
 from typing_extensions import Self
@@ -370,3 +371,13 @@ class Geometry:
 
         else:
             return cls(**new_dct)
+
+    def dump(self) -> Mapping[str, Any]:
+        return {
+            "row": self._row,
+            "col": self._col,
+            "total_thickness": self._total_thickness,
+            "pixel_vert_size": self._pixel_vert_size,
+            "pixel_horz_size": self._pixel_horz_size,
+            "pixel_scale": self._pixel_scale,
+        }

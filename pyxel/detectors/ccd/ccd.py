@@ -155,3 +155,10 @@ class CCD(Detector):
             detector.charge._frame = new_frame[previous_frame.columns]
 
         return detector
+
+    def dump(self) -> Mapping[str, Any]:
+        return {
+            "geometry": self._geometry.dump(),
+            "environment": self._environment.dump(),
+            "characteristics": self._characteristics.dump(),
+        }

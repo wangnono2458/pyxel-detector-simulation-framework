@@ -135,6 +135,30 @@ class Configuration:
         else:
             raise NotImplementedError
 
+    def to_yaml(self) -> str:
+        import yaml
+
+        content = "# yaml-language-server: $schema=https://esa.gitlab.io/pyxel/doc/latest/pyxel_schema.json"
+
+        content += "\n"
+        if self.exposure:
+            content += yaml.safe_dump({"exposure": self.exposure.dump()})
+
+        if self.observation or self.calibration:
+            raise NotImplementedError
+
+        content += "\n"
+        if self.ccd_detector:
+            content += yaml.safe_dump({"ccd_detector": self.ccd_detector.dump()})
+
+        if self.cmos_detector or self.mkid_detector or self.apd_detector:
+            raise NotImplementedError
+
+        content += "\n"
+        content += yaml.safe_dump({"pipeline": self.pipeline.dump()})
+
+        return content
+
 
 def load(yaml_file: str | Path) -> Configuration:
     """Load configuration from a ``YAML`` file."""

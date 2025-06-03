@@ -96,3 +96,10 @@ class ExposureOutputs(Outputs):
 
                 func = save_methods[out_format]
                 func(data=dataset, name=obj)
+
+    def dump(self) -> Mapping[str, Any]:
+        return {
+            "output_folder": self._output_folder,
+            "custom_dir_name": self._custom_dir_name,
+            "save_data_to_file": self.save_data_to_file,
+        }
