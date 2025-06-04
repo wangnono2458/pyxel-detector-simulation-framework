@@ -13,7 +13,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
-from typing import Any, Self
+from typing import Self
 
 
 @cache
@@ -41,7 +41,7 @@ def get_schema() -> Mapping:
 
 
 def clean_text(data: str) -> str:
-    """Remove 'reStructuredText' Sphinx-style references.
+    """Remove 'reStructuredText' Sphinx-style references from the input text.
 
     Parameters
     ----------
@@ -58,7 +58,16 @@ def clean_text(data: str) -> str:
     >>> clean_text("Geometrical attributes of a :term:`CCD` detector.")
     'Geometrical attributes of a CCD detector.'
     """
-    return re.sub(r":term:`([^`]+)`", r"\1", data)
+    # Define patterns and their replacement
+    patterns: Sequence[tuple[str, str]] = [
+        (r":term:`([^`]+)`", r"\1"),
+        (r":ref:`([^`]+)`", r"'\1'"),
+    ]
+
+    for pattern, replacement in patterns:
+        data = re.sub(pattern=pattern, repl=replacement, string=data)
+
+    return data
 
 
 @dataclass(frozen=True)

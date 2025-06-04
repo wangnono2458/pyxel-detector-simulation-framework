@@ -19,6 +19,11 @@ from pyxel.util import clean_text, get_schema
             "Geometrical attributes of a CCD detector.",
             id="One 'term'",
         ),
+        pytest.param(
+            "You can check the arguments specification in :ref:`Load image`",
+            "You can check the arguments specification in 'Load image'",
+            id="one 'ref'",
+        ),
     ],
 )
 def test_clean_text(content: str, exp_result: str):
