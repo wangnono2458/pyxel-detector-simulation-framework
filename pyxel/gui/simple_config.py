@@ -5,48 +5,65 @@
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
 
-from collections.abc import Mapping
+"""Sub-package to display a GUI to build a simple Configuration object."""
 
-import numpy as np
+from collections.abc import Mapping
+from typing import TYPE_CHECKING
+
 import panel as pn
 import param
-import xarray as xr
 
 import pyxel
 from pyxel import Configuration
 from pyxel.gui import run_mode_gui
+from pyxel.util import clean_text, get_schema
 
 pn.extension("codeeditor")
 
+if TYPE_CHECKING:
+    import xarray as xr
 
-def display_header(obj: param.String) -> pn.layout.Panel:
+
+def display_header(text: str, doc: str | None = None) -> pn.layout.Panel:
     """Create a header row for a Panel layout."""
-    return pn.Row(
-        pn.widgets.StaticText(value=obj.default),
-        pn.widgets.TooltipIcon(value=obj.doc, margin=(0, 10, 0, -10)),
+    row = pn.Row(
+        pn.widgets.StaticText(value=clean_text(text)),
         styles={"font-weight": "bold"},
         margin=(5, 10, 5, 0),
     )
+
+    if doc:
+        row.append(
+            pn.widgets.TooltipIcon(
+                value=clean_text(doc),
+                margin=(0, 10, 0, -10),
+            )
+        )
+
+    return row
 
 
 class CCDGeometry(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
-    header = param.String("Geometrical attributes of a CCD detector", doc="XXX")
-    columns = param.Integer(100, bounds=(1, None), doc="Number of pixel columns")
-    rows = param.Integer(100, bounds=(1, None), doc="Number of pixel rows")
+    columns = param.Integer(100, bounds=(1, None))
+    rows = param.Integer(100, bounds=(1, None))
 
     def view(self) -> pn.layout.Panel:
         """Return a Panel layout to visualize the geometry fields."""
+        schema = get_schema()["definitions"]["CCDGeometry"]
+
         return pn.Column(
-            display_header(self.param.header),
+            display_header(schema["description"]),
             pn.widgets.IntInput.from_param(
                 self.param.columns,
+                description=schema["properties"]["col"]["description"],
                 margin=(5, 10, 5, 10),
                 sizing_mode="stretch_width",
             ),
             pn.widgets.IntInput.from_param(
                 self.param.rows,
+                description=schema["properties"]["row"]["description"],
                 margin=(5, 10, 10, 10),
                 sizing_mode="stretch_width",
             ),
@@ -81,23 +98,22 @@ class CCDGeometry(param.Parameterized):
 class Environment(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
-    header = param.String("Environmental attributes of the detector", doc="XXX")
     temperature = param.Number(
-        default=None,
-        bounds=(0, None),
-        inclusive_bounds=(False, False),
-        doc="XXX",
+        default=None, bounds=(0, None), inclusive_bounds=(False, False)
     )
 
     def view(self) -> pn.layout.Panel:
         """Return a Panel layout to visualize the geometry fields."""
+        schema = get_schema()["definitions"]["Environment"]
+
         return pn.Column(
-            display_header(self.param.header),
+            display_header(schema["description"]),
             pn.widgets.FloatInput.from_param(
                 self.param.temperature,
                 step=1.0,
                 start=1e-6,
                 placeholder="Add a temperature ...",
+                description=schema["properties"]["temperature"]["description"],
                 margin=(5, 10, 10, 10),
                 sizing_mode="stretch_width",
             ),
@@ -115,6 +131,7 @@ class CCD(param.Parameterized):
     def view(self) -> pn.layout.Panel:
         """Return a Panel layout to visualize the geometry fields."""
         return pn.Column(
+            # display_header('CCD Detector'),
             self.geometry.view(),
             self.environment.view(),
             styles={"border": "2px solid black", "border_radius": "8px"},
@@ -134,18 +151,41 @@ class CCD(param.Parameterized):
 #             margin=10,
 #         )
 
+#
+# class Readout(param.Parameterized):
+#     """Configuration parameters and a Panel-based used interface."""
+#
+#     header = param.String("Readout mode", doc="XXX")
+#     readout_time = param.Array(np.array([1.0, 2.0]), doc="Readout time")
+#     non_destructive = param.Boolean(False, doc="Non-destructive readout mode")
+#
+#     def view(self) -> pn.layout.Panel:
+#         """Return a Panel layout to visualize the geometry fields."""
+#         return pn.Column(
+#             display_param_header(self.param.header),
+#             pn.Param(
+#                 self.param.readout_time,
+#                 sizing_mode="stretch_width",
+#             ),
+#             pn.Param(
+#                 self.param.non_destructive,
+#                 sizing_mode="stretch_width",
+#             ),
+#             styles={"border": "2px solid black", "border_radius": "8px"},
+#             margin=10,
+#         )
+
 
 # TODO: Create a BaseClass or prototype
 class ModelUSAF(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
-    header = param.String("USAF illumination", doc="XXX")
     enabled = param.Boolean(True)
 
     def view(self) -> pn.layout.Panel:
         """Return a Panel layout to visualize the geometry fields."""
         return pn.Card(
-            header=display_header(self.param.header),
+            header=display_header("USAF illumination"),
             objects=[
                 pn.Param(
                     self.param.enabled,
@@ -161,15 +201,14 @@ class ModelUSAF(param.Parameterized):
 class GroupPhotonCollection(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
-    header = param.String("Photon Collection group", doc="XXX")
     models = param.List([ModelUSAF(name="usaf_illumination")], instantiate=True)
 
     def view(self) -> pn.layout.Panel:
         """Return a Panel layout to visualize the geometry fields."""
         column = pn.Column(
-            display_header(self.param.header),
+            display_header("Photon Collection group"),
             styles={"border": "2px solid black", "border_radius": "8px"},
-            margin=10,
+            margin=(10, 10, 5, 10),
         )
 
         for el in self.models:
@@ -182,14 +221,13 @@ class GroupPhotonCollection(param.Parameterized):
 class ModelCDM(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
-    header = param.String("Charge Distortion Model", doc="XXX")
     # Add more parameters
     enabled = param.Boolean(True)
 
     def view(self) -> pn.layout.Panel:
         """Return a Panel layout to visualize the geometry fields."""
         return pn.Card(
-            header=display_header(self.param.header),
+            header=display_header("Charge Distortion Model"),
             objects=[
                 pn.Param(
                     self.param.enabled,
@@ -205,13 +243,12 @@ class ModelCDM(param.Parameterized):
 class GroupChargeTransfer(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
-    header = param.String("Charge Transfer Collection group", doc="XXX")
     models = param.List([ModelCDM(name="charge_distortion_model")], instantiate=True)
 
     def view(self) -> pn.layout.Panel:
         """Return a Panel layout to visualize the geometry fields."""
         column = pn.Column(
-            display_header(self.param.header),
+            display_header("Charge Transfer Collection group"),
             styles={"border": "2px solid black", "border_radius": "8px"},
             margin=10,
         )
@@ -220,30 +257,6 @@ class GroupChargeTransfer(param.Parameterized):
             column.append(el.view())
 
         return column
-
-
-class Readout(param.Parameterized):
-    """Configuration parameters and a Panel-based used interface."""
-
-    header = param.String("Readout mode", doc="XXX")
-    readout_time = param.Array(np.array([1.0, 2.0]), doc="Readout time")
-    non_destructive = param.Boolean(False, doc="Non-destructive readout mode")
-
-    def view(self) -> pn.layout.Panel:
-        """Return a Panel layout to visualize the geometry fields."""
-        return pn.Column(
-            display_header(self.param.header),
-            pn.Param(
-                self.param.readout_time,
-                sizing_mode="stretch_width",
-            ),
-            pn.Param(
-                self.param.non_destructive,
-                sizing_mode="stretch_width",
-            ),
-            styles={"border": "2px solid black", "border_radius": "8px"},
-            margin=10,
-        )
 
 
 class CCDPipeline(param.Parameterized):
@@ -266,9 +279,8 @@ class PredefinedConfig(param.Parameterized):
     """
 
     detector = param.Parameter(default=None)  # TODO: Improve this
-    readout = param.Parameter(Readout(), instantiate=True)
+    # readout = param.Parameter(Readout(), instantiate=True)
     pipeline = param.Parameter(default=None)  # TODO: Improve this
-    # photon_collection = param.Parameter(group_photon_collection_param)# TODO: Remove this
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -302,8 +314,8 @@ class PredefinedConfig(param.Parameterized):
         )
         self.pipeline = self._ccd_pipeline
         self._pipeline_column = pn.Column(
-            styles={"border": "2px solid black"},
-            margin=10,
+            styles={"border": "2px solid black", "border_radius": "8px"},
+            margin=(5, 10, 5, 10),
         )
 
         # self.pipeline.append(photon_collection)
@@ -357,7 +369,7 @@ class PredefinedConfig(param.Parameterized):
 
         with self._button.param.update(loading=True):
             self._button.loading = True
-            ds: xr.Dataset = run_mode_gui(config, tqdm_widget=progress_widget)
+            _ds: xr.Dataset = run_mode_gui(config, tqdm_widget=progress_widget)
             image_tabs = pyxel.display_detector(config.detector)
 
         # Python snippet code
@@ -400,8 +412,9 @@ pyxel.display_detector(config.detector)
         # )
         # iref = pn.bind(self._select_detector, detector_name=widget_detectors)
 
-        column = pn.Column(
+        config_column = pn.Column(
             width=400,
+            margin=5,
             styles={
                 "background": "WhiteSmoke",
                 "border": "2px solid black",
@@ -411,8 +424,12 @@ pyxel.display_detector(config.detector)
                 "border_radius": "8px",
             },
         )
-        column.append(
-            pn.pane.Markdown("### Pre-defined Configuration", align="center", margin=0)
+        config_column.append(
+            pn.pane.Markdown(
+                "### Pre-defined Configuration",
+                align="center",
+                margin=(5, 0, 0, 0),
+            )
         )
         # column.append(widget_detectors)
         # column.append(iref)
@@ -420,11 +437,11 @@ pyxel.display_detector(config.detector)
         self._detectors_widget["CCD"].visible = True
         # self._detectors_widget["CMOS"].visible = False
 
-        column.append(self._detectors_widget["CCD"])  # TODO: Improve this
+        config_column.append(self._detectors_widget["CCD"])  # TODO: Improve this
         # column.append(self._detectors_widget["CMOS"])  # TODO: Improve this
 
         # Readout
-        column.append(self.readout.view())
+        # column.append(self.readout.view())
 
         # Model groups
         # self._pipeline_column = pn.Column(styles={"border": "2px solid black"}, margin=10)
@@ -434,7 +451,7 @@ pyxel.display_detector(config.detector)
         self._pipeline_column.append(self.pipeline.photon_collection.view())
         self._pipeline_column.append(self.pipeline.charge_transfer.view())
 
-        column.append(self._pipeline_column)
+        config_column.append(self._pipeline_column)
 
         self._button = pn.widgets.Button(
             name="Execute pipeline",
@@ -442,10 +459,10 @@ pyxel.display_detector(config.detector)
             button_type="primary",
             sizing_mode="stretch_width",
         )
-        column.append(self._button)
+        config_column.append(self._button)
 
         return pn.Row(
-            column,
+            config_column,
             self._results_column,
             width=400 * 3,
             styles={
@@ -453,3 +470,10 @@ pyxel.display_detector(config.detector)
                 # "border": "2px dashed yellow",
             },
         )
+
+
+# # pip install watchfiles
+# # panel serve simple_config.py --dev --show
+# foo = PredefinedConfig()
+# foo.display().servable(title="Pyxel")
+# pn.serve(foo.display(), dev=True)
