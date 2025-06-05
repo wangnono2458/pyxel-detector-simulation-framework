@@ -8,15 +8,19 @@
 """Sub-package to display a GUI to build a simple Configuration object."""
 
 from collections.abc import Mapping
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import panel as pn
 import param
 
 import pyxel
+import pyxel.gui.images
 from pyxel import Configuration
 from pyxel.gui import run_mode_gui
 from pyxel.util import clean_text, get_schema
+
+folder_image = Path(pyxel.gui.images.__path__[0])
 
 pn.extension("codeeditor")
 
@@ -53,20 +57,32 @@ class CCDGeometry(param.Parameterized):
         """Return a Panel layout to visualize the geometry fields."""
         schema = get_schema()["definitions"]["CCDGeometry"]
 
-        return pn.Column(
-            display_header(schema["description"]),
-            pn.widgets.IntInput.from_param(
-                self.param.columns,
-                description=schema["properties"]["col"]["description"],
-                margin=(5, 10, 5, 10),
-                sizing_mode="stretch_width",
+        return pn.Card(
+            header=pn.Row(
+                pn.pane.SVG(
+                    folder_image / "adjustements_horizontal.svg",
+                    width=18,
+                    margin=(10, -5, 10, 0),
+                    align="end",
+                ),
+                display_header(schema["description"]),
+                margin=(0, 0, -10, 0),
             ),
-            pn.widgets.IntInput.from_param(
-                self.param.rows,
-                description=schema["properties"]["row"]["description"],
-                margin=(5, 10, 10, 10),
-                sizing_mode="stretch_width",
-            ),
+            objects=[
+                pn.widgets.IntInput.from_param(
+                    self.param.columns,
+                    description=schema["properties"]["col"]["description"],
+                    margin=(5, 10, 5, 10),
+                    sizing_mode="stretch_width",
+                ),
+                pn.widgets.IntInput.from_param(
+                    self.param.rows,
+                    description=schema["properties"]["row"]["description"],
+                    margin=(5, 10, 10, 10),
+                    sizing_mode="stretch_width",
+                ),
+            ],
+            collapsible=False,
             styles={"border": "2px solid black", "border_radius": "8px"},
             margin=(10, 10, 5, 10),
         )
@@ -106,17 +122,29 @@ class Environment(param.Parameterized):
         """Return a Panel layout to visualize the geometry fields."""
         schema = get_schema()["definitions"]["Environment"]
 
-        return pn.Column(
-            display_header(schema["description"]),
-            pn.widgets.FloatInput.from_param(
-                self.param.temperature,
-                step=1.0,
-                start=1e-6,
-                placeholder="Add a temperature ...",
-                description=schema["properties"]["temperature"]["description"],
-                margin=(5, 10, 10, 10),
-                sizing_mode="stretch_width",
+        return pn.Card(
+            header=pn.Row(
+                pn.pane.SVG(
+                    folder_image / "thermometer.svg",
+                    width=18,
+                    margin=(10, -5, 10, 0),
+                    align="end",
+                ),
+                display_header(schema["description"]),
+                margin=(0, 0, -10, 0),
             ),
+            objects=[
+                pn.widgets.FloatInput.from_param(
+                    self.param.temperature,
+                    step=1.0,
+                    start=1e-6,
+                    placeholder="Add a temperature ...",
+                    description=schema["properties"]["temperature"]["description"],
+                    margin=(5, 10, 10, 10),
+                    sizing_mode="stretch_width",
+                )
+            ],
+            collapsible=False,
             styles={"border": "2px solid black", "border_radius": "8px"},
             margin=(5, 10, 10, 10),
         )
@@ -130,10 +158,19 @@ class CCD(param.Parameterized):
 
     def view(self) -> pn.layout.Panel:
         """Return a Panel layout to visualize the geometry fields."""
-        return pn.Column(
-            # display_header('CCD Detector'),
-            self.geometry.view(),
-            self.environment.view(),
+        return pn.Card(
+            header=pn.Row(
+                pn.pane.SVG(
+                    folder_image / "frame.svg",
+                    width=18,
+                    margin=(10, -5, 10, 0),
+                    align="end",
+                ),
+                display_header("CCD Detector"),
+                margin=(0, 0, -10, 0),
+            ),
+            objects=[self.geometry.view(), self.environment.view()],
+            collapsible=False,
             styles={"border": "2px solid black", "border_radius": "8px"},
             margin=10,
         )
@@ -185,7 +222,7 @@ class ModelUSAF(param.Parameterized):
     def view(self) -> pn.layout.Panel:
         """Return a Panel layout to visualize the geometry fields."""
         return pn.Card(
-            header=display_header("USAF illumination"),
+            header=pn.Row(display_header("USAF illumination"), margin=(0, 0, -10, 0)),
             objects=[
                 pn.Param(
                     self.param.enabled,
@@ -193,6 +230,7 @@ class ModelUSAF(param.Parameterized):
                 )
             ],
             margin=10,
+            # margin=(0, 0, -10, 0),
             styles={"border": "2px solid black", "border_radius": "8px"},
         )
 
@@ -205,8 +243,18 @@ class GroupPhotonCollection(param.Parameterized):
 
     def view(self) -> pn.layout.Panel:
         """Return a Panel layout to visualize the geometry fields."""
-        column = pn.Column(
-            display_header("Photon Collection group"),
+        column = pn.Card(
+            header=pn.Row(
+                pn.pane.SVG(
+                    folder_image / "layout_list.svg",
+                    width=18,
+                    margin=(10, -5, 10, 0),
+                    align="end",
+                ),
+                display_header("Photon Collection group"),
+                margin=(0, 0, -10, 0),
+            ),
+            collapsible=False,
             styles={"border": "2px solid black", "border_radius": "8px"},
             margin=(10, 10, 5, 10),
         )
@@ -227,13 +275,11 @@ class ModelCDM(param.Parameterized):
     def view(self) -> pn.layout.Panel:
         """Return a Panel layout to visualize the geometry fields."""
         return pn.Card(
-            header=display_header("Charge Distortion Model"),
-            objects=[
-                pn.Param(
-                    self.param.enabled,
-                    sizing_mode="stretch_width",
-                )
-            ],
+            header=pn.Row(
+                display_header("Charge Distortion Model"),
+                margin=(0, 0, -10, 0),
+            ),
+            objects=[pn.Param(self.param.enabled, sizing_mode="stretch_width")],
             margin=10,
             styles={"border": "2px solid black", "border_radius": "8px"},
         )
@@ -247,8 +293,18 @@ class GroupChargeTransfer(param.Parameterized):
 
     def view(self) -> pn.layout.Panel:
         """Return a Panel layout to visualize the geometry fields."""
-        column = pn.Column(
-            display_header("Charge Transfer Collection group"),
+        column = pn.Card(
+            header=pn.Row(
+                pn.pane.SVG(
+                    folder_image / "layout_list.svg",
+                    width=18,
+                    margin=(10, -5, 10, 0),
+                    align="end",
+                ),
+                display_header("Charge Transfer Collection group"),
+                margin=(0, 0, -10, 0),
+            ),
+            collapsible=False,
             styles={"border": "2px solid black", "border_radius": "8px"},
             margin=10,
         )
@@ -313,7 +369,18 @@ class PredefinedConfig(param.Parameterized):
             charge_transfer=GroupChargeTransfer(),
         )
         self.pipeline = self._ccd_pipeline
-        self._pipeline_column = pn.Column(
+        self._pipeline_column = pn.Card(
+            header=pn.Row(
+                pn.pane.SVG(
+                    folder_image / "layers.svg",
+                    width=18,
+                    margin=(10, -5, 10, 0),
+                    align="end",
+                ),
+                display_header("Pipeline / Models"),
+                margin=(0, 0, -10, 0),
+            ),
+            collapsible=False,
             styles={"border": "2px solid black", "border_radius": "8px"},
             margin=(5, 10, 5, 10),
         )
