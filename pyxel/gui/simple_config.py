@@ -413,12 +413,22 @@ class PredefinedConfig(param.Parameterized):
         code_editor_widget = pn.widgets.CodeEditor(
             value=source_code,
             name="Code",
-            sizing_mode="stretch_width",
             language="python",
+            sizing_mode="stretch_width",
+            readonly=True,
+        )
+
+        yaml_widget = pn.widgets.CodeEditor(
+            value=config.to_yaml(),
+            name="Configuration",
+            language="yaml",
+            sizing_mode="stretch_width",
             readonly=True,
         )
 
         image_tabs.append(code_editor_widget)
+        image_tabs.append(yaml_widget)
+
         self._results_column.append(image_tabs)
 
     def display(self):
