@@ -345,6 +345,8 @@ class PredefinedConfig(param.Parameterized):
     #     self.detector = self._detectors[detector_name]
 
     def _run_pipeline(self, event):
+        import hvplot.xarray  # noqa: F401
+
         # print(f"Run pipeline, {event=}")
         # TODO: Add a waiting status on the button
         self._results_column.clear()
@@ -359,8 +361,8 @@ class PredefinedConfig(param.Parameterized):
             num_cols=self.detector.geometry.columns,  # TODO: use '.column' instead
         )
 
-        config.running_mode.readout.times = self.readout.readout_time.tolist()
-        config.running_mode.readout.non_destructive = self.readout.non_destructive
+        config.running_mode.readout.times = [1.0, 2.0, 3.0]
+        config.running_mode.readout.non_destructive = True
 
         assert config.pipeline.photon_collection
         config.pipeline.photon_collection.usaf_illumination.enabled = (
@@ -373,22 +375,40 @@ class PredefinedConfig(param.Parameterized):
             image_tabs = pyxel.display_detector(config.detector)
 
         # Python snippet code
-        source_code: str = f"""# Snippet code
-import pyxel
+        source_code_lst: list[str] = []
+        source_code_lst.append("# Snippet code")
+        source_code_lst.append("import pyxel")
+        source_code_lst.append("")
+        source_code_lst.append(f"# Get default {self.detector.name!r} pipeline")
+        source_code_lst.append(
+            f"config = pyxel.build_configuration({self.detector.name!r}, num_cols={self.detector.geometry.columns!r}, num_rows={self.detector.geometry.rows!r})"
+        )
+        source_code_lst.append("")
 
-config = pyxel.build_configuration({self.detector.name!r}, num_cols={self.detector.geometry.columns!r}, num_rows={self.detector.geometry.rows!r})  # Get default {self.detector.name!r} pipeline
+        if self.detector.environment.temperature:
+            source_code_lst.append(
+                f"config.detector.environment.temperature = {self.detector.environment.temperature!r}"
+            )
 
-config.detector.environment.temperature = {self.detector.environment.temperature!r}
-config.running_mode.readout.times = {config.running_mode.readout.times.tolist()!r}
-config.running_mode.readout.non_destructive = {config.running_mode.readout.non_destructive!r}
-config.pipeline.photon_collection.usaf_illumination.enabled = {config.pipeline.photon_collection.usaf_illumination.enabled!r}
+        source_code_lst.append(
+            f"config.running_mode.readout.times = {config.running_mode.readout.times.tolist()!r}"
+        )
+        source_code_lst.append(
+            f"config.running_mode.readout.non_destructive = {config.running_mode.readout.non_destructive!r}"
+        )
+        source_code_lst.append(
+            f"config.pipeline.photon_collection.usaf_illumination.enabled = {config.pipeline.photon_collection.usaf_illumination.enabled!r}"
+        )
+        source_code_lst.append("")
+        source_code_lst.append(
+            f"# pyxel.save(config, filename='demo_{self.detector.name}.yaml')  # Not yet implemented"
+        )
+        source_code_lst.append("")
+        source_code_lst.append("result = pyxel.run_mode_dataset(config)")
+        source_code_lst.append("")
+        source_code_lst.append("pyxel.display_detector(config.detector)")
 
-# pyxel.save(config, filename='demo_{self.detector.name}.yaml')  # Not yet implemented
-
-result = pyxel.run_mode_dataset(config)
-
-pyxel.display_detector(config.detector)
-"""
+        source_code = "\n".join(source_code_lst)
 
         code_editor_widget = pn.widgets.CodeEditor(
             value=source_code,
@@ -474,6 +494,6 @@ pyxel.display_detector(config.detector)
 
 # # pip install watchfiles
 # # panel serve simple_config.py --dev --show
-# foo = PredefinedConfig()
-# foo.display().servable(title="Pyxel")
+foo = PredefinedConfig()
+foo.display().servable(title="Pyxel")
 # pn.serve(foo.display(), dev=True)
