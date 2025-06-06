@@ -34,6 +34,8 @@ More information in [`channel order`](https://esa.gitlab.io/pyxel/doc/stable/bac
 ### Others
 * Fix issues found by mypy 1.16.
   (See [!1050](https://gitlab.com/esa/pyxel/-/merge_requests/1050)).
+* Add capability to select tests to run with tox.
+  (See [!1053](https://gitlab.com/esa/pyxel/-/merge_requests/1053)).
 
 
 ## 2.10 / 2025-05-22
