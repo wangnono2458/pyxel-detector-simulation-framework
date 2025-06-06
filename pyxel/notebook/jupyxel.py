@@ -8,7 +8,7 @@
 """Tools for jupyter notebook visualization."""
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 
@@ -644,13 +644,17 @@ def display_scene(
     return ax
 
 
-def display_dataset(dataset: "xr.Dataset") -> "pn.layout.Panel":
+def display_dataset(
+    dataset: "xr.Dataset", orientation: Literal["horizontal", "vertical"] = "horizontal"
+) -> "pn.layout.Panel":
     """Display an interactive visualization of a 3D dataset.
 
     Parameters
     ----------
     dataset : Dataset
         An Xarray Dataset with at least the dimensions 'x', 'y' and 'time'.
+    orientation : 'horizontal' or 'vertical'. Default: 'horizontal'
+        Orientation of the plots.
 
     Returns
     -------
@@ -782,8 +786,17 @@ def display_dataset(dataset: "xr.Dataset") -> "pn.layout.Panel":
     # Dynamic map for pixel time evolution plot
     pixel_plot = hv.DynamicMap(pixel_evolution, streams=[pointer_stream])
 
+    if orientation == "horizontal":
+        images_layout = pn.Row(
+            image_plot_widget, pn.Row(image_plot_holoview, pixel_plot)
+        )
+    else:
+        images_layout = pn.Row(
+            image_plot_widget, pn.Column(image_plot_holoview, pixel_plot)
+        )
+
     # Final layout with tabs
     return pn.Tabs(
-        ("2D Image", pn.Row(image_plot_widget, image_plot_holoview, pixel_plot)),
+        ("2D Image", images_layout),
         ("Histogram", hist_plot),
     )
