@@ -17,6 +17,7 @@ Top-level functions
     run_mode
     run_mode_dataset
     run
+    launch_basic_gui
     build_configuration
     show_versions
 
