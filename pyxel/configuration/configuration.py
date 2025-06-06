@@ -167,8 +167,37 @@ def build_configuration(
     num_rows: int,
     num_cols: int,
 ) -> Configuration:
+    """Build a default Pyxel ``Configuration`` object for a specified detector type.
+
+    Parameters
+    ----------
+    detector_type : 'CCD', 'CMOS', 'MKID', 'APD'
+        Type of detector for which the configuration should be built.
+    num_rows : int
+        Number of pixel row in the detector.
+    num_cols : int
+        Number of pixel columns in the detector.
+
+    Returns
+    -------
+    Configuration
+        A fully defined ``Configuration`` object with pre-filled basic models.
+
+    Examples
+    --------
+    >>> import pyxel
+    >>> config = pyxel.build_configuration(
+    ...     detector_type="CCD",
+    ...     num_rows=512,
+    ...     num_cols=512,
+    ... )
+    >>> config.detector.geometry.row
+    512
+    >>> result = pyxel.run_mode(config)
+    """
     match detector_type:
         case "CCD":
+            # Define a default configuration for a CCD detector
             config = Configuration(
                 exposure=Exposure(readout=Readout()),
                 ccd_detector=CCD(
@@ -183,12 +212,14 @@ def build_configuration(
                     ),
                 ),
                 pipeline=DetectionPipeline(
+                    # Generate photons with a USAF pattern
                     photon_collection=[
                         ModelFunction(
                             name="usaf_illumination",
                             func="pyxel.models.photon_collection.usaf_illumination",
                         )
                     ],
+                    # Convert photons to electrons
                     charge_generation=[
                         ModelFunction(
                             name="simple_conversion",
@@ -201,6 +232,7 @@ def build_configuration(
                             func="pyxel.models.charge_collection.simple_collection",
                         )
                     ],
+                    # Convert electrons to volt
                     charge_measurement=[
                         ModelFunction(
                             name="simple_measurement",
@@ -221,7 +253,7 @@ def build_configuration(
             )
 
         case _:
-            raise NotImplementedError
+            raise NotImplementedError("Currently only 'CCD' detector is implemented.")
 
     return config
 
