@@ -17,4 +17,6 @@ Run
 
 .. autofunction:: run
 
+.. autofunction:: build_configuration
+
 .. autofunction:: show_versions

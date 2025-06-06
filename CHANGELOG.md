@@ -19,10 +19,19 @@ This release includes various bug fixes and feature enhancements to improve usab
 Defined a consistent channel order convention for multi-channel detectors. 
 More information in [`channel order`](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html#channel-order-convention).
 
+### 🆕 New Channel order convention
+
+New function [`pyxel.build_configuration`](https://esa.gitlab.io/pyxel/doc/stable/references/api/run.html#pyxel.build_configuration)
+to build a `Configuration` object with pre-defined models.
+
+
 ### Core
 * ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html) not working for 
   CMOS and APD detector(s).
   (See [!1051](https://gitlab.com/esa/pyxel/-/merge_requests/1051)).
+* New function [`pyxel.build_configuration`](https://esa.gitlab.io/pyxel/doc/stable/references/api/run.html#pyxel.build_configuration) 
+  to build a basic Configuration object.
+  (See [!1054](https://gitlab.com/esa/pyxel/-/merge_requests/1054)).
 
 ### Documentation
 * Add a convention about the order of ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html)
