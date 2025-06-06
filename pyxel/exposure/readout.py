@@ -8,8 +8,9 @@
 #
 """TBW."""
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from numbers import Number
+from typing import Any
 
 import numpy as np
 
@@ -195,6 +196,13 @@ class Readout:
 
         new_parameters = {**parameters, **changes}
         return Readout(**new_parameters)
+
+    def dump(self) -> Mapping[str, Any]:
+        return {
+            "times": self._times.tolist(),
+            "start_time": self._start_time,
+            "non_destructive": self._non_destructive,
+        }
 
 
 def calculate_steps(times: np.ndarray, start_time: float) -> np.ndarray:

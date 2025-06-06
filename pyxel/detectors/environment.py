@@ -9,7 +9,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from typing_extensions import Self
@@ -193,3 +193,13 @@ class Environment:
             raise NotImplementedError
 
         return cls(temperature=dct.get("temperature"), wavelength=wavelength)
+
+    def dump(self) -> Mapping[str, Any]:
+        return {
+            "temperature": self._temperature,
+            "wavelength": (
+                self._wavelength.to_dict()
+                if isinstance(self._wavelength, WavelengthHandling)
+                else self._wavelength
+            ),
+        }

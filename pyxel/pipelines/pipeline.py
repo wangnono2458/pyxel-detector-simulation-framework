@@ -7,7 +7,8 @@
 
 """TBW."""
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
+from typing import Any
 
 from pyxel.pipelines import ModelFunction, ModelGroup
 
@@ -211,3 +212,38 @@ class DetectionPipeline:
 
                 for key, value in model.arguments.items():
                     yield f"PYXEL /    {key}: {value}"
+
+    def dump(self) -> Mapping[str, Any]:
+        dct = {}
+
+        if models_group := self._scene_generation:
+            dct["scene_generation"] = [model.dump() for model in models_group.models]
+
+        if models_group := self._photon_collection:
+            dct["photon_collection"] = [model.dump() for model in models_group.models]
+
+        if models_group := self._phasing:
+            dct["phasing"] = [model.dump() for model in models_group.models]
+
+        if models_group := self._charge_generation:
+            dct["charge_generation"] = [model.dump() for model in models_group.models]
+
+        if models_group := self._charge_collection:
+            dct["charge_collection"] = [model.dump() for model in models_group.models]
+
+        if models_group := self._charge_transfer:
+            dct["charge_transfer"] = [model.dump() for model in models_group.models]
+
+        if models_group := self._charge_measurement:
+            dct["charge_measurement"] = [model.dump() for model in models_group.models]
+
+        if models_group := self._signal_transfer:
+            dct["signal_transfer"] = [model.dump() for model in models_group.models]
+
+        if models_group := self._readout_electronics:
+            dct["readout_electronics"] = [model.dump() for model in models_group.models]
+
+        if models_group := self._data_processing:
+            dct["data_processing"] = [model.dump() for model in models_group.models]
+
+        return dct

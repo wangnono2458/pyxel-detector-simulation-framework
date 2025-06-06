@@ -11,9 +11,9 @@
 import logging
 import warnings
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import numpy as np
 from typing_extensions import deprecated
@@ -155,6 +155,17 @@ class Exposure:
         data_tree.attrs["running mode"] = "Exposure"
 
         return data_tree
+
+    def dump(self) -> Mapping[str, Any]:
+        return {
+            "readout": self.readout.dump(),
+            "outputs": self.outputs.dump() if self.outputs else None,
+            "result_type": self._result_type,
+            "pipeline_seed": self._pipeline_seed,
+            "working_directory": (
+                self.working_directory.as_posix() if self.working_directory else None
+            ),
+        }
 
 
 # TODO: This function will be deprecated
