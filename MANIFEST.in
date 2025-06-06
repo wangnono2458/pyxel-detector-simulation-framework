@@ -11,4 +11,4 @@ include pyxel/models/charge_generation/data/*.txt
 include pyxel/models/charge_generation/data/*.csv
 include pyxel/models/**/metadata.yaml
 
-include pyxel/gui/images/*.svg
+include pyxel/gui/icons/*.svg

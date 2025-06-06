@@ -15,12 +15,16 @@ import panel as pn
 import param
 
 import pyxel
-import pyxel.gui.images
 from pyxel import Configuration
 from pyxel.gui import run_mode_gui
 from pyxel.util import clean_text, get_schema
 
-folder_image = Path(pyxel.gui.images.__path__[0])
+
+def get_folder_icons() -> Path:
+    import pyxel.gui.icons
+
+    return Path(pyxel.gui.icons.__path__[0])
+
 
 pn.extension("codeeditor")
 
@@ -60,7 +64,7 @@ class CCDGeometry(param.Parameterized):
         return pn.Card(
             header=pn.Row(
                 pn.pane.SVG(
-                    folder_image / "adjustements_horizontal.svg",
+                    get_folder_icons() / "adjustements_horizontal.svg",
                     width=18,
                     margin=(10, -5, 10, 0),
                     align="end",
@@ -125,7 +129,7 @@ class Environment(param.Parameterized):
         return pn.Card(
             header=pn.Row(
                 pn.pane.SVG(
-                    folder_image / "thermometer.svg",
+                    get_folder_icons() / "thermometer.svg",
                     width=18,
                     margin=(10, -5, 10, 0),
                     align="end",
@@ -161,7 +165,7 @@ class CCD(param.Parameterized):
         return pn.Card(
             header=pn.Row(
                 pn.pane.SVG(
-                    folder_image / "frame.svg",
+                    get_folder_icons() / "frame.svg",
                     width=18,
                     margin=(10, -5, 10, 0),
                     align="end",
@@ -246,7 +250,7 @@ class GroupPhotonCollection(param.Parameterized):
         column = pn.Card(
             header=pn.Row(
                 pn.pane.SVG(
-                    folder_image / "layout_list.svg",
+                    get_folder_icons() / "layout_list.svg",
                     width=18,
                     margin=(10, -5, 10, 0),
                     align="end",
@@ -296,7 +300,7 @@ class GroupChargeTransfer(param.Parameterized):
         column = pn.Card(
             header=pn.Row(
                 pn.pane.SVG(
-                    folder_image / "layout_list.svg",
+                    get_folder_icons() / "layout_list.svg",
                     width=18,
                     margin=(10, -5, 10, 0),
                     align="end",
@@ -372,7 +376,7 @@ class BasicConfigGUI(param.Parameterized):
         self._pipeline_column = pn.Card(
             header=pn.Row(
                 pn.pane.SVG(
-                    folder_image / "layers.svg",
+                    get_folder_icons() / "layers.svg",
                     width=18,
                     margin=(10, -5, 10, 0),
                     align="end",

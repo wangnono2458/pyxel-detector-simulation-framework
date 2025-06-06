@@ -5,3 +5,5 @@
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
 #
+
+"""Sub-package for the SVG icons for the GUI."""
