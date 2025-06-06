@@ -664,9 +664,22 @@ def display_dataset(
     Raises
     ------
     TypeError
-        If 'dataset' is not an Xarray dataset.
+        If 'dataset' is not a Xarray dataset.
     ValueError
         If required dimensions 'x', 'y' or 'time' are missing for the dataset.
+
+    Examples
+    --------
+    >>> import pyxel
+    >>> config = pyxel.build_configuration(
+    ...     detector_type="CCD",
+    ...     num_rows=512,
+    ...     num_cols=512,
+    ... )
+    >>> ds = pyxel.run_mode_dataset(config)
+    >>> ds
+    <xarray.Dataset>
+    >>> pyxel.display_dataset(ds)
     """
     import colorcet as cc
     import holoviews as hv
