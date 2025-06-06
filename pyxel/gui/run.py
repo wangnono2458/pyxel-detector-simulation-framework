@@ -4,7 +4,8 @@
 #  is part of this Pyxel package. No part of the package, including
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
-#
+
+"""Sub-package for routines to be used for a GUI."""
 
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
