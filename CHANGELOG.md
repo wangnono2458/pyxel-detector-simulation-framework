@@ -14,12 +14,20 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 
 This release includes various bug fixes and feature enhancements to improve usability and flexibility.
 
+### 🆕 New Channel order convention
+
+Defined a consistent channel order convention for multi-channel detectors. 
+More information in [`channel order`](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html#channel-order-convention).
+
 ### Core
 * ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html) not working for 
   CMOS and APD detector(s).
   (See [!1051](https://gitlab.com/esa/pyxel/-/merge_requests/1051)).
 
 ### Documentation
+* Add a convention about the order of ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html)
+  in the documentation.
+  (See [!1052](https://gitlab.com/esa/pyxel/-/merge_requests/1052)).
 
 ### Models
 

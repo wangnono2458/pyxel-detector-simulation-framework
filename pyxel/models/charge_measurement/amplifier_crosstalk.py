@@ -323,6 +323,11 @@ def dc_crosstalk(
     * :external+pyxel_data:doc:`examples/models/amplifier_crosstalk/crosstalk`
     * :external+pyxel_data:doc:`use_cases/HxRG/h2rg`
     * :external+pyxel_data:doc:`examples/observation/sequential`
+
+    For more information about the channels, click here:
+
+    * :ref:`channels`
+    * :ref:`channels_order`.
     """
     # Validation and convert coupling matrix
     cpl_matrix_2d: np.ndarray = get_matrix(coupling_matrix)
@@ -394,6 +399,11 @@ def ac_crosstalk(
     * :external+pyxel_data:doc:`examples/models/amplifier_crosstalk/crosstalk`
     * :external+pyxel_data:doc:`use_cases/HxRG/h2rg`
     * :external+pyxel_data:doc:`examples/observation/sequential`
+
+    For more information about the channels, click here:
+
+    * :ref:`channels`
+    * :ref:`channels_order`.
     """
     # Validation and conversion
     cpl_matrix_2d: np.ndarray = get_matrix(coupling_matrix)

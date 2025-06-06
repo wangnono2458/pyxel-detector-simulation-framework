@@ -4,8 +4,8 @@
 Channels
 ========
 
-In Detectors, especially CCDs and CMOSs image sensors, the concept of **channels** is used to enable
-parallel readout of the image data.
+In Detectors, particularly CCDs and CMOSs image sensors, the concept of **channels** enables the
+**parallel readout** of image data.
 This improve readout speed and efficiency by dividing the sensor into multiple regions, each processed independently.
 
 What is a Channel ?
@@ -39,6 +39,18 @@ The supported readout positions are:
 These positions are essential when modeling charge transfer and readout timings,
 as they influence how pixels are clocked out during readout.
 
+
+.. _channels_order:
+
+Channel order convention
+========================
+
+When a detector is divided into multiple channels, the **channel order** follows a consistent convention:
+**top-left** -> **top-right** -> **bottom-left**  -> **bottom right**.
+
+This ordering provides a predictable sequence for processing and simulation, particularly
+when handling channel-specific operations.
+
 Example
 =======
 
@@ -49,8 +61,11 @@ Example
 
     Example with four channels.
 
-This figure above shows a typical configuration of a detector with four channels,
-each associated with its own readout node at the respective corner.
+In this figure above, the detector is split into four quadrants,
+each corresponding to a distinct channel with its own readout node at the respective corner.
+
+Based on the standard readout position, the **channel order** is: ``OP9`` (top-left), ``OP13`` (top-right),
+``OP1`` (bottom-left) and ``OP1`` (bottom-right).
 
 Use in simulation
 =================

@@ -17,6 +17,9 @@ defined in a matrix configuration as follows:
     :alt: Channels
     :align: center
 
+Based on the standard readout position, the **channel order** is: ``OP9`` (top-left), ``OP13`` (top-right),
+``OP1`` (bottom-left) and ``OP1`` (bottom-right).
+
 The corresponding YAML definition could be:
 
 .. code-block:: yaml
@@ -36,7 +39,7 @@ The corresponding YAML definition could be:
 """
 
 import difflib
-from collections.abc import Hashable, Mapping, Sequence
+from collections.abc import Hashable, Iterator, Mapping, Sequence
 from typing import Literal
 
 import numpy as np
@@ -53,6 +56,10 @@ class Matrix:
     (2, 2)
     >>> matrix.size
     4
+    >>> matrix.ndim
+    2
+    >>> list(matrix)
+    ['OP9', 'OP13', 'OP1', 'OP5']
     """
 
     def __init__(self, data: Sequence[Sequence[Hashable]]):
@@ -83,18 +90,20 @@ class Matrix:
         if any(len(row) == 0 for row in data) and len(data) > 1:
             raise ValueError("Parameter 'matrix' is malformed: Cannot have empty rows.")
 
-        try:
-            self._data = np.array(
-                data, dtype=object
-            )  # Use dtype=object to accommodate different data types
-        except Exception as exc:
-            raise ValueError("Failed to convert input data to a NumPy array: ") from exc
+        # Use dtype=object to accommodate different data types
+        self._data = np.array(data, dtype=object)
 
     def __eq__(self, other) -> bool:
         return type(self) is type(other) and np.array_equal(self._data, other._data)
 
     def __array__(self, dtype: np.dtype | None = None) -> np.ndarray:
         return np.array(self._data, dtype=dtype)
+
+    def __len__(self) -> int:
+        return self.size
+
+    def __iter__(self) -> Iterator:
+        return self._data.flat
 
     @property
     def size(self) -> int:
@@ -105,6 +114,11 @@ class Matrix:
     def shape(self) -> tuple[int, int]:
         """Shape of the matrix."""
         return self._data.shape  # type: ignore[return-value]
+
+    @property
+    def ndim(self) -> int:
+        """Number of dimension(s) of the matrix."""
+        return self._data.ndim
 
 
 # TODO: Implement using Abstract Class 'Mapping'
@@ -167,9 +181,7 @@ class ReadoutPosition:
         self.positions = positions
 
     def __eq__(self, other):
-        if not isinstance(other, ReadoutPosition):
-            return NotImplemented
-        return self.positions == other.positions
+        return isinstance(other, ReadoutPosition) and self.positions == other.positions
 
     def __len__(self):
         """Return the number of readout positions."""
@@ -185,6 +197,7 @@ class Channels:
 
     Examples
     --------
+    >>> from pyxel.detectors import Channels, Matrix, ReadoutPosition
     >>> channels = Channels(
     ...     matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
     ...     readout_position=ReadoutPosition(
@@ -198,16 +211,30 @@ class Channels:
     ... )
     >>> channels
     Channels<4 channels>
+    >>> len(channels)
+    4
+    >>> channels.shape
+    (2, 2)
+    >>> list(channels)
+    ['OP9', 'OP13', 'OP1', 'OP5']
     """
 
     def __init__(self, matrix: Matrix, readout_position: ReadoutPosition):
-        self.matrix = matrix
-        self.readout_position = readout_position
+        if not isinstance(matrix, Matrix):
+            raise TypeError(f"'matrix' must be a Matrix object, got {matrix=}")
+
+        if not isinstance(readout_position, ReadoutPosition):
+            raise TypeError(
+                f"'readout_position' must be a ReadoutPosition object, got {readout_position=}"
+            )
+
+        self._matrix: Matrix = matrix
+        self._readout_position: ReadoutPosition = readout_position
 
         # Validate matching counts
         # Flatten the matrix to count unique elements
-        matrix_terms = {term for row in self.matrix._data for term in row}
-        readout_keys = set(self.readout_position.keys())
+        matrix_terms = {term for row in self._matrix._data for term in row}
+        readout_keys = set(self._readout_position.keys())
 
         if len(matrix_terms) > len(readout_keys):
             raise ValueError("Readout direction of at least one channel is missing.")
@@ -225,26 +252,49 @@ class Channels:
                 "Readout position contains extra channels not listed in matrix."
             )
 
-    def __eq__(self, other):
-        if not isinstance(other, Channels):
-            return NotImplemented
-
-        # Check equality by comparing both the matrix and the readout positions
+    def __eq__(self, other) -> bool:
         return (
-            self.matrix == other.matrix
+            isinstance(other, Channels)
+            and self.matrix == other.matrix
             and self.readout_position == other.readout_position
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         # Count unique channel names by flattening the matrix and getting unique items
         unique_channels = {term for row in self.matrix._data for term in row}
         return f"Channels<{len(unique_channels)} channels>"
+
+    def __len__(self) -> int:
+        return len(self.matrix)
+
+    def __iter__(self) -> Iterator:
+        return iter(self.matrix)
+
+    @property
+    def matrix(self) -> Matrix:
+        """Get the matrix structure of the channel(s)."""
+        return self._matrix
+
+    @property
+    def readout_position(self) -> ReadoutPosition:
+        """Get the readout position(s) of the channel(s)."""
+        return self._readout_position
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        """Shape of the channel(s)."""
+        return self.matrix.shape
+
+    @property
+    def ndim(self) -> int:
+        """Number of dimension(s) of the channel(s)."""
+        return self.matrix.ndim
 
     # TODO: Move
     def build_mask(self) -> np.ndarray:
         """Generate a mask or map for the defined channels."""
         # Should save n array, one for each channel? Or should it have a well-defined structure to identify the channels?
-        raise NotImplementedError
+        raise NotImplementedError("Method 'build_mask' is not yet implemented !")
 
     def to_dict(self) -> Mapping:
         """Get the attributes of this instance as a `dict`."""
@@ -255,8 +305,18 @@ class Channels:
 
     @classmethod
     def from_dict(cls, dct: Mapping) -> Self:
-        """Create a new instance of `Geometry` from a `dict`."""
-        # TODO: This is a simplistic implementation. Improve this.
+        """Create a new instance of `Geometry` from a `dict`.
+
+        Raises
+        ------
+        KeyError
+            If required keys are missing.
+        """
+        if "matrix" not in dct:
+            raise KeyError("Missing required key 'matrix'.")
+
+        if "readout_position" not in dct:
+            raise KeyError("Missing required key 'readout_position'.")
 
         obj = cls(
             matrix=Matrix(dct["matrix"]),

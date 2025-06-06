@@ -6,11 +6,20 @@
 #  the terms contained in the file ‘LICENCE.txt’.
 
 from copy import deepcopy
+from dataclasses import dataclass
 
 import numpy as np
 import pytest
 
 from pyxel.detectors.channels import Channels, Matrix, ReadoutPosition
+
+
+@dataclass
+class MatrixParams:
+    matrix: list
+    shape: tuple[int, ...]
+    ndim: int
+    flat_list: list
 
 
 @pytest.mark.parametrize(
@@ -24,13 +33,20 @@ from pyxel.detectors.channels import Channels, Matrix, ReadoutPosition
                 "OP1": "bottom-left",
                 "OP5": "bottom-left",
             },
-            [["OP9", "OP13"], ["OP1", "OP5"]],
+            MatrixParams(
+                matrix=[["OP9", "OP13"], ["OP1", "OP5"]],
+                shape=(2, 2),
+                ndim=2,
+                flat_list=["OP9", "OP13", "OP1", "OP5"],
+            ),
             id="Grid structure (str)",
         ),
         pytest.param(
             [[9, 13], [1, 5]],
             {9: "top-left", 13: "top-left", 1: "bottom-left", 5: "bottom-left"},
-            [[9, 13], [1, 5]],
+            MatrixParams(
+                matrix=[[9, 13], [1, 5]], shape=(2, 2), ndim=2, flat_list=[9, 13, 1, 5]
+            ),
             id="Grid structure (int)",
         ),
         pytest.param(
@@ -41,34 +57,165 @@ from pyxel.detectors.channels import Channels, Matrix, ReadoutPosition
                 1: "bottom-left",
                 "OP5": "bottom-left",
             },
-            [["OP9", 13], [1, "OP5"]],
+            MatrixParams(
+                matrix=[["OP9", 13], [1, "OP5"]],
+                shape=(2, 2),
+                ndim=2,
+                flat_list=["OP9", 13, 1, "OP5"],
+            ),
             id="Grid structure (str and int)",
         ),
         pytest.param(
             [["OP9", "OP13"]],
             {"OP9": "top-left", "OP13": "top-left"},
-            [["OP9", "OP13"]],
+            MatrixParams(
+                matrix=[["OP9", "OP13"]],
+                shape=(1, 2),
+                ndim=2,
+                flat_list=["OP9", "OP13"],
+            ),
             id="row structure",
         ),
         pytest.param(
             [["OP9"], ["OP1"]],
             {"OP9": "top-left", "OP1": "bottom-left"},
-            [["OP9"], ["OP1"]],
+            MatrixParams(
+                matrix=[["OP9"], ["OP1"]],
+                shape=(2, 1),
+                ndim=2,
+                flat_list=["OP9", "OP1"],
+            ),
             id="column structure",
         ),
     ],
 )
-def test_channels_valid_initialization(matrix, readout_position, exp_matrix):
+def test_channels_valid_initialization(
+    matrix, readout_position, exp_matrix: MatrixParams
+):
     """Test Channels initialization with correct matrix and readout_position."""
     # Should not raise an error
     channels = Channels(
-        matrix=Matrix(matrix), readout_position=ReadoutPosition(readout_position)
+        matrix=Matrix(matrix),
+        readout_position=ReadoutPosition(readout_position),
     )
 
     # Check if attributes are correctly assigned
     assert isinstance(channels.matrix, Matrix)
-    assert np.array(channels.matrix).tolist() == exp_matrix
+    assert np.array(channels.matrix).tolist() == exp_matrix.matrix
+    assert channels.shape == exp_matrix.shape
+    assert channels.ndim == exp_matrix.ndim
+    assert list(channels) == exp_matrix.flat_list
+
     assert channels.readout_position.positions == readout_position
+
+
+@pytest.mark.parametrize(
+    "obj1, obj2,exp_result",
+    [
+        pytest.param(
+            Channels(
+                matrix=Matrix([["OP9", "OP13"]]),
+                readout_position=ReadoutPosition(
+                    {"OP9": "top-left", "OP13": "top-left"}
+                ),
+            ),
+            Channels(
+                matrix=Matrix([["OP9", "OP13"]]),
+                readout_position=ReadoutPosition(
+                    {"OP9": "top-left", "OP13": "top-left"}
+                ),
+            ),
+            True,
+            id="same",
+        ),
+        pytest.param(
+            Channels(
+                matrix=Matrix([["OP9", "OP13"]]),
+                readout_position=ReadoutPosition(
+                    {"OP9": "top-left", "OP13": "top-left"}
+                ),
+            ),
+            Channels(
+                matrix=Matrix([["OP9", "OP13"]]),
+                readout_position=ReadoutPosition(
+                    {
+                        "OP13": "top-left",
+                        "OP9": "top-left",
+                    }
+                ),
+            ),
+            True,
+            id="same2",
+        ),
+        pytest.param(
+            Channels(
+                matrix=Matrix([["OP9", "OP13"]]),
+                readout_position=ReadoutPosition(
+                    {"OP9": "top-left", "OP13": "top-left"}
+                ),
+            ),
+            Channels(
+                matrix=Matrix([["OP9"], ["OP13"]]),
+                readout_position=ReadoutPosition(
+                    {"OP9": "top-left", "OP13": "top-left"}
+                ),
+            ),
+            False,
+            id="different shape",
+        ),
+        pytest.param(
+            Channels(
+                matrix=Matrix([["OP9", "OP13"]]),
+                readout_position=ReadoutPosition(
+                    {"OP9": "top-left", "OP13": "top-left"}
+                ),
+            ),
+            Channels(
+                matrix=Matrix([["OP9", "OP13"]]),
+                readout_position=ReadoutPosition(
+                    {"OP9": "top-left", "OP13": "top-right"}
+                ),
+            ),
+            False,
+            id="different readout positions",
+        ),
+        pytest.param(
+            Channels(
+                matrix=Matrix([["OP9", "OP13"]]),
+                readout_position=ReadoutPosition(
+                    {"OP9": "top-left", "OP13": "top-left"}
+                ),
+            ),
+            Channels(
+                matrix=Matrix([["OP13", "OP9"]]),
+                readout_position=ReadoutPosition(
+                    {"OP9": "top-left", "OP13": "top-left"}
+                ),
+            ),
+            False,
+            id="different matrix",
+        ),
+        pytest.param(
+            Channels(
+                matrix=Matrix([["OP9", "OP13"]]),
+                readout_position=ReadoutPosition(
+                    {"OP9": "top-left", "OP13": "top-left"}
+                ),
+            ),
+            Matrix([["OP9", "OP13"]]),
+            False,
+            id="different type",
+        ),
+    ],
+)
+def test_channels_eq(obj1, obj2, exp_result: bool):
+    """Test method 'Channels.__eq__'."""
+    assert isinstance(obj1, Channels)
+
+    if exp_result:
+        assert obj1 == obj2
+    else:
+        assert obj1 != obj2
 
 
 @pytest.mark.parametrize(
@@ -104,7 +251,8 @@ def test_channels_missing_readout_position(matrix, readout_position, exp_msg):
     """Test Channels raises an error when readout_position is incomplete."""
     with pytest.raises(ValueError, match=exp_msg):
         Channels(
-            matrix=Matrix(matrix), readout_position=ReadoutPosition(readout_position)
+            matrix=Matrix(matrix),
+            readout_position=ReadoutPosition(readout_position),
         )
 
 
@@ -151,8 +299,32 @@ def test_channels_extra_readout_position(matrix, readout_position, exp_msg):
     """Test Channels raises an error when readout_position has extra keys."""
     with pytest.raises(ValueError, match=exp_msg):
         Channels(
-            matrix=Matrix(matrix), readout_position=ReadoutPosition(readout_position)
+            matrix=Matrix(matrix),
+            readout_position=ReadoutPosition(readout_position),
         )
+
+
+@pytest.mark.parametrize(
+    "matrix, readout_position, exp_message",
+    [
+        pytest.param(
+            [["OP9", "OP13"]],
+            ReadoutPosition({"OP9": "top-left", "OP13": "top-left"}),
+            r"'matrix' must be a Matrix",
+            id="Wrong 'matrix'",
+        ),
+        pytest.param(
+            Matrix([["OP9", "OP13"]]),
+            {"OP9": "top-left", "OP13": "top-left"},
+            r"'readout_position' must be a ReadoutPosition",
+            id="Wrong 'readout_position'",
+        ),
+    ],
+)
+def test_channels_wrong_initialization(matrix, readout_position, exp_message: str):
+    """Test 'Channels.__init__' with wrong parameters."""
+    with pytest.raises(TypeError, match=exp_message):
+        _ = Channels(matrix=matrix, readout_position=readout_position)
 
 
 def test_channels_same_count_different_names():
@@ -170,53 +342,61 @@ def test_channels_same_count_different_names():
         match="Channel names in the matrix and in the readout directions are not matching.",
     ):
         Channels(
-            matrix=Matrix(matrix), readout_position=ReadoutPosition(readout_position)
+            matrix=Matrix(matrix),
+            readout_position=ReadoutPosition(readout_position),
         )
 
 
 @pytest.mark.parametrize(
-    "data, error_message",
+    "data, exp_exc, exp_message",
     [
         pytest.param(
             [["OP9"], ["OP13", "OP1", "OP5"]],
+            ValueError,
             "Parameter 'matrix' is malformed: All rows must be of the same length.",
             id="Mismatched row lengths",
         ),
         pytest.param(
             [["OP9"], ["OP13", "OP1"], ["OP5"]],
+            ValueError,
             "Parameter 'matrix' is malformed: All rows must be of the same length.",
             id="Each row different lengths",
         ),
         pytest.param(
             ["OP9", "OP13", "OP1", "OP5"],
+            ValueError,
             "All rows in the matrix must be sequences and not strings.",
             id="Single string inputs treated as rows",
         ),
         pytest.param(
-            [], "Matrix data must contain at least one row.", id="Empty matrix"
+            [],
+            ValueError,
+            "Matrix data must contain at least one row.",
+            id="Empty matrix",
         ),
         pytest.param(
             [[9, 13], [1]],
+            ValueError,
             "Parameter 'matrix' is malformed: All rows must be of the same length.",
             id="Numerical row length mismatch",
         ),
         pytest.param(
             [[], []],
+            ValueError,
             "Parameter 'matrix' is malformed: Cannot have empty rows.",
             id="Empty rows but equal length",
         ),
+        pytest.param("OP9", TypeError, "Matrix must be a sequence", id="string"),
     ],
 )
-def test_matrix_initialization(data, error_message):
-    if error_message:
-        with pytest.raises(ValueError, match=error_message):
+def test_matrix_initialization(data, exp_exc, exp_message):
+    if exp_message:
+        with pytest.raises(exp_exc, match=exp_message):
             _ = Matrix(data)
     else:
         # Expecting successful initialization here
         matrix = Matrix(data)
-        assert isinstance(
-            matrix, Matrix
-        ), "Matrix instance should be created successfully."
+        assert isinstance(matrix, Matrix)
 
 
 @pytest.mark.parametrize(
@@ -232,13 +412,8 @@ def test_matrix_initialization(data, error_message):
 )
 def test_matrix_successful_initialization(data):
     # Test for successful initialization
-    try:
-        matrix = Matrix(data)
-        assert isinstance(
-            matrix, Matrix
-        ), "Matrix should be successfully initialized with valid data."
-    except ValueError:
-        pytest.fail("Matrix initialization should not fail for valid data.")
+    matrix = Matrix(data)
+    assert isinstance(matrix, Matrix)
 
 
 @pytest.mark.parametrize(
@@ -268,8 +443,65 @@ def test_channels_bad_readout_position(matrix, readout_position, exp_error):
     """Test with a malformed 'readout_position' parameter."""
     with pytest.raises(ValueError, match=exp_error):
         _ = Channels(
-            matrix=Matrix(matrix), readout_position=ReadoutPosition(readout_position)
+            matrix=Matrix(matrix),
+            readout_position=ReadoutPosition(readout_position),
         )
+
+
+@pytest.mark.parametrize(
+    "obj1, obj2, exp_result",
+    [
+        pytest.param(
+            ReadoutPosition({"OP9": "top-left", "OP13": "top-right"}),
+            ReadoutPosition({"OP9": "top-left", "OP13": "top-right"}),
+            True,
+            id="same",
+        ),
+        pytest.param(
+            ReadoutPosition({"OP9": "top-left", "OP13": "top-right"}),
+            ReadoutPosition({"OP13": "top-right", "OP9": "top-left"}),
+            True,
+            id="same reversed",
+        ),
+        pytest.param(
+            ReadoutPosition({"OP9": "top-left", "OP13": "top-right"}),
+            ReadoutPosition({"OP9": "top-left", "OP13": "top-left"}),
+            False,
+            id="different",
+        ),
+        pytest.param(
+            ReadoutPosition({"OP9": "top-left", "OP13": "top-right"}),
+            {"OP9": "top-left", "OP13": "top-right"},
+            False,
+            id="different type",
+        ),
+    ],
+)
+def test_readout_positions_eq(obj1, obj2, exp_result: bool):
+    """Test method 'ReadoutPosition.__eq__'."""
+    assert isinstance(obj1, ReadoutPosition)
+
+    if exp_result:
+        assert obj1 == obj2
+    else:
+        assert obj1 != obj2
+
+
+@pytest.mark.parametrize(
+    "position, exp_len",
+    [
+        pytest.param(ReadoutPosition({"OP9": "top-left"}), 1, id="1 element"),
+        pytest.param(
+            ReadoutPosition({"OP9": "top-left", "OP13": "top-right"}),
+            2,
+            id="2 elements",
+        ),
+    ],
+)
+def test_readout_positions_len(position, exp_len: int):
+    """Test method 'ReadoutPosition.__len__'."""
+    assert isinstance(position, ReadoutPosition)
+    assert len(position) == exp_len
 
 
 def test_eq():
@@ -460,8 +692,29 @@ def test_to_dict(matrix, readout_position):
         ),
     ],
 )
-def test_from_dict(dct, exp_channels):
-    """Test method '.from_dict'."""
+def test_channels_from_dict(dct, exp_channels):
+    """Test method 'Channels.from_dict'."""
     channels = Channels.from_dict(dct)
 
     assert channels == exp_channels
+
+
+@pytest.mark.parametrize(
+    "dct, exp_exc, exp_msg",
+    [
+        pytest.param(
+            {"readout_position": {"OP9": "top-left", "OP13": "top-left"}},
+            KeyError,
+            r"Missing required key 'matrix'",
+        ),
+        pytest.param(
+            {"matrix": [["OP9", "OP13"]]},
+            KeyError,
+            r"Missing required key 'readout_position'",
+        ),
+    ],
+)
+def test_channels_from_dict_bad_inputs(dct, exp_exc, exp_msg: str):
+    """Test method 'Channels.from_dict' with bad inputs."""
+    with pytest.raises(exp_exc, match=exp_msg):
+        _ = Channels.from_dict(dct)

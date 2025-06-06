@@ -142,7 +142,7 @@ def test_horizontal_pixel_center_pos(
             None,
             Channels(
                 matrix=Matrix([["OP9", "OP13"], ["OP1", "OP5"]]),
-                readout_position=(
+                readout_position=ReadoutPosition(
                     {
                         "OP9": "top-left",
                         "OP13": "top-left",
@@ -162,7 +162,9 @@ def test_horizontal_pixel_center_pos(
             None,
             Channels(
                 matrix=Matrix([["OP9", "OP13"]]),
-                readout_position=({"OP9": "top-left", "OP13": "top-left"}),
+                readout_position=ReadoutPosition(
+                    {"OP9": "top-left", "OP13": "top-left"}
+                ),
             ),
             id="Row - 2 channel(s)",
         ),
@@ -175,7 +177,9 @@ def test_horizontal_pixel_center_pos(
             None,
             Channels(
                 matrix=Matrix([["OP9"], ["OP1"]]),
-                readout_position=({"OP9": "top-left", "OP1": "bottom-left"}),
+                readout_position=ReadoutPosition(
+                    {"OP9": "top-left", "OP1": "bottom-left"}
+                ),
             ),
             id="Column - 2 channel(s)",
         ),
