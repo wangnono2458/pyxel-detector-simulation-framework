@@ -59,6 +59,17 @@ Example:
 >>> pyxel.display_dataset(ds)
 ```
 
+### 🆕 New function to create a basic GUI
+
+New function [`pyxel.launch_basic_gui`](https://esa.gitlab.io/pyxel/doc/stable/references/api/notebook.html#pyxel.launch_basic_gui)
+to launch a GUI for a pre-defined detector pipeline configuration.
+
+Example:
+```python
+>>> import pyxel
+>>> pyxel.launch_basic_gui()
+```
+
 ### Core
 * [`Channels`](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html) not working for 
   CMOS and APD detector(s).
