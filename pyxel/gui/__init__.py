@@ -4,16 +4,8 @@
 #  is part of this Pyxel package. No part of the package, including
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
-
-"""TBW."""
+#
 
 # flake8: noqa
-from .configuration import (
-    load,
-    loads,
-    Configuration,
-    copy_config_file,
-    build_configuration,
-    launch_basic_gui,
-)
-from .configuration import _build_configuration
+from .run import run_mode_gui
+from .basic_config_ui import BasicConfigGUI

@@ -309,6 +309,20 @@ def build_configuration(
     return config
 
 
+def launch_basic_gui():
+    """Launch the Graphical User Interface for a pre-defined detector pipeline configuration.
+
+    Examples
+    --------
+    >>> import pyxel
+    >>> pyxel.launch_basic_gui()
+    """
+    from pyxel.gui import BasicConfigGUI
+
+    config_gui = BasicConfigGUI()
+    return config_gui.display()
+
+
 def to_exposure_outputs(dct: dict | None) -> ExposureOutputs:
     """Create a ExposureOutputs class from a dictionary."""
     if dct:

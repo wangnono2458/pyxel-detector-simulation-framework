@@ -17,6 +17,8 @@ General
 
 .. autofunction:: display_scene
 
+.. autofunction:: launch_basic_gui
+
 
 Displaying calibration inputs and outputs in notebooks
 ======================================================

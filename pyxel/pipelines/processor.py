@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     import xarray as xr
 
     from pyxel.detectors import Detector
+    from pyxel.exposure.exposure import TqdmProgressBar
     from pyxel.observation import Observation
 
 
@@ -317,8 +318,21 @@ class Processor:
         else:
             setattr(obj, att, new_value)
 
+    def num_steps(self) -> int:
+        total = 0
+        for group_name in self.pipeline.model_group_names:
+            models_grp: ModelGroup | None = getattr(self.pipeline, group_name)
+            if not models_grp:
+                continue
+
+            total += len(models_grp)
+
+        return total
+
     # TODO: Create a method `DetectionPipeline.run`
-    def run_pipeline(self, debug: bool) -> None:
+    def run_pipeline(
+        self, debug: bool, progress_bar: Optional["TqdmProgressBar"] = None
+    ) -> None:
         """Run a pipeline with all its models in the right order.
 
         Parameters
@@ -341,6 +355,7 @@ class Processor:
             models_grp.run(
                 detector=self.detector,
                 debug=debug,
+                progress_bar=progress_bar,
             )
 
     # TODO: Refactor '.result'. See #524. Deprecate this method ?

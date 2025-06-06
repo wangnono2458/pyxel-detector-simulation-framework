@@ -13,7 +13,7 @@ import warnings
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Protocol, Union
 
 import numpy as np
 from typing_extensions import deprecated
@@ -31,6 +31,20 @@ if TYPE_CHECKING:
     from pyxel.detectors import Detector
     from pyxel.exposure import Readout
     from pyxel.outputs import CalibrationOutputs, ExposureOutputs, ObservationOutputs
+
+
+class TqdmProgressBar(Protocol):
+    """Protocol for a tqdm-like progress bar interface."""
+
+    def set_description_str(
+        self, desc: str | None = None, refresh: bool = True
+    ) -> None: ...
+    def set_postfix(
+        self, ordered_dict: dict | None = None, refresh: bool = True, **kwargs
+    ) -> None: ...
+    def reset(self, total: int | None = None) -> None: ...
+    def update(self, n: int = 1) -> None: ...
+    def close(self) -> None: ...
 
 
 class Exposure:
@@ -139,17 +153,21 @@ class Exposure:
         -------
         DataTree
         """
-        progressbar = self.readout._num_steps != 1
+        progress_bar = None
+        if self.readout._num_steps != 1:
+            from tqdm.auto import tqdm
+
+            progress_bar = tqdm()
 
         # Unpure changing of processor
         data_tree: "xr.DataTree" = run_pipeline(
             processor=processor,
             readout=self.readout,
             outputs=self.outputs,
-            progressbar=progressbar,
             pipeline_seed=self.pipeline_seed,
             debug=debug,
             with_inherited_coords=with_inherited_coords,
+            progress_bar=progress_bar,
         )
 
         data_tree.attrs["running mode"] = "Exposure"
@@ -381,8 +399,8 @@ def run_pipeline(
     debug: bool,
     with_inherited_coords: bool,
     output_filename_suffix: int | str | None = None,
-    progressbar: bool = False,
     pipeline_seed: int | None = None,
+    progress_bar: TqdmProgressBar | None = None,
 ) -> "xr.DataTree":
     """Run standalone exposure pipeline.
 
@@ -396,8 +414,6 @@ def run_pipeline(
         If True, captures intermediate data for debugging purposes.
     with_inherited_coords : bool
         If True, the results are formatted hierarchically in the returned `DataTree`.
-    progressbar : bool
-        If True, displays a progress bar indicating the readout progress of the detector.
     pipeline_seed : int
         An optional random seed to ensure reproducibility of the pipeline.
 
@@ -408,7 +424,6 @@ def run_pipeline(
     # Late import to speedup start-up time
     import xarray as xr
     from dask.utils import format_bytes
-    from tqdm.auto import tqdm
 
     # if isinstance(detector, CCD):
     #    dynamic.non_destructive_readout = False
@@ -426,12 +441,14 @@ def run_pipeline(
         # The detector should be reset before exposure
         detector.empty()
 
-        if progressbar:
-            pbar = tqdm(
-                total=detector.readout_properties.num_steps,
-                desc="Run pipeline: ",
-                postfix={"size": format_bytes(0)},
+        if progress_bar is not None:
+            num_total_steps = (
+                detector.readout_properties.num_steps * processor.num_steps()
             )
+
+            progress_bar.set_description_str(desc="Run pipeline: ")
+            progress_bar.set_postfix({"size": format_bytes(0)})
+            progress_bar.reset(total=num_total_steps)
 
         buckets_data_tree: xr.DataTree = xr.DataTree()
 
@@ -458,7 +475,7 @@ def run_pipeline(
             detector.empty(is_destructive_readout)
 
             # Execute the pipeline for this step.
-            processor.run_pipeline(debug=debug)
+            processor.run_pipeline(debug=debug, progress_bar=progress_bar)
 
             # Extract the results from the 'detector' into a partial 'DataTree'
             partial_datatree_2d: xr.DataTree = _extract_datatree_2d(detector=detector)
@@ -484,7 +501,7 @@ def run_pipeline(
                     )
 
             # Update the progress bar after each step.
-            if progressbar:
+            if progress_bar is not None:
                 num_bytes = buckets_data_tree.nbytes
                 num_bytes += detector.scene.data.nbytes
 
@@ -494,8 +511,7 @@ def run_pipeline(
                 if detector._data is not None:
                     num_bytes += detector.data.nbytes
 
-                pbar.update(1)
-                pbar.set_postfix(size=format_bytes(num_bytes))
+                progress_bar.set_postfix({"size": format_bytes(num_bytes)})
 
         # Prepare the final dictionary to construct the `DataTree`.
         dct: dict[str, xr.Dataset | xr.DataTree | None] = {}
@@ -549,7 +565,7 @@ def run_pipeline(
         data_tree = xr.DataTree.from_dict(dct)
         data_tree.attrs["pyxel version"] = __version__
 
-        if progressbar:
-            pbar.close()
+        if progress_bar:
+            progress_bar.close()
 
     return data_tree
