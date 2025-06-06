@@ -13,7 +13,8 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
-from typing import Self
+
+from typing_extensions import Self
 
 
 @cache
