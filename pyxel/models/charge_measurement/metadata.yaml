@@ -325,3 +325,45 @@ models:
           reference_pixel_border_width: 4
     notebooks:
       - use_cases/HxRG/h2rg
+
+  - name: dc_crosstalk
+    full_name: DC Crosstalk
+    detector:
+      - CCD
+      - CMOS
+      - APD
+    description: >
+      Apply DC crosstalk signal to detector signal.
+    config: >
+      - name: dc_crosstalk
+        func: pyxel.models.charge_measurement.dc_crosstalk
+        enabled: true
+        arguments:
+          coupling_matrix: [[1, 0.5, 0, 0], [0.5, 1, 0, 0], [0, 0, 1, 0.5], [0, 0, 0.5, 1]]
+          channel_matrix: [1,2,3,4]
+          readout_directions: [1,2,1,2]
+    notebooks:
+      - examples/models/amplifier_crosstalk/crosstalk
+      - use_cases/HxRG/h2rg
+      - examples/observation/sequential
+
+  - name: ac_crosstalk
+    full_name: AC Crosstalk
+    detector:
+      - CCD
+      - CMOS
+      - APD
+    description: >
+      Apply AC crosstalk signal to detector signal.
+    config: >
+      - name: ac_crosstalk
+        func: pyxel.models.charge_measurement.ac_crosstalk
+        enabled: true
+        arguments:
+          coupling_matrix: [[1, 0.5, 0, 0], [0.5, 1, 0, 0], [0, 0, 1, 0.5], [0, 0, 0.5, 1]]
+          channel_matrix: [1,2,3,4]
+          readout_directions: [1,2,1,2]
+    notebooks:
+      - examples/models/amplifier_crosstalk/crosstalk
+      - use_cases/HxRG/h2rg
+      - examples/observation/sequential
