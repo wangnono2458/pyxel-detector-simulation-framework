@@ -438,8 +438,8 @@ class PredefinedConfig(param.Parameterized):
 
         with self._button.param.update(loading=True):
             self._button.loading = True
-            _ds: xr.Dataset = run_mode_gui(config, tqdm_widget=progress_widget)
-            image_tabs = pyxel.display_detector(config.detector)
+            ds: xr.Dataset = run_mode_gui(config, tqdm_widget=progress_widget)
+            image_tabs = pyxel.display_dataset(ds, orientation="vertical")
 
         # Python snippet code
         source_code_lst: list[str] = []
@@ -569,8 +569,9 @@ class PredefinedConfig(param.Parameterized):
         )
 
 
-# # pip install watchfiles
-# # panel serve simple_config.py --dev --show
-foo = PredefinedConfig()
-foo.display().servable(title="Pyxel")
-# pn.serve(foo.display(), dev=True)
+# if __name__ == '__main__':
+# pip install watchfiles
+#
+# panel serve simple_config.py --dev --show
+# config = PredefinedConfig()
+# config.display().servable(title="Pyxel")
