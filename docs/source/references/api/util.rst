@@ -27,3 +27,8 @@ Image utilities
 ===============
 
 .. autofunction:: fit_into_array
+
+Extract information from JSON Schema
+====================================
+
+.. autofunction:: get_schema

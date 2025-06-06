@@ -55,6 +55,9 @@ Example:
   (See [!1056](https://gitlab.com/esa/pyxel/-/merge_requests/1056)).
 * Add method `Configuration.to_yaml`.
   (See [!1058](https://gitlab.com/esa/pyxel/-/merge_requests/1058)).
+* Add new function [`pyxel.util.get_schema`](https://esa.gitlab.io/pyxel/doc/stable/references/api/util.html#pyxel.util.get_schema)
+  to extract information from the JSON Schema.
+  (See [!1059](https://gitlab.com/esa/pyxel/-/merge_requests/1059)).
 
 ### Documentation
 * Add a convention about the order of ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html)

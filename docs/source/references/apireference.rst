@@ -198,6 +198,7 @@ Utility functions
     memory_usage_details
     time_pipeline
     fit_into_array
+    get_schema
 
 Deprecated / Pending deprecation
 ================================
