@@ -10,26 +10,26 @@
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
-from panel.widgets import Tqdm
-
-from pyxel import Configuration
-from pyxel.exposure import Exposure, run_pipeline
-from pyxel.observation import Observation
-from pyxel.pipelines import Processor
-from pyxel.run import apply_overrides
-
 if TYPE_CHECKING:
     import xarray as xr
+    from panel.widgets import Tqdm
 
+    from pyxel import Configuration
     from pyxel.outputs import Outputs
 
 
 def run_mode_gui(
-    config: Configuration,
+    config: "Configuration",
     *,
-    tqdm_widget: Tqdm,
+    tqdm_widget: "Tqdm",
     override_dct: Mapping[str, Any] | None = None,
 ) -> "xr.Dataset":
+    # Late import
+    from pyxel.exposure import Exposure, run_pipeline
+    from pyxel.observation import Observation
+    from pyxel.pipelines import Processor
+    from pyxel.run import apply_overrides
+
     # Initialize the Processor object with the detector and pipeline.
     if isinstance(config.running_mode, Observation):
         processor = Processor(

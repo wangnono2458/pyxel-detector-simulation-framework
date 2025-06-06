@@ -11,13 +11,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import panel as pn
 import param
-
-import pyxel
-from pyxel import Configuration
-from pyxel.gui import run_mode_gui
-from pyxel.util import clean_text, get_schema
 
 
 def get_folder_icons() -> Path:
@@ -26,14 +20,20 @@ def get_folder_icons() -> Path:
     return Path(pyxel.gui.icons.__path__[0])
 
 
-pn.extension("codeeditor")
-
 if TYPE_CHECKING:
+    import panel as pn
     import xarray as xr
 
+    from pyxel import Configuration
 
-def display_header(text: str, doc: str | None = None) -> pn.layout.Panel:
+
+def display_header(text: str, doc: str | None = None) -> "pn.layout.Panel":
     """Create a header row for a Panel layout."""
+    # Late import
+    import panel as pn
+
+    from pyxel.util import clean_text
+
     row = pn.Row(
         pn.widgets.StaticText(value=clean_text(text)),
         styles={"font-weight": "bold"},
@@ -57,8 +57,13 @@ class CCDGeometry(param.Parameterized):
     columns = param.Integer(100, bounds=(1, None))
     rows = param.Integer(100, bounds=(1, None))
 
-    def view(self) -> pn.layout.Panel:
+    def view(self) -> "pn.layout.Panel":
         """Return a Panel layout to visualize the geometry fields."""
+        # Late import
+        import panel as pn
+
+        from pyxel.util import get_schema
+
         schema = get_schema()["definitions"]["CCDGeometry"]
 
         return pn.Card(
@@ -122,8 +127,13 @@ class Environment(param.Parameterized):
         default=None, bounds=(0, None), inclusive_bounds=(False, False)
     )
 
-    def view(self) -> pn.layout.Panel:
+    def view(self) -> "pn.layout.Panel":
         """Return a Panel layout to visualize the geometry fields."""
+        # Late import
+        import panel as pn
+
+        from pyxel.util import get_schema
+
         schema = get_schema()["definitions"]["Environment"]
 
         return pn.Card(
@@ -160,8 +170,11 @@ class CCD(param.Parameterized):
     geometry = param.Parameter(CCDGeometry(), instantiate=True)
     environment = param.Parameter(Environment(), instantiate=True)
 
-    def view(self) -> pn.layout.Panel:
+    def view(self) -> "pn.layout.Panel":
         """Return a Panel layout to visualize the geometry fields."""
+        # Late import
+        import panel as pn
+
         return pn.Card(
             header=pn.Row(
                 pn.pane.SVG(
@@ -223,8 +236,11 @@ class ModelUSAF(param.Parameterized):
 
     enabled = param.Boolean(True)
 
-    def view(self) -> pn.layout.Panel:
+    def view(self) -> "pn.layout.Panel":
         """Return a Panel layout to visualize the geometry fields."""
+        # Late import
+        import panel as pn
+
         return pn.Card(
             header=pn.Row(display_header("USAF illumination"), margin=(0, 0, -10, 0)),
             objects=[
@@ -245,8 +261,11 @@ class GroupPhotonCollection(param.Parameterized):
 
     models = param.List([ModelUSAF(name="usaf_illumination")], instantiate=True)
 
-    def view(self) -> pn.layout.Panel:
+    def view(self) -> "pn.layout.Panel":
         """Return a Panel layout to visualize the geometry fields."""
+        # Late import
+        import panel as pn
+
         column = pn.Card(
             header=pn.Row(
                 pn.pane.SVG(
@@ -276,8 +295,11 @@ class ModelCDM(param.Parameterized):
     # Add more parameters
     enabled = param.Boolean(True)
 
-    def view(self) -> pn.layout.Panel:
+    def view(self) -> "pn.layout.Panel":
         """Return a Panel layout to visualize the geometry fields."""
+        # Late import
+        import panel as pn
+
         return pn.Card(
             header=pn.Row(
                 display_header("Charge Distortion Model"),
@@ -295,8 +317,11 @@ class GroupChargeTransfer(param.Parameterized):
 
     models = param.List([ModelCDM(name="charge_distortion_model")], instantiate=True)
 
-    def view(self) -> pn.layout.Panel:
+    def view(self) -> "pn.layout.Panel":
         """Return a Panel layout to visualize the geometry fields."""
+        # Late import
+        import panel as pn
+
         column = pn.Card(
             header=pn.Row(
                 pn.pane.SVG(
@@ -343,6 +368,12 @@ class BasicConfigGUI(param.Parameterized):
     pipeline = param.Parameter(default=None)  # TODO: Improve this
 
     def __init__(self, *args, **kwargs):
+        # Late import
+        import hvplot.xarray  # noqa: F401
+        import panel as pn
+
+        pn.extension("codeeditor")
+
         super().__init__(*args, **kwargs)
 
         ccd_param: param.Parameterized = CCD(name="CCD")  # TODO: Improve this
@@ -416,7 +447,11 @@ class BasicConfigGUI(param.Parameterized):
     #     self.detector = self._detectors[detector_name]
 
     def _run_pipeline(self, event):
-        import hvplot.xarray  # noqa: F401
+        # Late import
+        import panel as pn
+
+        import pyxel
+        from pyxel.gui import run_mode_gui
 
         # print(f"Run pipeline, {event=}")
         # TODO: Add a waiting status on the button
@@ -426,7 +461,7 @@ class BasicConfigGUI(param.Parameterized):
         progress_widget = pn.widgets.Tqdm()
         self._results_column.append(progress_widget)
 
-        config: Configuration = pyxel.build_configuration(
+        config: "Configuration" = pyxel.build_configuration(
             self.detector.name,
             num_rows=self.detector.geometry.rows,  # TODO: use '.row' instead
             num_cols=self.detector.geometry.columns,  # TODO: use '.column' instead
@@ -512,6 +547,8 @@ class BasicConfigGUI(param.Parameterized):
         #     sizing_mode="stretch_width",
         # )
         # iref = pn.bind(self._select_detector, detector_name=widget_detectors)
+        # Late import
+        import panel as pn
 
         config_column = pn.Column(
             width=400,
