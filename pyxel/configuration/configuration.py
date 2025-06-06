@@ -241,6 +241,9 @@ def build_configuration(
     ... )
     >>> config.detector.geometry.row
     512
+    >>> print(config.to_yaml())
+    # yaml-language-server: $schema=https://esa.gitlab.io/pyxel/doc/latest/pyxel_schema.json
+    ...
     >>> result = pyxel.run_mode(config)
     """
     match detector_type:
