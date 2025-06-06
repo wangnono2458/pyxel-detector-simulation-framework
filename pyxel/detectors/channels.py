@@ -17,6 +17,9 @@ defined in a matrix configuration as follows:
     :alt: Channels
     :align: center
 
+Based on the standard readout position, the **channel order** is: ``OP9`` (top-left), ``OP13`` (top-right),
+``OP1`` (bottom-left) and ``OP1`` (bottom-right).
+
 The corresponding YAML definition could be:
 
 .. code-block:: yaml
