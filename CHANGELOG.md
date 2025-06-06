@@ -19,11 +19,26 @@ This release includes various bug fixes and feature enhancements to improve usab
 Defined a consistent channel order convention for multi-channel detectors. 
 More information in [`channel order`](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html#channel-order-convention).
 
-### 🆕 New Channel order convention
+### 🆕 New function `pyxel.build_configuration` and method `Configuration.to_yaml`
 
 New function [`pyxel.build_configuration`](https://esa.gitlab.io/pyxel/doc/stable/references/api/run.html#pyxel.build_configuration)
 to build a `Configuration` object with pre-defined models.
 
+Example:
+```python
+>>> import pyxel
+>>> config = pyxel.build_configuration(
+...     detector_type="CCD",
+...     num_rows=512,
+...     num_cols=512,
+... )
+>>> config.detector.geometry.row
+512
+>>> print(config.to_yaml())
+# yaml-language-server: $schema=https://esa.gitlab.io/pyxel/doc/latest/pyxel_schema.json
+...
+>>> result = pyxel.run_mode(config)
+```
 
 ### Core
 * [`Channels`](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html) not working for 
@@ -38,6 +53,8 @@ to build a `Configuration` object with pre-defined models.
 * Remove parameter `debug` from function
   [`pyxel.run_mode_dataset`](https://esa.gitlab.io/pyxel/doc/stable/references/api/run.html#pyxel.run_mode_dataset).
   (See [!1056](https://gitlab.com/esa/pyxel/-/merge_requests/1056)).
+* Add method `Configuration.to_yaml`.
+  (See [!1058](https://gitlab.com/esa/pyxel/-/merge_requests/1058)).
 
 ### Documentation
 * Add a convention about the order of ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html)
