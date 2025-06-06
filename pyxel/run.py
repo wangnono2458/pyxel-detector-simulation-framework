@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     )
 
 
+@deprecated("This function will be removed")
 def exposure_mode(
     exposure: "Exposure",
     detector: Detector,
@@ -114,6 +115,7 @@ def exposure_mode(
     return result
 
 
+@deprecated("This function will be removed")
 def _run_exposure_mode_without_datatree(
     exposure: "Exposure",
     processor: Processor,
@@ -146,6 +148,7 @@ def _run_exposure_mode_without_datatree(
     )
 
 
+@deprecated("This function will be removed")
 def _run_exposure_mode(
     exposure: "Exposure",
     processor: Processor,
@@ -220,6 +223,7 @@ def _run_exposure_mode(
     return result
 
 
+@deprecated("This function will be removed")
 def observation_mode(
     observation: "Observation",
     detector: Detector,
@@ -288,6 +292,7 @@ def observation_mode(
     return result
 
 
+@deprecated("This function will be removed")
 def calibration_mode(
     calibration: "Calibration",
     detector: Detector,
@@ -449,6 +454,7 @@ def calibration_mode(
     return result
 
 
+@deprecated("This function will be removed")
 def _run_calibration_mode_without_datatree(
     calibration: "Calibration",
     processor: Processor,
@@ -637,7 +643,7 @@ def run_mode(
     *,
     override_dct: Mapping[str, Any] | None = None,
     debug: bool = False,
-    with_inherited_coords: bool = False,
+    with_inherited_coords: bool = True,
 ) -> "xr.DataTree":
     """Execute a Pyxel simulation pipeline.
 
@@ -687,7 +693,6 @@ def run_mode(
     >>> config = pyxel.load("exposure_configuration.yaml")
     >>> data_tree = pyxel.run_mode(
     ...     config,
-    ...     with_inherited_coords=True,  # with the new 'provisional' parameter
     ...     override={  # optional
     ...         "exposure.outputs.output_folder": "new_folder",
     ...         "pipeline.photon_collection.load_image.arguments.image_file": "new_image.fits",
@@ -903,6 +908,13 @@ def run_mode(
                         long_name:  Group: 'simple_adc'
     """
     # Input validation
+    if with_inherited_coords is False:
+        warnings.warn(
+            "Parameter 'with_inherited_coords' is deprecated",
+            DeprecationWarning,
+            stacklevel=1,
+        )
+
     if config is None and mode is None and detector is None and pipeline is None:
         raise ValueError("Missing required argument: 'config'.")
 
@@ -963,8 +975,7 @@ def run_mode(
 
     match mode:
         case Exposure():
-            data_tree = _run_exposure_mode(
-                exposure=mode,
+            data_tree = mode.run_exposure(
                 processor=processor,
                 debug=debug,
                 with_inherited_coords=with_inherited_coords,

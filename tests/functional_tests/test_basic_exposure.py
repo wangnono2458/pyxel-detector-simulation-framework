@@ -129,7 +129,7 @@ def test_simple_adc_dtype(readout_times, valid_config_filename: Path):
     )
 
     assert detector.image.dtype == np.uint16
-    assert result["image"].dtype == np.uint16
+    assert result["/bucket/image"].dtype == np.uint16
 
 
 @pytest.mark.parametrize(
