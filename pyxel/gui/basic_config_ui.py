@@ -380,7 +380,7 @@ class BasicConfigGUI(param.Parameterized):
         # cmos_param: param.Parameterized = CMOS(name="CMOS")  # TODO: Improve this
 
         # ccd_param .view().visible = True
-        # cmos_param.view().visble = False
+        # cmos_param.view().visible = False
 
         # TODO: Improve this
         self._detectors: Mapping[str, param.Parameterized] = {

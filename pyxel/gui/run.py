@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from panel.widgets import Tqdm
 
     from pyxel import Configuration
-    from pyxel.outputs import Outputs
+    from pyxel.outputs import ExposureOutputs
 
 
 def run_mode_gui(
@@ -48,14 +48,14 @@ def run_mode_gui(
             mode=config.running_mode,
         )
 
-    # Create an output folder (if needed)
-    outputs: Outputs | None = config.running_mode.outputs
-    if outputs:
-        outputs.create_output_folder()
-
     mode = config.running_mode
     match mode:
         case Exposure():
+            # Create an output folder (if needed)
+            outputs: ExposureOutputs | None = mode.outputs
+            if outputs:
+                outputs.create_output_folder()
+
             data_tree = run_pipeline(
                 processor=processor,
                 readout=mode.readout,
