@@ -26,7 +26,7 @@ to build a `Configuration` object with pre-defined models.
 
 
 ### Core
-* ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html) not working for 
+* [`Channels`](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html) not working for 
   CMOS and APD detector(s).
   (See [!1051](https://gitlab.com/esa/pyxel/-/merge_requests/1051)).
 * New function [`pyxel.build_configuration`](https://esa.gitlab.io/pyxel/doc/stable/references/api/run.html#pyxel.build_configuration) 
@@ -35,6 +35,9 @@ to build a `Configuration` object with pre-defined models.
 * Parameter `with_inherited_coords` in [`pyxel.run_mode`](https://esa.gitlab.io/pyxel/doc/stable/references/api/run.html#pyxel.run_mode)
   is deprecated.
   (See [!1055](https://gitlab.com/esa/pyxel/-/merge_requests/1055)).
+* Remove parameter `debug` from function
+  [`pyxel.run_mode_dataset`](https://esa.gitlab.io/pyxel/doc/stable/references/api/run.html#pyxel.run_mode_dataset).
+  (See [!1056](https://gitlab.com/esa/pyxel/-/merge_requests/1056)).
 
 ### Documentation
 * Add a convention about the order of ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html)
