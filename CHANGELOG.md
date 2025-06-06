@@ -43,6 +43,9 @@ to build a `Configuration` object with pre-defined models.
 * Add a convention about the order of ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html)
   in the documentation.
   (See [!1052](https://gitlab.com/esa/pyxel/-/merge_requests/1052)).
+* Fix typo in documentation for model
+  [`CDM`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_transfer_models.html#charge-distortion-model-cdm).
+  (See [!1057](https://gitlab.com/esa/pyxel/-/merge_requests/1057)).
 
 ### Models
 
