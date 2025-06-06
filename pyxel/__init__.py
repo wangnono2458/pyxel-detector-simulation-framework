@@ -22,6 +22,7 @@ from .configuration import (
     copy_config_file,
     Configuration,
     build_configuration,
+    launch_basic_gui,
 )
 from .run import (
     calibration_mode,

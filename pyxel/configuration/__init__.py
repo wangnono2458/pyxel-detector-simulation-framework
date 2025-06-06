@@ -14,5 +14,6 @@ from .configuration import (
     Configuration,
     copy_config_file,
     build_configuration,
+    launch_basic_gui,
 )
 from .configuration import _build_configuration

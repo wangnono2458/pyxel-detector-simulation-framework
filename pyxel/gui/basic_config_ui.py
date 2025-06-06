@@ -355,7 +355,7 @@ class CCDPipeline(param.Parameterized):
 
 
 class BasicConfigGUI(param.Parameterized):
-    """Pre-defined detector pipeline with Panel UI.
+    """Graphical User Interface for configuring and executing a basic detector pipeline.
 
     Examples
     --------
