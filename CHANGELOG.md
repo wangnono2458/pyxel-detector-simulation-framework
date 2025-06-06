@@ -32,6 +32,9 @@ to build a `Configuration` object with pre-defined models.
 * New function [`pyxel.build_configuration`](https://esa.gitlab.io/pyxel/doc/stable/references/api/run.html#pyxel.build_configuration) 
   to build a basic Configuration object.
   (See [!1054](https://gitlab.com/esa/pyxel/-/merge_requests/1054)).
+* Parameter `with_inherited_coords` in [`pyxel.run_mode`](https://esa.gitlab.io/pyxel/doc/stable/references/api/run.html#pyxel.run_mode)
+  is deprecated.
+  (See [!1055](https://gitlab.com/esa/pyxel/-/merge_requests/1055)).
 
 ### Documentation
 * Add a convention about the order of ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html)
