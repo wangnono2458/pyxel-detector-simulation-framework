@@ -9,6 +9,8 @@ General
 
 .. currentmodule:: pyxel
 
+.. autofunction:: display_dataset
+
 .. autofunction:: display_detector
 
 .. autofunction:: display_html

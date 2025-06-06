@@ -39,6 +39,7 @@ from .notebook import (
     display_calibration_inputs,
     display_simulated,
     display_evolution,
+    display_dataset,
     champion_heatmap,
     optimal_parameters,
 )

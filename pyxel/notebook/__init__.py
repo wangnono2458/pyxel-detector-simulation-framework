@@ -16,6 +16,7 @@ from .jupyxel import (
     display_detector,
     display_persist,
     display_scene,
+    display_dataset,
 )
 from .html_representation import display_html
 

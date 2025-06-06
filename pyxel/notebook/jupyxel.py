@@ -8,7 +8,7 @@
 """Tools for jupyter notebook visualization."""
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 
@@ -642,3 +642,174 @@ def display_scene(
     ax.vlines(x=r_x.value, ymin=b_y.value, ymax=t_y.value)
 
     return ax
+
+
+def display_dataset(
+    dataset: "xr.Dataset", orientation: Literal["horizontal", "vertical"] = "horizontal"
+) -> "pn.layout.Panel":
+    """Display an interactive visualization of a 3D dataset.
+
+    Parameters
+    ----------
+    dataset : Dataset
+        An Xarray Dataset with at least the dimensions 'x', 'y' and 'time'.
+    orientation : 'horizontal' or 'vertical'. Default: 'horizontal'
+        Orientation of the plots.
+
+    Returns
+    -------
+    Panel
+        A Panel layout containing the widgets and plots.
+
+    Raises
+    ------
+    TypeError
+        If 'dataset' is not a Xarray dataset.
+    ValueError
+        If required dimensions 'x', 'y' or 'time' are missing for the dataset.
+
+    Examples
+    --------
+    >>> import pyxel
+    >>> config = pyxel.build_configuration(
+    ...     detector_type="CCD",
+    ...     num_rows=512,
+    ...     num_cols=512,
+    ... )
+    >>> ds = pyxel.run_mode_dataset(config)
+    >>> ds
+    <xarray.Dataset>
+    >>> pyxel.display_dataset(ds)
+    """
+    import colorcet as cc
+    import holoviews as hv
+    import hvplot.xarray
+    import numpy as np
+    import panel as pn
+    import xarray as xr
+
+    pn.extension()
+
+    if not isinstance(dataset, xr.Dataset):
+        raise TypeError(f"Expecting a 'dataset'. Got {dataset=}")
+
+    if "x" not in dataset.dims:
+        raise ValueError(f"Missing dimension 'x'. Got dimensions: {list(dataset.dims)}")
+    if "y" not in dataset.dims:
+        raise ValueError(f"Missing dimension 'y'. Got dimensions: {list(dataset.dims)}")
+    if "time" not in dataset.dims:
+        raise ValueError(
+            f"Missing dimension 'time'. Got dimensions: {list(dataset.dims)}"
+        )
+
+    # Determine plot aspect ratio
+    aspect: float = dataset.sizes["y"] / dataset.sizes["x"]
+
+    # Widget to select the data variable (e.g. 'photon', 'signal', ...)
+    bucket_widget: pn.widgets.Widget = pn.widgets.Select(
+        name="Bucket", options=list(dataset.data_vars)
+    )
+
+    # Widget to select time
+    time_widget: pn.widgets.Widget = pn.widgets.DiscreteSlider(
+        name="Readout time [s]",
+        options=np.array(dataset["time"]).tolist(),
+    )
+
+    # Widget to select the color map
+    cmap_widget: pn.widgets.Widget = pn.widgets.ColorMap(
+        name="Color",
+        options={
+            "fire": cc.fire,
+            "gray": cc.gray,  # linear colormaps, for plotting magnitudes
+            "blues": cc.blues,  # linear colormaps, for plotting magnitudes
+            "colorwheel": cc.colorwheel,  # cyclic colormaps for cyclic quantities like orientation or phase
+            "coolwarm": cc.coolwarm,
+            # diverging colormap for plotting magnitude increasing or decreasing from a central point
+            "rainbow": cc.rainbow4,  # To highlight local differences in sequential data
+            "isoluminant": cc.isolum,  # To highlight low spatial-frequency information
+        },
+    )
+
+    # Widget to select histogram range
+    range_widget: pn.widgets.Widget = pn.widgets.EditableRangeSlider(
+        name="range", start=0, end=100
+    )
+
+    # Widget to choose number of bins in histogram
+    num_bins_widget: pn.widgets.Widget = pn.widgets.Select(
+        name="Num bins", options=[10, 20, 50, 100], value=50
+    )
+
+    def get_image_2d(bucket_name: str, time_value: float) -> xr.DataArray:
+        """Extract a 2D image from a bucket at a specific time."""
+        data_array: xr.DataArray = dataset[bucket_name].sel(
+            time=time_value, method="nearest"
+        )
+
+        # Update range widget for histogram
+        start, end = float(data_array.min()), float(data_array.max())
+
+        range_widget.start, range_widget.end = start, end
+        range_widget.name = f"Range [{data_array.attrs.get('units', 'undefined')}]"
+
+        range_widget.value = (start, end)
+        range_widget.step = min((end - start) / 1000, 0.01)
+
+        return data_array
+
+    # Bind data selection to widgets
+    data_selected = hvplot.bind(
+        get_image_2d,
+        bucket_name=bucket_widget,
+        time_value=time_widget,
+    )
+
+    # Enable interactive plotting
+    data_selected_interactive = data_selected.interactive(loc="left")
+
+    # Create 2D image plot
+    image_plot_interactive = data_selected_interactive.hvplot.image(
+        aspect=aspect,
+        cmap=cmap_widget,
+        cnorm="linear",
+    )
+    image_plot_holoview = image_plot_interactive.holoviews()
+    image_plot_widget = image_plot_interactive.widgets()
+
+    # Create histogram of pixel values
+    hist_plot = data_selected_interactive.hvplot.hist(
+        aspect=1.0,
+        logy=False,
+        bins=num_bins_widget,
+        bin_range=range_widget,
+    )
+
+    def pixel_evolution(x: float | None, y: float | None):
+        """Plot the time evolution of a pixel clicked in the image plot."""
+        if x is None or y is None:
+            return hv.Curve([]).opts(title="Click on image to view pixel time series")
+
+        data = dataset[bucket_widget.value].sel(x=x, y=y, method="nearest")
+        return data.hvplot.line(aspect=1.0) * data.hvplot.scatter(aspect=1.0)
+
+    # Stream to get cursor coordinated from 'image_plot_holoview'
+    pointer_stream = hv.streams.PointerXY(x=0, y=0, source=image_plot_holoview)
+
+    # Dynamic map for pixel time evolution plot
+    pixel_plot = hv.DynamicMap(pixel_evolution, streams=[pointer_stream])
+
+    if orientation == "horizontal":
+        images_layout = pn.Row(
+            image_plot_widget, pn.Row(image_plot_holoview, pixel_plot)
+        )
+    else:
+        images_layout = pn.Row(
+            image_plot_widget, pn.Column(image_plot_holoview, pixel_plot)
+        )
+
+    # Final layout with tabs
+    return pn.Tabs(
+        ("2D Image", images_layout),
+        ("Histogram", hist_plot),
+    )
