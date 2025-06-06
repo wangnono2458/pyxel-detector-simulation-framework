@@ -325,12 +325,12 @@ class CCDPipeline(param.Parameterized):
 # TODO: Add CMOSPipeline
 
 
-class PredefinedConfig(param.Parameterized):
+class BasicConfigGUI(param.Parameterized):
     """Pre-defined detector pipeline with Panel UI.
 
     Examples
     --------
-    >>> gui_config = PredefinedConfig()
+    >>> gui_config = BasicConfigGUI()
     >>> gui_config.display()
     """
 

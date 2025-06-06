@@ -8,3 +8,4 @@
 
 # flake8: noqa
 from .run import run_mode_gui
+from .basic_config_ui import BasicConfigGUI
