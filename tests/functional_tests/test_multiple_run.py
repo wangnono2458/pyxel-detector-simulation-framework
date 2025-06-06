@@ -43,7 +43,7 @@ def test_multiple_run_only_single_readout():
     np.testing.assert_equal(charge_2d, exp_charge_2d)
 
     # Check 'result.charge'
-    charge_array_3d = result["charge"]
+    charge_array_3d = result["/bucket/charge"]
     assert isinstance(charge_array_3d, xr.DataArray)
     exp_charge_array_3d = xr.DataArray(
         np.array([[[10.0, 10.0], [10.0, 10.0]]], dtype=float),
@@ -82,7 +82,7 @@ def test_multiple_run_only_single_readout():
     np.testing.assert_equal(charge_2d, exp_charge_2d)
 
     # Check 'result.charge'
-    charge_array_3d = result["charge"]
+    charge_array_3d = result["/bucket/charge"]
     assert isinstance(charge_array_3d, xr.DataArray)
     exp_charge_array_3d = xr.DataArray(
         np.array([[[10.0, 10.0], [10.0, 10.0]]], dtype=float),
@@ -107,7 +107,7 @@ def test_multiple_run_multiple_readout_destructive_readout():
     )
 
     # Check 'result.charge'
-    charge_array_3d = result["charge"]
+    charge_array_3d = result["/bucket/charge"]
     assert isinstance(charge_array_3d, xr.DataArray)
     exp_charge_array_3d = xr.DataArray(
         np.array(
@@ -125,7 +125,7 @@ def test_multiple_run_multiple_readout_destructive_readout():
     xr.testing.assert_equal(charge_array_3d, exp_charge_array_3d)
 
     # Check 'result.pixel'
-    pixel_3d = result["pixel"]
+    pixel_3d = result["/bucket/pixel"]
     assert isinstance(pixel_3d, xr.DataArray)
     exp_pixel_3d = xr.DataArray(
         np.array(
@@ -157,7 +157,7 @@ def test_multiple_run_multiple_readout_non_destructive_readout():
     )
 
     # Check 'result.charge'
-    charge_array_3d = result["charge"]
+    charge_array_3d = result["/bucket/charge"]
     assert isinstance(charge_array_3d, xr.DataArray)
     exp_charge_array_3d = xr.DataArray(
         np.array(
@@ -175,7 +175,7 @@ def test_multiple_run_multiple_readout_non_destructive_readout():
     xr.testing.assert_equal(charge_array_3d, exp_charge_array_3d)
 
     # Check 'result.pixel'
-    pixel_3d = result["pixel"]
+    pixel_3d = result["/bucket/pixel"]
     assert isinstance(pixel_3d, xr.DataArray)
     exp_pixel_3d = xr.DataArray(
         np.array(
