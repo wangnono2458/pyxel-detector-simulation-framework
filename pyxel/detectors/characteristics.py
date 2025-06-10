@@ -392,12 +392,16 @@ class Characteristics:
 
         return cls(adc_voltage_range=adc_voltage_range, **new_dct)
 
-    def dump(self) -> Mapping[str, Any]:
+    def dump(
+        self,
+    ) -> dict[str, int | float | str | dict[str, float] | list[float] | None]:
         return {
             "quantum_efficiency": self._quantum_efficiency,
             "charge_to_volt_conversion": self._charge_to_volt_conversion,
             "pre_amplification": self._pre_amplification,
             "full_well_capacity": self._full_well_capacity,
             "adc_bit_resolution": self._adc_bit_resolution,
-            "adc_voltage_range": self._adc_voltage_range,
+            "adc_voltage_range": (
+                list(self._adc_voltage_range) if self._adc_voltage_range else None
+            ),
         }

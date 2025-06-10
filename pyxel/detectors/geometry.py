@@ -372,7 +372,7 @@ class Geometry:
         else:
             return cls(**new_dct)
 
-    def dump(self) -> Mapping[str, Any]:
+    def dump(self) -> dict[str, int | float | None]:
         return {
             "row": self._row,
             "col": self._col,

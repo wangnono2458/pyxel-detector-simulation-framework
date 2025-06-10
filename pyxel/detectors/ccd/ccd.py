@@ -156,7 +156,14 @@ class CCD(Detector):
 
         return detector
 
-    def dump(self) -> Mapping[str, Any]:
+    def dump(
+        self,
+    ) -> Mapping[
+        str,
+        dict[str, int | float | None]
+        | dict[str, float | dict[str, float | int] | None]
+        | dict[str, int | float | str | dict[str, float] | list[float] | None],
+    ]:
         return {
             "geometry": self._geometry.dump(),
             "environment": self._environment.dump(),

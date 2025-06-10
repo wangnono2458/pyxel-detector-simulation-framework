@@ -112,7 +112,7 @@ class Arguments(MutableMapping):
     #     """TBW."""
     #     return Arguments(deepcopy(self._arguments))
 
-    def dump(self) -> Mapping[str, Any]:
+    def dump(self) -> dict[str, Any]:
         return {"arguments": self._arguments}
 
 
@@ -236,7 +236,7 @@ class ModelFunction:
         detector.current_running_model_name = self.name
         self.func(detector, **self.arguments)
 
-    def dump(self) -> Mapping[str, Any]:
+    def dump(self) -> dict[str, str | bool | dict[str, Any] | None]:
         return {
             "func": self._func_name,
             "name": self._name,
