@@ -7,9 +7,11 @@
 
 """Sub-package to display a GUI to build a simple Configuration object."""
 
-from collections.abc import Mapping
+import inspect
+from collections.abc import Callable, Mapping
+from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import param
 
@@ -18,6 +20,19 @@ if TYPE_CHECKING:
     import xarray as xr
 
     from pyxel import Configuration
+
+
+@cache
+def _get_default_values(func: Callable) -> Mapping[str, Any]:
+    dct = {}
+    for name, value in inspect.signature(func).parameters.items():
+        if name == "detector":
+            continue
+
+        dct[name] = value.default
+
+    print(f"{dct=}")
+    return dct
 
 
 def get_icons_folder() -> Path:
@@ -495,7 +510,9 @@ class BasicConfigGUI(param.Parameterized):
         # self._outputs_panel.append(image_tabs)
 
     def get_config(self) -> "Configuration":
+        # Late import
         import pyxel
+        from pyxel.pipelines import Arguments, ModelFunction
 
         config: "Configuration" = pyxel.build_configuration(
             self.detector.name,
@@ -506,16 +523,31 @@ class BasicConfigGUI(param.Parameterized):
         config.running_mode.readout.times = [1.0, 2.0, 3.0]
         config.running_mode.readout.non_destructive = True
 
+        # Create model 'usaf_illumination' from scratch
+        # TODO: This should be done directly in 'Configuguration'. Improve this !
+        from pyxel.models.photon_collection import usaf_illumination
+
         assert config.pipeline.photon_collection is not None  # TODO: Fix this
+        assert isinstance(
+            config.pipeline.photon_collection.usaf_illumination, ModelFunction
+        )
+
         config.pipeline.photon_collection.usaf_illumination.enabled = (
             self.pipeline.photon_collection.models[0].enabled
         )
+        # TODO: Use info from JSON Schema
+        config.pipeline.photon_collection.usaf_illumination._arguments = Arguments(
+            _get_default_values(usaf_illumination)
+        )
+
+        print(f"=== {config.pipeline.photon_collection.usaf_illumination=}")
 
         return config
 
     def get_source_code(self, config: "Configuration") -> str:
         # Late import
         import pyxel
+        from pyxel.pipelines import ModelFunction
 
         # Python snippet code
         source_code_lst: list[str] = []
@@ -550,6 +582,10 @@ class BasicConfigGUI(param.Parameterized):
 
         source_code_lst.append("# Configure the model(s)")
         assert config.pipeline.photon_collection is not None
+        print(f"{config.pipeline.photon_collection.usaf_illumination=}")
+        assert isinstance(
+            config.pipeline.photon_collection.usaf_illumination, ModelFunction
+        )
         source_code_lst.append(
             f"config.pipeline.photon_collection.usaf_illumination.enabled = {config.pipeline.photon_collection.usaf_illumination.enabled!r}"
         )
