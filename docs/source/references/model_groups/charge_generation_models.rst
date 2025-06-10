@@ -465,8 +465,8 @@ all with the same incident energy of 100 MeV and for 5 different thicknesses of 
         particle_type: proton
         initial_energy: 100.          # MeV
         particles_per_second: 100
-        incident_angles:
-        starting_position:
+        incident_angles: null
+        starting_position: null
         spectrum_file: 'data/proton_L2_solarMax_11mm_Shielding.txt'
         seed: 4321
 

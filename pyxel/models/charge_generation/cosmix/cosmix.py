@@ -62,7 +62,7 @@ def cosmix(
     running_mode: Literal["stopping", "stepsize", "geant4", "plotting"],
     particle_type: Literal["proton", "alpha", "ion"],
     particles_per_second: float,
-    spectrum_file: str,
+    spectrum_file: str | None = None,
     initial_energy: (
         int | float | Literal["random"] | None
     ) = "random",  # TODO: Remove 'Optional'
@@ -98,7 +98,7 @@ def cosmix(
         Type of particle: ``proton``, ``alpha``, ``ion``.
     particles_per_second : float
         Number of particles per second.
-    spectrum_file : str
+    spectrum_file : str, Default: None.
         Path to input spectrum
     initial_energy : int or float or literal
         Kinetic energy of particle, set `random` for random.
@@ -134,6 +134,18 @@ def cosmix(
     # TODO: Remove this
     if starting_position is None:
         starting_position = ("random", "random", "random")
+
+    if spectrum_file is None:
+        if particle_type == "proton":
+            from pyxel.models.charge_generation import data as data_repo
+
+            data_folder = Path(data_repo.__path__[0])
+            spectrum_file = data_folder.joinpath(
+                "proton_L2_solarMax_11mm_Shielding.txt"
+            ).as_posix()
+
+        else:
+            raise ValueError("Missing parameter 'spectrum_file' !")
 
     incident_angle_alpha, incident_angle_beta = incident_angles
     start_pos_ver, start_pos_hor, start_pos_z = starting_position

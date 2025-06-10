@@ -3218,9 +3218,13 @@
               "type": "string"
             },
             "spectrum_file": {
+              "default": null,
               "description": "Path to input spectrum",
               "title": "spectrum_file",
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "starting_position": {
               "additionalItems": false,
@@ -3277,8 +3281,7 @@
             "simulation_mode",
             "running_mode",
             "particle_type",
-            "particles_per_second",
-            "spectrum_file"
+            "particles_per_second"
           ],
           "title": "Parameters",
           "type": "object"
