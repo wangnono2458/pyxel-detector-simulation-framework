@@ -60,12 +60,28 @@ def _add_comments(text: str) -> str:
 
     new_lines = []
     for line in text.splitlines():
+        clean_line: str = line.lstrip()
+
         for name, unit in units.items():
-            if line.lstrip().startswith(f"{name}:"):
+            if clean_line.startswith(f"{name}:"):
                 result = f"{line}  # Unit: [{unit}]"
                 break
         else:
             result = line
+
+        if (
+            clean_line.startswith("readout")
+            or clean_line.startswith("outputs")
+            or clean_line.startswith("geometry")
+            or clean_line.startswith("environment")
+            or clean_line.startswith("characteristics")
+            or clean_line.startswith("photon_collection")
+            or clean_line.startswith("charge_generation")
+            or clean_line.startswith("charge_collection")
+            or clean_line.startswith("charge_measurement")
+            or clean_line.startswith("readout_electronics")
+        ):
+            new_lines.append("")
 
         new_lines.append(result)
 
