@@ -245,12 +245,19 @@ class ModelFunction:
         self.func(detector, **self.arguments)
 
     def dump(self) -> dict[str, str | bool | dict[str, Any] | None]:
-        return {
-            "func": self._func_name,
-            "name": self._name,
-            "arguments": dict(self._arguments) if self._arguments else None,
-            "enabled": self.enabled,
-        }
+        if self._arguments:
+            return {
+                "func": self._func_name,
+                "name": self._name,
+                "enabled": self.enabled,
+                "arguments": dict(self._arguments),
+            }
+        else:
+            return {
+                "func": self._func_name,
+                "name": self._name,
+                "enabled": self.enabled,
+            }
 
 
 class FitnessFunction:
