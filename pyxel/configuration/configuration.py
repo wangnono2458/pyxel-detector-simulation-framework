@@ -196,6 +196,11 @@ class Configuration:
         """Convert the configuration into YAML content."""
         import yaml
 
+        class IndentDumper(yaml.Dumper):
+            def increase_indent(self, flow: bool = False, indentless: bool = False):
+                # Force indentation
+                return super().increase_indent(flow=flow, indentless=False)
+
         content = "# yaml-language-server: $schema=https://esa.gitlab.io/pyxel/doc/latest/pyxel_schema.json\n\n"
 
         content += "#############################################################\n"
@@ -214,8 +219,10 @@ class Configuration:
             content += "# Exposure running mode                                                                                     #\n"
             content += "# More information here: https://esa.gitlab.io/pyxel/doc/stable/background/running_modes/exposure_mode.html #\n"
             content += "#############################################################################################################\n"
-            content += yaml.safe_dump(
-                {"exposure": self.exposure.dump()}, sort_keys=False
+            content += yaml.dump(
+                {"exposure": self.exposure.dump()},
+                sort_keys=False,
+                Dumper=IndentDumper,
             )
 
         if self.observation or self.calibration:
@@ -224,8 +231,10 @@ class Configuration:
         content += "\n"
         if self.ccd_detector:
             content += "# Define detector to use\n"
-            content += yaml.safe_dump(
-                {"ccd_detector": self.ccd_detector.dump()}, sort_keys=False
+            content += yaml.dump(
+                {"ccd_detector": self.ccd_detector.dump()},
+                sort_keys=False,
+                Dumper=IndentDumper,
             )
 
         if self.cmos_detector or self.mkid_detector or self.apd_detector:
@@ -236,7 +245,11 @@ class Configuration:
         content += "# Define Pipeline                                                                        #\n"
         content += "# More information here: https://esa.gitlab.io/pyxel/doc/stable/background/pipeline.html #\n"
         content += "##########################################################################################\n"
-        content += yaml.safe_dump({"pipeline": self.pipeline.dump()}, sort_keys=False)
+        content += yaml.dump(
+            {"pipeline": self.pipeline.dump()},
+            sort_keys=False,
+            Dumper=IndentDumper,
+        )
 
         content_with_comments = _add_comments(content)
 
