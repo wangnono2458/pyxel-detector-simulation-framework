@@ -13,6 +13,8 @@ from pathlib import Path
 from shutil import copy2
 from typing import IO, TYPE_CHECKING, Any, Literal, Optional, Union
 
+from typing_extensions import overload
+
 from pyxel import __version__ as version
 from pyxel.detectors import (
     APD,
@@ -169,7 +171,12 @@ class Configuration:
         else:
             raise NotImplementedError
 
-    def to_yaml(self) -> str:
+    @overload
+    def to_yaml(self) -> str: ...
+    @overload
+    def to_yaml(self, filename: str | Path) -> None: ...
+
+    def to_yaml(self, filename: str | Path | None = None) -> str | None:
         """Convert the configuration into YAML content."""
         import yaml
 
@@ -215,7 +222,13 @@ class Configuration:
         content += "##########################################################################################\n"
         content += yaml.safe_dump({"pipeline": self.pipeline.dump()}, sort_keys=False)
 
-        return _add_comments(content)
+        content_with_comments = _add_comments(content)
+
+        if filename is None:
+            return content_with_comments
+        else:
+            _ = Path(filename).write_text(content_with_comments)
+            return None
 
 
 def load(yaml_file: str | Path) -> Configuration:
