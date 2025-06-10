@@ -56,6 +56,7 @@ def _add_comments(text: str) -> str:
         "adc_bit_resolution": "bit",
         "full_well_capacity": "electron",
         "temperature": "K",
+        "wavelength": "nm",
     }
 
     new_lines = []

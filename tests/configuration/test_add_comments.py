@@ -28,6 +28,7 @@ from pyxel.configuration.configuration import _add_comments
             "\n  environment:\n    temperature: null  # Unit: [K]",
             id="Temperature, null",
         ),
+        pytest.param("wavelength:", "wavelength:  # Unit: [nm]", id="wavelength"),
         pytest.param("row:", "row:  # Unit: [pix]", id="row"),
         pytest.param("col:", "col:  # Unit: [pix]", id="col"),
         pytest.param("times:", "times:  # Unit: [s]", id="times"),
