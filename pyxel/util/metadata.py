@@ -29,10 +29,10 @@ def get_schema() -> Mapping:
         Pyxel JSON Schema
     """
     # Late import
-    import pyxel.static
+    from pyxel import static
 
     # Locate the 'pyxel_schema.json' file
-    folder = Path(pyxel.static.__path__[0])
+    folder = Path(static.__path__[0])
     pyxel_schema_filename = folder / "pyxel_schema.json"
 
     # Read and parse the JSON schema

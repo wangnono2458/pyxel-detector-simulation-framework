@@ -645,7 +645,8 @@ def display_scene(
 
 
 def display_dataset(
-    dataset: "xr.Dataset", orientation: Literal["horizontal", "vertical"] = "horizontal"
+    dataset: "xr.Dataset",
+    orientation: Literal["horizontal", "vertical"] = "horizontal",
 ) -> "pn.layout.Panel":
     """Display an interactive visualization of a 3D dataset.
 
@@ -702,18 +703,23 @@ def display_dataset(
             f"Missing dimension 'time'. Got dimensions: {list(dataset.dims)}"
         )
 
+    widget_width: int = 200
+
     # Determine plot aspect ratio
     aspect: float = dataset.sizes["y"] / dataset.sizes["x"]
 
     # Widget to select the data variable (e.g. 'photon', 'signal', ...)
     bucket_widget: pn.widgets.Widget = pn.widgets.Select(
-        name="Bucket", options=list(dataset.data_vars)
+        name="Bucket",
+        options=list(dataset.data_vars),
+        width=widget_width,
     )
 
     # Widget to select time
     time_widget: pn.widgets.Widget = pn.widgets.DiscreteSlider(
         name="Readout time [s]",
         options=np.array(dataset["time"]).tolist(),
+        width=widget_width,
     )
 
     # Widget to select the color map
@@ -729,16 +735,23 @@ def display_dataset(
             "rainbow": cc.rainbow4,  # To highlight local differences in sequential data
             "isoluminant": cc.isolum,  # To highlight low spatial-frequency information
         },
+        width=widget_width,
     )
 
     # Widget to select histogram range
     range_widget: pn.widgets.Widget = pn.widgets.EditableRangeSlider(
-        name="range", start=0, end=100
+        name="range",
+        start=0,
+        end=100,
+        width=widget_width,
     )
 
     # Widget to choose number of bins in histogram
     num_bins_widget: pn.widgets.Widget = pn.widgets.Select(
-        name="Num bins", options=[10, 20, 50, 100], value=50
+        name="Num bins",
+        options=[10, 20, 50, 100],
+        value=50,
+        width=widget_width,
     )
 
     def get_image_2d(bucket_name: str, time_value: float) -> xr.DataArray:
@@ -759,20 +772,27 @@ def display_dataset(
         return data_array
 
     # Bind data selection to widgets
-    data_selected = hvplot.bind(
+    data_selected: xr.DataArray = hvplot.bind(
         get_image_2d,
         bucket_name=bucket_widget,
         time_value=time_widget,
     )
 
     # Enable interactive plotting
-    data_selected_interactive = data_selected.interactive(loc="left")
+    data_selected_interactive = data_selected.interactive(
+        width=widget_width, loc="left"
+    )
 
     # Create 2D image plot
-    image_plot_interactive = data_selected_interactive.hvplot.image(
-        aspect=aspect,
-        cmap=cmap_widget,
-        cnorm="linear",
+    image_plot_interactive: hvplot.xarray.XArrayInteractive = (
+        data_selected_interactive.hvplot.image(
+            aspect=aspect,
+            cmap=cmap_widget,
+            cnorm="linear",
+            flip_yaxis=True,
+            # frame_width=300,
+            # width=700
+        )
     )
     image_plot_holoview = image_plot_interactive.holoviews()
     image_plot_widget = image_plot_interactive.widgets()
@@ -801,15 +821,17 @@ def display_dataset(
 
     if orientation == "horizontal":
         images_layout = pn.Row(
-            image_plot_widget, pn.Row(image_plot_holoview, pixel_plot)
+            image_plot_widget,
+            pn.Row(image_plot_holoview, pixel_plot),
         )
     else:
         images_layout = pn.Row(
-            image_plot_widget, pn.Column(image_plot_holoview, pixel_plot)
+            image_plot_widget,
+            pn.Column(image_plot_holoview, pixel_plot),
         )
 
     # Final layout with tabs
     return pn.Tabs(
         ("2D Image", images_layout),
-        ("Histogram", hist_plot),
+        ("Histogram", pn.Row(hist_plot, align=("start", "start"))),
     )
