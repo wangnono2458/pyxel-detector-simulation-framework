@@ -7,11 +7,9 @@
 
 """Sub-package to display a GUI to build a simple Configuration object."""
 
-import inspect
-from collections.abc import Callable, Mapping
-from functools import cache
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 import param
 
@@ -20,19 +18,6 @@ if TYPE_CHECKING:
     import xarray as xr
 
     from pyxel import Configuration
-
-
-@cache
-def _get_default_values(func: Callable) -> Mapping[str, Any]:
-    dct = {}
-    for name, value in inspect.signature(func).parameters.items():
-        if name == "detector":
-            continue
-
-        dct[name] = value.default
-
-    print(f"{dct=}")
-    return dct
 
 
 def get_icons_folder() -> Path:
@@ -312,6 +297,62 @@ class GroupPhotonCollection(param.Parameterized):
 
 
 # TODO: Create a BaseClass or prototype
+class ModelCosmix(param.Parameterized):
+    """Configuration parameters and a Panel-based used interface."""
+
+    # Add more parameters
+    enabled = param.Boolean(True)
+
+    def view(self) -> "pn.layout.Panel":
+        """Return a Panel layout to visualize the geometry fields."""
+        # Late import
+        import panel as pn
+
+        return pn.Card(
+            header=pn.Row(
+                display_header("Cosmix"),
+                margin=(0, 0, -10, 0),
+            ),
+            objects=[pn.Param(self.param.enabled, sizing_mode="stretch_width")],
+            margin=10,
+            styles={"border": "2px solid black", "border_radius": "8px"},
+        )
+
+
+# TODO: Create a BaseClass or prototype
+class GroupChargeGeneration(param.Parameterized):
+    """Configuration parameters and a Panel-based used interface."""
+
+    models = param.List([ModelCosmix(name="cosmix")], instantiate=True)
+
+    def view(self) -> "pn.layout.Panel":
+        """Return a Panel layout to visualize the geometry fields."""
+        # Late import
+        import panel as pn
+
+        column = pn.Card(
+            header=pn.Row(
+                pn.pane.SVG(
+                    get_icons_folder() / "layout_list.svg",
+                    width=18,
+                    margin=(10, -5, 10, 0),
+                    align="end",
+                ),
+                display_header("Charge Generation group"),
+                margin=(0, 0, -10, 0),
+            ),
+            collapsible=False,
+            styles={"border": "2px solid black", "border_radius": "8px"},
+            margin=(10, 10, 5, 10),
+        )
+
+        for el in self.models:
+            column.append(el.view())
+
+        return column
+
+
+# TODO: Create a BaseClass or prototype
 class ModelCDM(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
@@ -371,6 +412,7 @@ class CCDPipeline(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
     photon_collection = param.Parameter()
+    charge_generation = param.Parameter()
     charge_transfer = param.Parameter()
 
 
@@ -420,9 +462,10 @@ class BasicConfigGUI(param.Parameterized):
         # photon_collection = GroupPhotonCollection()  # TODO: Improve this
         self._ccd_pipeline = CCDPipeline(
             photon_collection=GroupPhotonCollection(),
+            charge_generation=GroupChargeGeneration(),
             charge_transfer=GroupChargeTransfer(),
         )
-        self.pipeline = self._ccd_pipeline
+        self.pipeline: CCDPipeline = self._ccd_pipeline
         self._pipeline_column = pn.Card(
             header=pn.Row(
                 pn.pane.SVG(
@@ -478,7 +521,6 @@ class BasicConfigGUI(param.Parameterized):
             image_tabs = pyxel.display_dataset(ds, orientation="vertical")
 
         num_tabs_to_be_removed = min(len(self._outputs_tabs) - 2, 0)
-        print(f"{num_tabs_to_be_removed=}, {len(self._outputs_tabs)=}")
         if num_tabs_to_be_removed > 0:
             # Remove some tabs
             for _ in range(num_tabs_to_be_removed):
@@ -512,7 +554,7 @@ class BasicConfigGUI(param.Parameterized):
     def get_config(self) -> "Configuration":
         # Late import
         import pyxel
-        from pyxel.pipelines import Arguments, ModelFunction
+        from pyxel.pipelines import ModelFunction
 
         config: "Configuration" = pyxel.build_configuration(
             self.detector.name,
@@ -520,12 +562,15 @@ class BasicConfigGUI(param.Parameterized):
             num_cols=self.detector.geometry.columns,  # TODO: use '.column' instead
         )
 
+        config.detector.geometry.total_thickness = 40.0
+        config.detector.geometry.pixel_vert_size = 18.0
+        config.detector.geometry.pixel_horz_size = 18.0
+
         config.running_mode.readout.times = [1.0, 2.0, 3.0]
         config.running_mode.readout.non_destructive = True
 
-        # Create model 'usaf_illumination' from scratch
+        # Modify model 'usaf_illumination'
         # TODO: This should be done directly in 'Configuguration'. Improve this !
-        from pyxel.models.photon_collection import usaf_illumination
 
         assert config.pipeline.photon_collection is not None  # TODO: Fix this
         assert isinstance(
@@ -535,13 +580,14 @@ class BasicConfigGUI(param.Parameterized):
         config.pipeline.photon_collection.usaf_illumination.enabled = (
             self.pipeline.photon_collection.models[0].enabled
         )
-        # TODO: Use info from JSON Schema
-        config.pipeline.photon_collection.usaf_illumination._arguments = Arguments(
-            _get_default_values(usaf_illumination)
+
+        # Modify model 'cosmix'
+        assert config.pipeline.charge_generation is not None  # TODO: Fix this
+        assert isinstance(config.pipeline.charge_generation.cosmix, ModelFunction)
+
+        config.pipeline.charge_generation.cosmix.enabled = (
+            self.pipeline.charge_generation.models[0].enabled
         )
-
-        print(f"=== {config.pipeline.photon_collection.usaf_illumination=}")
-
         return config
 
     def get_source_code(self, config: "Configuration") -> str:
@@ -562,6 +608,22 @@ class BasicConfigGUI(param.Parameterized):
         )
         source_code_lst.append("")
 
+        source_code_lst.append(
+            "# Add more information about the geometry of the detector"
+        )
+        source_code_lst.append("# These parameters are used for model 'cosmix'")
+        source_code_lst.append(
+            f"config.detector.geometry.total_thickness = {config.detector.geometry.total_thickness}  # Unit: [µm]"
+        )
+        source_code_lst.append(
+            f"config.detector.geometry.pixel_vert_size = {config.detector.geometry.pixel_vert_size}  # Unit: [µm]"
+        )
+        source_code_lst.append(
+            f"config.detector.geometry.pixel_horz_size = {config.detector.geometry.pixel_horz_size}  # Unit: [µm]"
+        )
+
+        source_code_lst.append("")
+
         if self.detector.environment.temperature:
             source_code_lst.append(
                 "# Configure the environmental parameter(s) for the detector"
@@ -580,16 +642,20 @@ class BasicConfigGUI(param.Parameterized):
         )
         source_code_lst.append("")
 
-        source_code_lst.append("# Configure the model(s)")
+        source_code_lst.append("# Configure the models")
         assert config.pipeline.photon_collection is not None
-        print(f"{config.pipeline.photon_collection.usaf_illumination=}")
         assert isinstance(
             config.pipeline.photon_collection.usaf_illumination, ModelFunction
         )
         source_code_lst.append(
             f"config.pipeline.photon_collection.usaf_illumination.enabled = {config.pipeline.photon_collection.usaf_illumination.enabled!r}"
         )
+        source_code_lst.append(
+            f"config.pipeline.charge_generation.cosmix.enabled = {config.pipeline.charge_generation.cosmix.enabled!r}"
+        )
         source_code_lst.append("")
+
+        source_code_lst.append(f"# Save current Configuration to a YAML file")
         source_code_lst.append(f"config.to_yaml('demo_{self.detector.name}.yaml')")
         source_code_lst.append("")
         source_code_lst.append(
@@ -604,9 +670,8 @@ class BasicConfigGUI(param.Parameterized):
 
         return source_code
 
-    def _update_code_yaml(self, **kwargs):
-        # print(f'{kwargs=}')
-        config = self.get_config()
+    def _update_code_yaml(self, **kwargs) -> None:
+        config: "Configuration" = self.get_config()
 
         self._code_panel.value = self.get_source_code(config)
         self._yaml_panel.value = config.to_yaml()
@@ -655,6 +720,9 @@ class BasicConfigGUI(param.Parameterized):
             rows=self.detector.geometry.param.rows,
             temperature=self.detector.environment.param.temperature,
             model_usaf_enabled=self.pipeline.photon_collection.models[0].param.enabled,
+            model_cosmix_enabled=self.pipeline.charge_generation.models[
+                0
+            ].param.enabled,
         )
 
         detector_widget.visible = True
@@ -672,6 +740,7 @@ class BasicConfigGUI(param.Parameterized):
         # TODO: Improve this
         # Only for CCDs
         self._pipeline_column.append(self.pipeline.photon_collection.view())
+        self._pipeline_column.append(self.pipeline.charge_generation.view())
         self._pipeline_column.append(self.pipeline.charge_transfer.view())
 
         config_panel.append(self._pipeline_column)

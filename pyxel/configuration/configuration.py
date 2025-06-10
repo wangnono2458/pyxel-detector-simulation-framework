@@ -345,6 +345,11 @@ def build_configuration(
                         ModelFunction(
                             name="usaf_illumination",
                             func="pyxel.models.photon_collection.usaf_illumination",
+                            arguments={
+                                "position": [0, 0],
+                                "convert_to_photons": True,
+                                "bit_resolution": 16,
+                            },
                         )
                     ],
                     # Convert photons to electrons
@@ -352,7 +357,22 @@ def build_configuration(
                         ModelFunction(
                             name="simple_conversion",
                             func="pyxel.models.charge_generation.simple_conversion",
-                        )
+                        ),
+                        ModelFunction(
+                            name="cosmix",
+                            func="pyxel.models.charge_generation.cosmix",
+                            arguments={
+                                "simulation_mode": "cosmic_ray",
+                                "running_mode": "stepsize",
+                                "particle_type": "proton",
+                                "initial_energy": 200.0,  # MeV
+                                "particles_per_second": 100,
+                                "incident_angles": None,
+                                "starting_position": None,
+                                "spectrum_file": None,
+                                "progressbar": False,
+                            },
+                        ),
                     ],
                     charge_collection=[
                         ModelFunction(

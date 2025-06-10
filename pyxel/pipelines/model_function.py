@@ -61,7 +61,11 @@ class Arguments(MutableMapping):
         self._arguments: dict[str, Any] = {
             key: (
                 value
-                if (not isinstance(value, Sequence) or isinstance(value, Mapping))
+                if (
+                    isinstance(value, str)
+                    or not isinstance(value, Sequence)
+                    or isinstance(value, Mapping)
+                )
                 else list(value)
             )
             for key, value in input_arguments.items()
