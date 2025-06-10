@@ -54,8 +54,8 @@ def display_header(text: str, doc: str | None = None) -> "pn.layout.Panel":
 class CCDGeometry(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
-    columns = param.Integer(100, bounds=(1, None))
     rows = param.Integer(100, bounds=(1, None))
+    columns = param.Integer(100, bounds=(1, None))
 
     def view(self) -> "pn.layout.Panel":
         """Return a Panel layout to visualize the geometry fields."""
@@ -81,18 +81,20 @@ class CCDGeometry(param.Parameterized):
                 margin=(0, 0, -10, 0),
             ),
             objects=[
-                pn.widgets.IntInput.from_param(
-                    self.param.columns,
-                    description=schema["properties"]["col"]["description"],
-                    margin=(5, 10, 5, 10),
-                    sizing_mode="stretch_width",
-                ),
-                pn.widgets.IntInput.from_param(
-                    self.param.rows,
-                    description=schema["properties"]["row"]["description"],
-                    margin=(5, 10, 10, 10),
-                    sizing_mode="stretch_width",
-                ),
+                pn.Row(
+                    pn.widgets.IntInput.from_param(
+                        self.param.rows,
+                        description=schema["properties"]["row"]["description"],
+                        margin=(5, 10, 10, 10),
+                        sizing_mode="stretch_width",
+                    ),
+                    pn.widgets.IntInput.from_param(
+                        self.param.columns,
+                        description=schema["properties"]["col"]["description"],
+                        margin=(5, 10, 5, 10),
+                        sizing_mode="stretch_width",
+                    ),
+                )
             ],
             collapsible=False,
             styles={"border": "2px solid black", "border_radius": "8px"},
@@ -172,11 +174,61 @@ class Environment(param.Parameterized):
         )
 
 
+class Characteristics(param.Parameterized):
+    """Configuration parameters and a Panel-based used interface."""
+
+    full_well_capacity = param.Number(
+        default=100_000,
+        bounds=(0, None),
+        inclusive_bounds=(False, False),
+    )
+
+    def view(self) -> "pn.layout.Panel":
+        """Return a Panel layout to visualize the geometry fields."""
+        # Late import
+        import panel as pn
+
+        from pyxel.util import get_schema
+
+        schema = get_schema()["definitions"]["Characteristics"]
+
+        return pn.Card(
+            header=pn.Row(
+                pn.pane.SVG(
+                    get_icons_folder() / "wrench.svg",
+                    width=18,
+                    margin=(10, -5, 10, 0),
+                    align="end",
+                ),
+                display_header(
+                    schema["description"],
+                    doc="Characteristic attributes of the detector",
+                ),
+                margin=(0, 0, -10, 0),
+            ),
+            objects=[
+                pn.widgets.FloatInput.from_param(
+                    self.param.full_well_capacity,
+                    step=1000.0,
+                    description=schema["properties"]["full_well_capacity"][
+                        "description"
+                    ],
+                    margin=(5, 10, 10, 10),
+                    sizing_mode="stretch_width",
+                )
+            ],
+            collapsible=False,
+            styles={"border": "2px solid black", "border_radius": "8px"},
+            margin=(5, 10, 10, 10),
+        )
+
+
 class CCD(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
     geometry = param.Parameter(CCDGeometry(), instantiate=True)
     environment = param.Parameter(Environment(), instantiate=True)
+    characteristics = param.Parameter(Characteristics(), instantiate=True)
 
     def view(self) -> "pn.layout.Panel":
         """Return a Panel layout to visualize the geometry fields."""
@@ -194,7 +246,11 @@ class CCD(param.Parameterized):
                 display_header("CCD Detector"),
                 margin=(0, 0, -10, 0),
             ),
-            objects=[self.geometry.view(), self.environment.view()],
+            objects=[
+                self.geometry.view(),
+                self.environment.view(),
+                self.characteristics.view(),
+            ],
             collapsible=False,
             styles={"border": "2px solid black", "border_radius": "8px"},
             margin=10,
@@ -250,7 +306,9 @@ class ModelUSAF(param.Parameterized):
         import panel as pn
 
         return pn.Card(
-            header=pn.Row(display_header("USAF illumination"), margin=(0, 0, -10, 0)),
+            header=pn.Row(
+                display_header("USAF-1951 illumination pattern"), margin=(0, 0, -10, 0)
+            ),
             objects=[
                 pn.Param(
                     self.param.enabled,
@@ -310,7 +368,7 @@ class ModelCosmix(param.Parameterized):
 
         return pn.Card(
             header=pn.Row(
-                display_header("Cosmix"),
+                display_header("CosmiX: Cosmic ray model"),
                 margin=(0, 0, -10, 0),
             ),
             objects=[pn.Param(self.param.enabled, sizing_mode="stretch_width")],
@@ -353,7 +411,7 @@ class GroupChargeGeneration(param.Parameterized):
 
 
 # TODO: Create a BaseClass or prototype
-class ModelCDM(param.Parameterized):
+class ModelSimpleFullWell(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
     # Add more parameters
@@ -366,7 +424,7 @@ class ModelCDM(param.Parameterized):
 
         return pn.Card(
             header=pn.Row(
-                display_header("Charge Distortion Model"),
+                display_header("Simple Full Well Capacity"),
                 margin=(0, 0, -10, 0),
             ),
             objects=[pn.Param(self.param.enabled, sizing_mode="stretch_width")],
@@ -376,10 +434,12 @@ class ModelCDM(param.Parameterized):
 
 
 # TODO: Create a BaseClass or prototype
-class GroupChargeTransfer(param.Parameterized):
+class GroupChargeCollection(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
-    models = param.List([ModelCDM(name="charge_distortion_model")], instantiate=True)
+    models = param.List(
+        [ModelSimpleFullWell(name="simple_full_well")], instantiate=True
+    )
 
     def view(self) -> "pn.layout.Panel":
         """Return a Panel layout to visualize the geometry fields."""
@@ -394,7 +454,7 @@ class GroupChargeTransfer(param.Parameterized):
                     margin=(10, -5, 10, 0),
                     align="end",
                 ),
-                display_header("Charge Transfer Collection group"),
+                display_header("Charge Collection group"),
                 margin=(0, 0, -10, 0),
             ),
             collapsible=False,
@@ -408,12 +468,68 @@ class GroupChargeTransfer(param.Parameterized):
         return column
 
 
+# # TODO: Create a BaseClass or prototype
+# class ModelCDM(param.Parameterized):
+#     """Configuration parameters and a Panel-based used interface."""
+#
+#     # Add more parameters
+#     enabled = param.Boolean(True)
+#
+#     def view(self) -> "pn.layout.Panel":
+#         """Return a Panel layout to visualize the geometry fields."""
+#         # Late import
+#         import panel as pn
+#
+#         return pn.Card(
+#             header=pn.Row(
+#                 display_header("Charge Distortion Model"),
+#                 margin=(0, 0, -10, 0),
+#             ),
+#             objects=[pn.Param(self.param.enabled, sizing_mode="stretch_width")],
+#             margin=10,
+#             styles={"border": "2px solid black", "border_radius": "8px"},
+#         )
+#
+#
+# # TODO: Create a BaseClass or prototype
+# class GroupChargeTransfer(param.Parameterized):
+#     """Configuration parameters and a Panel-based used interface."""
+#
+#     models = param.List([ModelCDM(name="charge_distortion_model")], instantiate=True)
+#
+#     def view(self) -> "pn.layout.Panel":
+#         """Return a Panel layout to visualize the geometry fields."""
+#         # Late import
+#         import panel as pn
+#
+#         column = pn.Card(
+#             header=pn.Row(
+#                 pn.pane.SVG(
+#                     get_icons_folder() / "layout_list.svg",
+#                     width=18,
+#                     margin=(10, -5, 10, 0),
+#                     align="end",
+#                 ),
+#                 display_header("Charge Transfer Collection group"),
+#                 margin=(0, 0, -10, 0),
+#             ),
+#             collapsible=False,
+#             styles={"border": "2px solid black", "border_radius": "8px"},
+#             margin=10,
+#         )
+#
+#         for el in self.models:
+#             column.append(el.view())
+#
+#         return column
+
+
 class CCDPipeline(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
     photon_collection = param.Parameter()
     charge_generation = param.Parameter()
-    charge_transfer = param.Parameter()
+    charge_collection = param.Parameter()
 
 
 # TODO: Add CMOSPipeline
@@ -463,9 +579,9 @@ class BasicConfigGUI(param.Parameterized):
         self._ccd_pipeline = CCDPipeline(
             photon_collection=GroupPhotonCollection(),
             charge_generation=GroupChargeGeneration(),
-            charge_transfer=GroupChargeTransfer(),
+            charge_collection=GroupChargeCollection(),
         )
-        self.pipeline: CCDPipeline = self._ccd_pipeline
+        self.pipeline = self._ccd_pipeline
         self._pipeline_column = pn.Card(
             header=pn.Row(
                 pn.pane.SVG(
@@ -485,7 +601,6 @@ class BasicConfigGUI(param.Parameterized):
         # self.pipeline.append(photon_collection)
 
     # def _select_detector(self, detector_name: str) -> None:
-    #     # print(f"{detector_name=}, {self.detector=}")
     #     assert isinstance(detector_name, str)
     #     assert detector_name in self._detectors
 
@@ -520,7 +635,7 @@ class BasicConfigGUI(param.Parameterized):
             ds: xr.Dataset = run_mode_gui(config, tqdm_widget=self._progress_widget)
             image_tabs = pyxel.display_dataset(ds, orientation="vertical")
 
-        num_tabs_to_be_removed = min(len(self._outputs_tabs) - 2, 0)
+        num_tabs_to_be_removed = max(len(self._outputs_tabs) - 2, 0)
         if num_tabs_to_be_removed > 0:
             # Remove some tabs
             for _ in range(num_tabs_to_be_removed):
@@ -562,12 +677,21 @@ class BasicConfigGUI(param.Parameterized):
             num_cols=self.detector.geometry.columns,  # TODO: use '.column' instead
         )
 
-        config.detector.geometry.total_thickness = 40.0
-        config.detector.geometry.pixel_vert_size = 18.0
-        config.detector.geometry.pixel_horz_size = 18.0
+        # config.detector.geometry.total_thickness = 40.0
+        # config.detector.geometry.pixel_vert_size = 18.0
+        # config.detector.geometry.pixel_horz_size = 18.0
 
-        config.running_mode.readout.times = [1.0, 2.0, 3.0]
-        config.running_mode.readout.non_destructive = True
+        config.detector.characteristics.full_well_capacity = (
+            self.detector.characteristics.full_well_capacity
+        )
+
+        if self.detector.environment.temperature is not None:
+            config.detector.environment.temperature = (
+                self.detector.environment.temperature
+            )
+
+        # config.running_mode.readout.times = [1.0, 2.0, 3.0]
+        # config.running_mode.readout.non_destructive = True
 
         # Modify model 'usaf_illumination'
         # TODO: This should be done directly in 'Configuguration'. Improve this !
@@ -588,6 +712,17 @@ class BasicConfigGUI(param.Parameterized):
         config.pipeline.charge_generation.cosmix.enabled = (
             self.pipeline.charge_generation.models[0].enabled
         )
+
+        # Modify model 'simple_full_well'
+        assert config.pipeline.charge_collection is not None  # TODO: Fix this
+        assert isinstance(
+            config.pipeline.charge_collection.simple_full_well, ModelFunction
+        )
+
+        config.pipeline.charge_collection.simple_full_well.enabled = (
+            self.pipeline.charge_collection.models[0].enabled
+        )
+
         return config
 
     def get_source_code(self, config: "Configuration") -> str:
@@ -621,6 +756,9 @@ class BasicConfigGUI(param.Parameterized):
         source_code_lst.append(
             f"config.detector.geometry.pixel_horz_size = {config.detector.geometry.pixel_horz_size}  # Unit: [µm]"
         )
+        source_code_lst.append(
+            f"config.detector.characteristics.full_well_capacity = {config.detector.characteristics.full_well_capacity}  # Unit: [e⁻]"
+        )
 
         source_code_lst.append("")
 
@@ -650,12 +788,19 @@ class BasicConfigGUI(param.Parameterized):
         source_code_lst.append(
             f"config.pipeline.photon_collection.usaf_illumination.enabled = {config.pipeline.photon_collection.usaf_illumination.enabled!r}"
         )
+
+        assert config.pipeline.charge_generation is not None
         source_code_lst.append(
             f"config.pipeline.charge_generation.cosmix.enabled = {config.pipeline.charge_generation.cosmix.enabled!r}"
         )
+
+        assert config.pipeline.charge_collection is not None
+        source_code_lst.append(
+            f"config.pipeline.charge_collection.simple_full_well.enabled = {config.pipeline.charge_collection.simple_full_well.enabled!r}"
+        )
         source_code_lst.append("")
 
-        source_code_lst.append(f"# Save current Configuration to a YAML file")
+        source_code_lst.append("# Save current Configuration to a YAML file")
         source_code_lst.append(f"config.to_yaml('demo_{self.detector.name}.yaml')")
         source_code_lst.append("")
         source_code_lst.append(
@@ -719,8 +864,12 @@ class BasicConfigGUI(param.Parameterized):
             columns=self.detector.geometry.param.columns,
             rows=self.detector.geometry.param.rows,
             temperature=self.detector.environment.param.temperature,
+            full_well_capacity=self.detector.characteristics.param.full_well_capacity,
             model_usaf_enabled=self.pipeline.photon_collection.models[0].param.enabled,
             model_cosmix_enabled=self.pipeline.charge_generation.models[
+                0
+            ].param.enabled,
+            model_simple_full_well_enabled=self.pipeline.charge_collection.models[
                 0
             ].param.enabled,
         )
@@ -741,7 +890,7 @@ class BasicConfigGUI(param.Parameterized):
         # Only for CCDs
         self._pipeline_column.append(self.pipeline.photon_collection.view())
         self._pipeline_column.append(self.pipeline.charge_generation.view())
-        self._pipeline_column.append(self.pipeline.charge_transfer.view())
+        self._pipeline_column.append(self.pipeline.charge_collection.view())
 
         config_panel.append(self._pipeline_column)
 
