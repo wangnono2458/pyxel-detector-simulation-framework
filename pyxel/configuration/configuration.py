@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from pyxel.calibration import Algorithm, Calibration
 
 
+# ruff: noqa: C901
 def _add_comments(text: str) -> str:
     """Add comments."""
 
@@ -69,7 +70,7 @@ def _add_comments(text: str) -> str:
 
     new_lines = []
     for line in text.splitlines():
-        clean_line: str = line.lstrip()
+        clean_line: str = line.strip()
 
         for name, unit in units.items():
             if clean_line.startswith(f"{name}:"):
@@ -129,6 +130,40 @@ def _add_comments(text: str) -> str:
                 "# Convert and manipulate signal into image data in ADUs in the `Image` bucket"
             )
             new_lines.append("# Signal [V] -> Image [adu]")
+
+        if clean_line.startswith("- func:"):
+            if clean_line.endswith("usaf_illumination"):
+                new_lines.append(
+                    "    # Add photons by applying USAF-1951 illumination pattern"
+                )
+            elif clean_line.endswith("optical_psf"):
+                new_lines.append("    # Convolve photons with a PSF")
+            elif clean_line.endswith("simple_conversion"):
+                new_lines.append(
+                    "    # Generate charges (in e⁻) from incident photon via simple photoelectric effect"
+                )
+            elif clean_line.endswith("cosmix"):
+                new_lines.append(
+                    "    # Generate Cosmic rays effects (in e⁻) using CosmiX model"
+                )
+            elif clean_line.endswith("charge_collection.simple_collection"):
+                new_lines.append(
+                    "    # Collect charges (in e⁻) by assigning them to nearest pixels (in e⁻)"
+                )
+            elif clean_line.endswith("simple_full_well"):
+                new_lines.append(
+                    "    # Clip pixel charges (in e⁻) to Full Well Capacity"
+                )
+            elif clean_line.endswith("simple_measurement"):
+                new_lines.append("    # Convert pixel charges (in e⁻) to Signal (in V)")
+            elif clean_line.endswith("simple_amplifier"):
+                new_lines.append(
+                    "    # Amplify signal (in V) using gain factors from output amplifier"
+                )
+            elif clean_line.endswith("simple_adc"):
+                new_lines.append(
+                    "    # Convert signal (in V) to image (in ADU) using ideal ADC"
+                )
 
         new_lines.append(result)
 
@@ -413,7 +448,7 @@ def build_configuration(
                         ModelFunction(
                             name="optical_psf",
                             func="pyxel.models.photon_collection.optical_psf",
-                            enabled=True,
+                            enabled=False,
                             arguments={
                                 "fov_arcsec": 5,  # FOV in arcseconds
                                 "wavelength": 600,  # wavelength in nanometer
