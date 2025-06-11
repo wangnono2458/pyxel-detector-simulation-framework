@@ -307,14 +307,10 @@ class ModelUSAF(param.Parameterized):
 
         return pn.Card(
             header=pn.Row(
-                display_header("USAF-1951 illumination pattern"), margin=(0, 0, -10, 0)
+                display_header("USAF-1951 illumination pattern"),
+                margin=(0, 0, -10, 0),
             ),
-            objects=[
-                pn.Param(
-                    self.param.enabled,
-                    sizing_mode="stretch_width",
-                )
-            ],
+            objects=[pn.Param(self.param.enabled, sizing_mode="stretch_width")],
             margin=10,
             # margin=(0, 0, -10, 0),
             styles={"border": "2px solid black", "border_radius": "8px"},
@@ -866,12 +862,12 @@ class BasicConfigGUI(param.Parameterized):
             temperature=self.detector.environment.param.temperature,
             full_well_capacity=self.detector.characteristics.param.full_well_capacity,
             model_usaf_enabled=self.pipeline.photon_collection.models[0].param.enabled,
-            model_cosmix_enabled=self.pipeline.charge_generation.models[
-                0
-            ].param.enabled,
-            model_simple_full_well_enabled=self.pipeline.charge_collection.models[
-                0
-            ].param.enabled,
+            model_cosmix_enabled=(
+                self.pipeline.charge_generation.models[0].param.enabled
+            ),
+            model_simple_full_well_enabled=(
+                self.pipeline.charge_collection.models[0].param.enabled
+            ),
         )
 
         detector_widget.visible = True
@@ -940,8 +936,5 @@ class BasicConfigGUI(param.Parameterized):
             pn.Column(self._progress_widget, self._outputs_tabs),
             code_yaml_sync_callback,
             width=400 * 3,
-            styles={
-                "background": "WhiteSmoke",
-                # "border": "2px dashed yellow",
-            },
+            styles={"background": "WhiteSmoke"},
         )
