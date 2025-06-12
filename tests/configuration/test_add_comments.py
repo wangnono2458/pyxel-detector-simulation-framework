@@ -33,7 +33,7 @@ from pyxel.configuration.configuration import _add_comments
         pytest.param("times:", "times:  # Unit: [s]", id="times"),
         pytest.param(
             "exposure\n  readout:\n    times:",
-            "exposure\n  readout:\n    times:  # Unit: [s]",
+            "exposure\n\n  readout:\n    times:  # Unit: [s]",
             id="times, multi lines",
         ),
         pytest.param("start_time:", "start_time:  # Unit: [s]", id="start_time"),
