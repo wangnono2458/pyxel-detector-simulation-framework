@@ -689,7 +689,8 @@ def display_dataset(
     import panel as pn
     import xarray as xr
 
-    pn.extension()
+    if not pn.extension._loaded:
+        pn.extension()
 
     if not isinstance(dataset, xr.Dataset):
         raise TypeError(f"Expecting a 'dataset'. Got {dataset=}")
