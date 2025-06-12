@@ -129,7 +129,7 @@ class Environment(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
     temperature = param.Number(
-        default=None,
+        default=173.0,
         bounds=(0, None),
         inclusive_bounds=(False, False),
     )
