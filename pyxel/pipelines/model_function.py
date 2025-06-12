@@ -10,7 +10,7 @@
 import inspect
 import sys
 import warnings
-from collections.abc import Callable, Mapping, MutableMapping
+from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from typing import TYPE_CHECKING, Any
 
 from pyxel.evaluator import evaluate_reference
@@ -57,8 +57,19 @@ class Arguments(MutableMapping):
     AttributeError: 'No argument named three !'
     """
 
-    def __init__(self, input_arguments: dict[str, Any]):
-        self._arguments: dict[str, Any] = dict(input_arguments)
+    def __init__(self, input_arguments: Mapping[str, Any]):
+        self._arguments: dict[str, Any] = {
+            key: (
+                value
+                if (
+                    isinstance(value, str)
+                    or not isinstance(value, Sequence)
+                    or isinstance(value, Mapping)
+                )
+                else list(value)
+            )
+            for key, value in input_arguments.items()
+        }
 
     def __setitem__(self, key, value):
         if key not in self._arguments:
@@ -111,9 +122,6 @@ class Arguments(MutableMapping):
     # def __deepcopy__(self, memo) -> "Arguments":
     #     """TBW."""
     #     return Arguments(deepcopy(self._arguments))
-
-    def dump(self) -> dict[str, Any]:
-        return {"arguments": self._arguments}
 
 
 # TODO: Improve this class. See issue #132.
@@ -237,12 +245,19 @@ class ModelFunction:
         self.func(detector, **self.arguments)
 
     def dump(self) -> dict[str, str | bool | dict[str, Any] | None]:
-        return {
-            "func": self._func_name,
-            "name": self._name,
-            "arguments": self._arguments.dump() if self._arguments else None,
-            "enabled": self.enabled,
-        }
+        if self._arguments:
+            return {
+                "func": self._func_name,
+                "name": self._name,
+                "enabled": self.enabled,
+                "arguments": dict(self._arguments),
+            }
+        else:
+            return {
+                "func": self._func_name,
+                "name": self._name,
+                "enabled": self.enabled,
+            }
 
 
 class FitnessFunction:
