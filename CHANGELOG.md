@@ -106,6 +106,8 @@ Example:
   (See [!1050](https://gitlab.com/esa/pyxel/-/merge_requests/1050)).
 * Add capability to select tests to run with tox.
   (See [!1053](https://gitlab.com/esa/pyxel/-/merge_requests/1053)).
+* Rename file 'source_extractor' to 'source_extractor_model'.
+  (See [!1063](https://gitlab.com/esa/pyxel/-/merge_requests/1063)).
 
 
 ## 2.10 / 2025-05-22
