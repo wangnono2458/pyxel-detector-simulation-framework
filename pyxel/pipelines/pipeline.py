@@ -7,7 +7,7 @@
 
 """TBW."""
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Sequence
 from typing import Any
 
 from pyxel.pipelines import ModelFunction, ModelGroup

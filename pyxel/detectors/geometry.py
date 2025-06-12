@@ -8,7 +8,6 @@
 """Geometry class for detector."""
 
 from collections.abc import Mapping
-from typing import Any
 
 import numpy as np
 from typing_extensions import Self
