@@ -152,30 +152,44 @@ or with the current Pyxel development code in Gitlab
     $ cd pyxel-examples
     $ uvx --python 3.12 --with git+https://gitlab.com/esa/pyxel.git[model] jupyter lab
 
+5. (Bonus) Run Pyxel with Marimo, Spyder or IPython
+```````````````````````````````````````````````````
+**With Marimo**
 
-.. note::
+It is easy to use Pyxel with `uv <https://docs.astral.sh/uv/>`_
+and `marimo <https://marimo.io>`_, an open-source reactive notebook for Python.:
 
-    You can also run Pyxel with `Spyder IDE <https://www.spyder-ide.org>`_:
+.. code-block:: bash
 
-    .. code-block:: bash
+    $ cd pyxel-examples
+    $ uvx --with pyxel-sim[model] marimo edit
 
-        $ cd pyxel-examples
-        $ uvx --with pyxel-sim[model] spyder
 
-    or with `IPython <https://ipython.readthedocs.io>`_:
+**Spyder IDE**
 
-     .. code-block:: bash
+You can also run Pyxel with `Spyder IDE <https://www.spyder-ide.org>`_:
 
-        $ cd pyxel-examples
-        $ uvx --with pyxel-sim[model] ipython
+.. code-block:: bash
 
-    or directly from the command line:
+    $ cd pyxel-examples
+    $ uvx --with pyxel-sim[model] spyder
 
-    .. code-block:: bash
+**IPython**
 
-        $ cd pyxel-examples
-        $ cd tutorial
-        $ uvx pyxel-sim run exposure.yaml
+With `IPython <https://ipython.readthedocs.io>`_, run the following commands:
+
+ .. code-block:: bash
+
+    $ cd pyxel-examples
+    $ uvx --with pyxel-sim[model] ipython
+
+or directly from the command line:
+
+.. code-block:: bash
+
+    $ cd pyxel-examples
+    $ cd tutorial
+    $ uvx pyxel-sim run exposure.yaml
 
 
 🐌 Quickstart Setup with 'normal' installation with `Miniconda <https://docs.anaconda.com/miniconda>`_ 🐌
