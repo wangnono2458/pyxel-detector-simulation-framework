@@ -918,8 +918,7 @@ class BasicConfigGUI(param.Parameterized):
 
         # TODO: Move this to '__init__'
         self._progress_widget = pn.widgets.Tqdm(
-            text="Pipeline not yet executed. Please click button 'run_pipeline'",
-            sizing_mode="stretch_width",
+            text="Pipeline not yet executed. Please click button 'run_pipeline'"
         )
 
         # TODO: Move this to '__init__'
