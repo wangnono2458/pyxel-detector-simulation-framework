@@ -100,6 +100,10 @@ Example:
   (See [!1057](https://gitlab.com/esa/pyxel/-/merge_requests/1057)).
 
 ### Models
+* Parameter `spectrum_file` is optional for model
+  [`CosmiX`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_generation_models.html#cosmix-cosmic-ray-model)
+  in [Charge Generation](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_generation_models.html#charge-generation-models) models.
+  (See [!1064](https://gitlab.com/esa/pyxel/-/merge_requests/1064)).
 
 ### Others
 * Fix issues found by mypy 1.16.
