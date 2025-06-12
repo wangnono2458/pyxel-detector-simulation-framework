@@ -7,7 +7,7 @@
 
 """TBW."""
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Sequence
 from typing import Any
 
 from pyxel.pipelines import ModelFunction, ModelGroup
@@ -213,8 +213,8 @@ class DetectionPipeline:
                 for key, value in model.arguments.items():
                     yield f"PYXEL /    {key}: {value}"
 
-    def dump(self) -> Mapping[str, Any]:
-        dct = {}
+    def dump(self) -> dict[str, list[dict[str, str | bool | dict[str, Any] | None]]]:
+        dct: dict[str, list[dict[str, str | bool | dict[str, Any] | None]]] = {}
 
         if models_group := self._scene_generation:
             dct["scene_generation"] = [model.dump() for model in models_group.models]

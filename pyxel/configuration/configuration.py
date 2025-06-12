@@ -13,6 +13,8 @@ from pathlib import Path
 from shutil import copy2
 from typing import IO, TYPE_CHECKING, Any, Literal, Optional, Union
 
+from typing_extensions import overload
+
 from pyxel import __version__ as version
 from pyxel.detectors import (
     APD,
@@ -34,6 +36,56 @@ from pyxel.pipelines import DetectionPipeline, FitnessFunction, ModelFunction
 
 if TYPE_CHECKING:
     from pyxel.calibration import Algorithm, Calibration
+
+
+def _add_comments(text: str) -> str:
+    """Add comments."""
+
+    units = {
+        "row": "pix",
+        "col": "pix",
+        "times": "s",
+        "start_time": "s",
+        "total_thickness": "µm",
+        "pixel_vert_size": "µm",
+        "pixel_horz_size": "µm",
+        "pixel_scale": "arcsec / pix",
+        "charge_to_volt_conversion": "V / electron",
+        "pre_amplification": "V / V",
+        "adc_voltage_range": "V",
+        "adc_bit_resolution": "bit",
+        "full_well_capacity": "electron",
+        "temperature": "K",
+    }
+
+    new_lines = []
+    for line in text.splitlines():
+        clean_line: str = line.lstrip()
+
+        for name, unit in units.items():
+            if clean_line.startswith(f"{name}:"):
+                result = f"{line}  # Unit: [{unit}]"
+                break
+        else:
+            result = line
+
+        if (
+            clean_line.startswith("readout")
+            or clean_line.startswith("outputs")
+            or clean_line.startswith("geometry")
+            or clean_line.startswith("environment")
+            or clean_line.startswith("characteristics")
+            or clean_line.startswith("photon_collection")
+            or clean_line.startswith("charge_generation")
+            or clean_line.startswith("charge_collection")
+            or clean_line.startswith("charge_measurement")
+            or clean_line.startswith("readout_electronics")
+        ):
+            new_lines.append("")
+
+        new_lines.append(result)
+
+    return "\n".join(new_lines)
 
 
 @dataclass
@@ -135,9 +187,19 @@ class Configuration:
         else:
             raise NotImplementedError
 
-    def to_yaml(self) -> str:
+    @overload
+    def to_yaml(self) -> str: ...
+    @overload
+    def to_yaml(self, filename: str | Path) -> None: ...
+
+    def to_yaml(self, filename: str | Path | None = None) -> str | None:
         """Convert the configuration into YAML content."""
         import yaml
+
+        class IndentDumper(yaml.Dumper):
+            def increase_indent(self, flow: bool = False, indentless: bool = False):
+                # Force indentation
+                return super().increase_indent(flow=flow, indentless=False)
 
         content = "# yaml-language-server: $schema=https://esa.gitlab.io/pyxel/doc/latest/pyxel_schema.json\n\n"
 
@@ -157,8 +219,10 @@ class Configuration:
             content += "# Exposure running mode                                                                                     #\n"
             content += "# More information here: https://esa.gitlab.io/pyxel/doc/stable/background/running_modes/exposure_mode.html #\n"
             content += "#############################################################################################################\n"
-            content += yaml.safe_dump(
-                {"exposure": self.exposure.dump()}, sort_keys=False
+            content += yaml.dump(
+                {"exposure": self.exposure.dump()},
+                sort_keys=False,
+                Dumper=IndentDumper,
             )
 
         if self.observation or self.calibration:
@@ -166,9 +230,11 @@ class Configuration:
 
         content += "\n"
         if self.ccd_detector:
-            content += "# CCD detector\n"
-            content += yaml.safe_dump(
-                {"ccd_detector": self.ccd_detector.dump()}, sort_keys=False
+            content += "# Define detector to use\n"
+            content += yaml.dump(
+                {"ccd_detector": self.ccd_detector.dump()},
+                sort_keys=False,
+                Dumper=IndentDumper,
             )
 
         if self.cmos_detector or self.mkid_detector or self.apd_detector:
@@ -179,9 +245,19 @@ class Configuration:
         content += "# Define Pipeline                                                                        #\n"
         content += "# More information here: https://esa.gitlab.io/pyxel/doc/stable/background/pipeline.html #\n"
         content += "##########################################################################################\n"
-        content += yaml.safe_dump({"pipeline": self.pipeline.dump()}, sort_keys=False)
+        content += yaml.dump(
+            {"pipeline": self.pipeline.dump()},
+            sort_keys=False,
+            Dumper=IndentDumper,
+        )
 
-        return content
+        content_with_comments = _add_comments(content)
+
+        if filename is None:
+            return content_with_comments
+        else:
+            _ = Path(filename).write_text(content_with_comments)
+            return None
 
 
 def load(yaml_file: str | Path) -> Configuration:

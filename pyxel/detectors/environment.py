@@ -9,7 +9,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 from typing_extensions import Self
@@ -41,7 +41,7 @@ class WavelengthHandling:
         if self.resolution <= 0:
             raise ValueError(f"'resolution' must be > 0. {self.resolution=}")
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, float | int]:
         return {
             "cut_on": self.cut_on,
             "cut_off": self.cut_off,
@@ -194,7 +194,7 @@ class Environment:
 
         return cls(temperature=dct.get("temperature"), wavelength=wavelength)
 
-    def dump(self) -> Mapping[str, Any]:
+    def dump(self) -> dict[str, float | dict[str, float | int] | None]:
         return {
             "temperature": self._temperature,
             "wavelength": (
