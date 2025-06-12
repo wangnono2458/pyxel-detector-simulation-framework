@@ -52,7 +52,7 @@ from pyxel.configuration.configuration import _add_comments
         ),
         pytest.param(
             "charge_to_volt_conversion:",
-            "charge_to_volt_conversion:  # Unit: [V / electron]",
+            "charge_to_volt_conversion:  # Unit: [V / e⁻]",
             id="charge_to_volt_conversion",
         ),
         pytest.param(
@@ -72,7 +72,7 @@ from pyxel.configuration.configuration import _add_comments
         ),
         pytest.param(
             "full_well_capacity:",
-            "full_well_capacity:  # Unit: [electron]",
+            "full_well_capacity:  # Unit: [e⁻]",
             id="full_well_capacity",
         ),
         pytest.param(
@@ -102,27 +102,47 @@ from pyxel.configuration.configuration import _add_comments
         ),
         pytest.param(
             "pipeline:\n  photon_collection:",
-            "pipeline:\n\n  photon_collection:",
+            """pipeline:
+
+# Generate and manipulate photon flux within the `Photon` bucket
+# -> Photon [photon]
+  photon_collection:""",
             id="Extra space - photon_collection",
         ),
         pytest.param(
             "pipeline:\n  charge_generation:",
-            "pipeline:\n\n  charge_generation:",
+            """pipeline:
+
+# Generate and manipulate charge in electrons within the `Charge` bucket
+# Photon [photon] -> Charge [e⁻]
+  charge_generation:""",
             id="Extra space - charge_generation",
         ),
         pytest.param(
             "pipeline:\n  charge_collection:",
-            "pipeline:\n\n  charge_collection:",
+            """pipeline:
+
+# Transfer and manipulate charge in electrons stored in the `Pixel` bucket
+# Charge [e⁻] -> Pixel [e⁻]
+  charge_collection:""",
             id="Extra space - charge_collection",
         ),
         pytest.param(
             "pipeline:\n  charge_measurement:",
-            "pipeline:\n\n  charge_measurement:",
+            """pipeline:
+
+# Convert and manipulate signal in Volt stored in the `Signal` bucket
+# Pixel [e⁻] -> Signal [V]
+  charge_measurement:""",
             id="Extra space - charge_measurement",
         ),
         pytest.param(
             "pipeline:\n  readout_electronics:",
-            "pipeline:\n\n  readout_electronics:",
+            """pipeline:
+
+# Convert and manipulate signal into image data in ADUs in the `Image` bucket
+# Signal [V] -> Image [adu]
+  readout_electronics:""",
             id="Extra space - readout_electronics",
         ),
     ],
