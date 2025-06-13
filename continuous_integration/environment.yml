@@ -32,7 +32,7 @@ dependencies:
   - xarray>=2024.10.0
   - photutils
   - poppy>=1.1.0
-  - specutils
+  - specutils>=1.2
   - synphot
   # Plotting
   - matplotlib-base>=3.6

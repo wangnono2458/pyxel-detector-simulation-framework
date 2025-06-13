@@ -69,6 +69,14 @@ Example:
 >>> import pyxel
 >>> pyxel.launch_basic_gui()
 ```
+### Breaking changes
+
+The minimum versions of some dependencies were also changed:
+
+  | Package   | Old | New      |
+  |-----------|-----|----------|
+  | specutils | -   | **1.2+** | 
+
 
 ### Core
 * [`Channels`](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html) not working for 
@@ -114,6 +122,8 @@ Example:
   (See [!1053](https://gitlab.com/esa/pyxel/-/merge_requests/1053)).
 * Rename file 'source_extractor' to 'source_extractor_model'.
   (See [!1063](https://gitlab.com/esa/pyxel/-/merge_requests/1063)).
+* Add compatibility with specutils>=1.2.
+  (See [!1068](https://gitlab.com/esa/pyxel/-/merge_requests/1068)).
 
 
 ## 2.10 / 2025-05-22
