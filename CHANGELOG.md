@@ -90,6 +90,8 @@ Example:
   (See [!1059](https://gitlab.com/esa/pyxel/-/merge_requests/1059)).
 * New function to display a `pyxel.display_dataset`.
   (See [!1060](https://gitlab.com/esa/pyxel/-/merge_requests/1060)).
+* Fix issues in function `pyxel.launch_basic_gui`.
+  (See [!1067](https://gitlab.com/esa/pyxel/-/merge_requests/1067)).
 
 ### Documentation
 * Add a convention about the order of ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html)
