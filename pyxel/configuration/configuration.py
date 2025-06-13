@@ -553,6 +553,8 @@ def launch_basic_gui():
     --------
     >>> import pyxel
     >>> pyxel.launch_basic_gui()
+
+    .. image:: _static/launch_basic_gui.jpeg
     """
     from pyxel.gui import BasicConfigGUI
 
