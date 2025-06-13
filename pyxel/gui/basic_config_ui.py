@@ -129,7 +129,7 @@ class Environment(param.Parameterized):
     """Configuration parameters and a Panel-based used interface."""
 
     temperature = param.Number(
-        default=None,
+        default=173.0,
         bounds=(0, None),
         inclusive_bounds=(False, False),
     )
@@ -918,8 +918,7 @@ class BasicConfigGUI(param.Parameterized):
 
         # TODO: Move this to '__init__'
         self._progress_widget = pn.widgets.Tqdm(
-            text="Pipeline not yet executed. Please click button 'run_pipeline'",
-            sizing_mode="stretch_width",
+            text="Pipeline not yet executed. Please click button 'run_pipeline'"
         )
 
         # TODO: Move this to '__init__'

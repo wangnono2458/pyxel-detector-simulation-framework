@@ -8,7 +8,7 @@
 """Tools for jupyter notebook visualization."""
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, Union
 
 import numpy as np
 
@@ -645,7 +645,7 @@ def display_scene(
 
 
 def display_dataset(
-    dataset: "xr.Dataset",
+    dataset: Union["xr.Dataset", "xr.DataTree"],
     orientation: Literal["horizontal", "vertical"] = "horizontal",
 ) -> "pn.layout.Panel":
     """Display an interactive visualization of a 3D dataset.
@@ -689,7 +689,8 @@ def display_dataset(
     import panel as pn
     import xarray as xr
 
-    pn.extension()
+    if isinstance(dataset, xr.DataTree):
+        dataset = dataset.to_dataset()
 
     if not isinstance(dataset, xr.Dataset):
         raise TypeError(f"Expecting a 'dataset'. Got {dataset=}")
@@ -703,22 +704,18 @@ def display_dataset(
             f"Missing dimension 'time'. Got dimensions: {list(dataset.dims)}"
         )
 
+    if not pn.extension._loaded:
+        pn.extension()
+
     widget_width: int = 200
 
     # Determine plot aspect ratio
-    aspect: float = dataset.sizes["y"] / dataset.sizes["x"]
+    aspect: float = dataset.sizes["x"] / dataset.sizes["y"]
 
     # Widget to select the data variable (e.g. 'photon', 'signal', ...)
     bucket_widget: pn.widgets.Widget = pn.widgets.Select(
         name="Bucket",
         options=list(dataset.data_vars),
-        width=widget_width,
-    )
-
-    # Widget to select time
-    time_widget: pn.widgets.Widget = pn.widgets.DiscreteSlider(
-        name="Readout time [s]",
-        options=np.array(dataset["time"]).tolist(),
         width=widget_width,
     )
 
@@ -754,7 +751,7 @@ def display_dataset(
         width=widget_width,
     )
 
-    def get_image_2d(bucket_name: str, time_value: float) -> xr.DataArray:
+    def get_image_2d_with_time(bucket_name: str, time_value: float) -> xr.DataArray:
         """Extract a 2D image from a bucket at a specific time."""
         data_array: xr.DataArray = dataset[bucket_name].sel(
             time=time_value, method="nearest"
@@ -771,16 +768,45 @@ def display_dataset(
 
         return data_array
 
+    def get_image_2d_without_time(bucket_name: str) -> xr.DataArray:
+        """Extract a 2D image from a bucket."""
+        data_array: xr.DataArray = dataset[bucket_name].squeeze()
+
+        # Update range widget for histogram
+        start, end = float(data_array.min()), float(data_array.max())
+
+        range_widget.start, range_widget.end = start, end
+        range_widget.name = f"Range [{data_array.attrs.get('units', 'undefined')}]"
+
+        range_widget.value = (start, end)
+        range_widget.step = min((end - start) / 1000, 0.01)
+
+        return data_array
+
     # Bind data selection to widgets
-    data_selected: xr.DataArray = hvplot.bind(
-        get_image_2d,
-        bucket_name=bucket_widget,
-        time_value=time_widget,
-    )
+    if len(dataset["time"]) > 1:
+        # Widget to select time
+        time_widget: pn.widgets.Widget = pn.widgets.DiscreteSlider(
+            name="Readout time [s]",
+            options=np.array(dataset["time"]).tolist(),
+            width=widget_width,
+        )
+
+        data_selected: xr.DataArray = hvplot.bind(
+            get_image_2d_with_time,
+            bucket_name=bucket_widget,
+            time_value=time_widget,
+        )
+    else:
+        data_selected = hvplot.bind(
+            get_image_2d_without_time,
+            bucket_name=bucket_widget,
+        )
 
     # Enable interactive plotting
     data_selected_interactive = data_selected.interactive(
-        width=widget_width, loc="left"
+        width=widget_width,
+        loc="left",
     )
 
     # Create 2D image plot
@@ -797,6 +823,37 @@ def display_dataset(
     image_plot_holoview = image_plot_interactive.holoviews()
     image_plot_widget = image_plot_interactive.widgets()
 
+    if len(dataset["time"]) > 1:
+
+        def pixel_evolution(x: float | None, y: float | None):
+            """Plot the time evolution of a pixel clicked in the image plot."""
+            if x is None or y is None:
+                return hv.Curve([]).opts(
+                    title="Click on image to view pixel time series"
+                )
+
+            data = dataset[bucket_widget.value].sel(x=x, y=y, method="nearest")
+            return data.hvplot.line(aspect=1.0) * data.hvplot.scatter(aspect=1.0)
+
+        # Stream to get cursor coordinated from 'image_plot_holoview'
+        pointer_stream = hv.streams.PointerXY(x=0, y=0, source=image_plot_holoview)
+
+        # Dynamic map for pixel time evolution plot
+        pixel_plot = hv.DynamicMap(pixel_evolution, streams=[pointer_stream])
+
+        if orientation == "horizontal":
+            images_layout = pn.Row(
+                image_plot_widget,
+                pn.Row(image_plot_holoview, pixel_plot),
+            )
+        else:
+            images_layout = pn.Row(
+                image_plot_widget,
+                pn.Column(image_plot_holoview, pixel_plot),
+            )
+    else:
+        images_layout = pn.Row(image_plot_widget, image_plot_holoview)
+
     # Create histogram of pixel values
     hist_plot = data_selected_interactive.hvplot.hist(
         aspect=1.0,
@@ -804,31 +861,6 @@ def display_dataset(
         bins=num_bins_widget,
         bin_range=range_widget,
     )
-
-    def pixel_evolution(x: float | None, y: float | None):
-        """Plot the time evolution of a pixel clicked in the image plot."""
-        if x is None or y is None:
-            return hv.Curve([]).opts(title="Click on image to view pixel time series")
-
-        data = dataset[bucket_widget.value].sel(x=x, y=y, method="nearest")
-        return data.hvplot.line(aspect=1.0) * data.hvplot.scatter(aspect=1.0)
-
-    # Stream to get cursor coordinated from 'image_plot_holoview'
-    pointer_stream = hv.streams.PointerXY(x=0, y=0, source=image_plot_holoview)
-
-    # Dynamic map for pixel time evolution plot
-    pixel_plot = hv.DynamicMap(pixel_evolution, streams=[pointer_stream])
-
-    if orientation == "horizontal":
-        images_layout = pn.Row(
-            image_plot_widget,
-            pn.Row(image_plot_holoview, pixel_plot),
-        )
-    else:
-        images_layout = pn.Row(
-            image_plot_widget,
-            pn.Column(image_plot_holoview, pixel_plot),
-        )
 
     # Final layout with tabs
     return pn.Tabs(

@@ -421,7 +421,7 @@ def build_configuration(
                         pixel_horz_size=18.0,
                         pixel_scale=0.01,
                     ),
-                    environment=Environment(),
+                    environment=Environment(temperature=173.0),
                     characteristics=Characteristics(
                         quantum_efficiency=0.8,
                         charge_to_volt_conversion=1e-6,
@@ -553,6 +553,8 @@ def launch_basic_gui():
     --------
     >>> import pyxel
     >>> pyxel.launch_basic_gui()
+
+    .. image:: _static/launch_basic_gui.jpeg
     """
     from pyxel.gui import BasicConfigGUI
 
