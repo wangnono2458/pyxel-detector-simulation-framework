@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 import click
 from typing_extensions import deprecated
 
+import pyxel
 from pyxel import Configuration
 from pyxel import __version__ as version
 from pyxel import copy_config_file, load, outputs
@@ -1373,6 +1374,12 @@ def download_pyxel_examples(folder, force: bool):
     Default folder is './pyxel-examples'.
     """
     download_examples(foldername=folder, force=force)
+
+
+@main.command(name="gui")
+def start_gui():
+    """Launch a GUI to generate a YAML configuration file."""
+    pyxel.launch_basic_gui().show(tile="Pyxel GUI")
 
 
 @main.command(name="create-model")
