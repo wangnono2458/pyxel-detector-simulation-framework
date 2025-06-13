@@ -172,6 +172,7 @@ General
 
 .. autosummary::
 
+    display_dataset
     display_detector
     display_html
     display_scene
