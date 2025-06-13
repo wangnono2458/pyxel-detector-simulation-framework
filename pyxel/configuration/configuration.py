@@ -275,7 +275,22 @@ class Configuration:
     def to_yaml(self, filename: str | Path) -> None: ...
 
     def to_yaml(self, filename: str | Path | None = None) -> str | None:
-        """Convert the configuration into YAML content."""
+        """Serialize the current configuration into YAML format.
+
+        If ``filename`` is not provided, the YAML content is returned as a string.
+        Otherwise, the YAML content is written to the specified file.
+
+        Parameters
+        ----------
+        filename : str, Path. Optional
+            Path to the output file.
+
+        Returns
+        -------
+        str or None
+            YAML-formatted configuration as a string if `filename` is not provided,
+            otherwise returns `None`
+        """
         import yaml
 
         class IndentDumper(yaml.Dumper):
@@ -558,8 +573,7 @@ def launch_basic_gui():
     """
     from pyxel.gui import BasicConfigGUI
 
-    config_gui = BasicConfigGUI()
-    return config_gui.display()
+    return BasicConfigGUI()
 
 
 def to_exposure_outputs(dct: dict | None) -> ExposureOutputs:

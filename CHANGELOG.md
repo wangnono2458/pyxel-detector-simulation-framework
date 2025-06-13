@@ -109,7 +109,8 @@ The minimum versions of some dependencies were also changed:
 * New function to display a `pyxel.display_dataset`.
   (See [!1060](https://gitlab.com/esa/pyxel/-/merge_requests/1060)).
 * Fix issues in function `pyxel.launch_basic_gui`.
-  (See [!1067](https://gitlab.com/esa/pyxel/-/merge_requests/1067)).
+  (See [!1067](https://gitlab.com/esa/pyxel/-/merge_requests/1067) and
+  [!1070](https://gitlab.com/esa/pyxel/-/merge_requests/1070)).
 * Add CLI `pyxel-sim gui` to start a basic GUI.
   (See [!1069](https://gitlab.com/esa/pyxel/-/merge_requests/1069)).
 
