@@ -117,7 +117,7 @@ Check the current version of the latest Pyxel release by entering:
 3. Download the Tutorial Notebooks
 ``````````````````````````````````
 
-Then you can download the Pyxel Tutorial Notebooks into the `pyxel-examples` folder with
+Then you can download the Pyxel Tutorial Notebooks into the ``pyxel-examples`` folder with
 the following commands:
 
 .. code-block:: bash
@@ -127,17 +127,17 @@ the following commands:
     Done in folder /../pyxel-examples.
 
 
-4. Run Pyxel with Jupyter lab
-`````````````````````````````
+4. Run Pyxel with JupyterLab
+````````````````````````````
 
-Then you can start a Jupyter Lab server with the latest version of Pyxel:
+Then you can start a JupyterLab server with the latest version of Pyxel:
 
 .. code-block:: bash
 
     $ cd pyxel-examples
     $ uvx --python 3.12 --with pyxel-sim[model] jupyter lab
 
-Alternatively, start Jupyter Lab server with a specific version of Pyxel and Python:
+Alternatively, start JupyterLab server with a specific version of Pyxel and Python:
 
 .. code-block:: bash
 
@@ -145,14 +145,25 @@ Alternatively, start Jupyter Lab server with a specific version of Pyxel and Pyt
     $ uvx --python 3.12 --with "pyxel-sim[model]==2.10" jupyter lab
 
 
-or with the current Pyxel development code in Gitlab
+or with the current Pyxel development code in GitLab
 
 .. code-block:: bash
 
     $ cd pyxel-examples
     $ uvx --python 3.12 --with git+https://gitlab.com/esa/pyxel.git[model] jupyter lab
 
-5. (Bonus) Run Pyxel with Marimo, Spyder or IPython
+
+5. (Extra) Run the basic GUI to generate a YAML file
+````````````````````````````````````````````````````
+You can now launch Pyxel's graphical interface and generate a basic YAML configuration file directly from the command line:
+
+.. code-block:: bash
+
+    $ uvx pyxel-sim gui
+
+
+
+6. (Bonus) Run Pyxel with Marimo, Spyder or IPython
 ```````````````````````````````````````````````````
 **With Marimo**
 
