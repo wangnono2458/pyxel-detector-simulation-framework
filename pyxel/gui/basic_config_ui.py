@@ -11,10 +11,11 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
+import panel as pn
 import param
+from typing_extensions import overload
 
 if TYPE_CHECKING:
-    import panel as pn
     import xarray as xr
 
     from pyxel import Configuration
@@ -531,7 +532,7 @@ class CCDPipeline(param.Parameterized):
 # TODO: Add CMOSPipeline
 
 
-class BasicConfigGUI(param.Parameterized):
+class BasicConfigGUI(pn.viewable.Viewer):
     """Graphical User Interface for configuring and executing a basic detector pipeline.
 
     Examples
@@ -593,6 +594,35 @@ class BasicConfigGUI(param.Parameterized):
             styles={"border": "2px solid black", "border_radius": "8px"},
             margin=(5, 10, 5, 10),
         )
+
+    @overload
+    def to_yaml(self) -> str: ...
+    @overload
+    def to_yaml(self, filename: str | Path) -> None: ...
+
+    def to_yaml(self, filename: str | Path | None = None) -> str | None:
+        """Serialize the current configuration into YAML format.
+
+        If ``filename`` is not provided, the YAML content is returned as a string.
+        Otherwise, the YAML content is written to the specified file.
+
+        Parameters
+        ----------
+        filename : str, Path. Optional
+           Path to the output file.
+
+        Returns
+        -------
+        str or None
+           YAML-formatted configuration as a string if `filename` is not provided,
+           otherwise returns `None`
+        """
+        config: "Configuration" = self.get_config()
+
+        if filename is None:
+            return config.to_yaml()
+
+        return config.to_yaml(filename)
 
         # self.pipeline.append(photon_collection)
 
@@ -817,7 +847,7 @@ class BasicConfigGUI(param.Parameterized):
         self._code_panel.value = self.get_source_code(config)
         self._yaml_panel.value = config.to_yaml()
 
-    def display(self):
+    def __panel__(self) -> pn.pane.Pane:
         """Display the GUI for simplified detector configuration."""
         # Select Detector
         # widget_detectors = pn.widgets.RadioButtonGroup(
