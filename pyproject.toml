@@ -81,7 +81,7 @@ dependencies = [
     "pillow",
     "scikit-image>=0.20.0",
     "astroquery",
-    "specutils",
+    "specutils>=1.2",
     "synphot",
     "diskcache",
     "rich",

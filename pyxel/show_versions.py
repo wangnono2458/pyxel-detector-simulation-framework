@@ -123,6 +123,7 @@ def show_versions():
         "param",
         "PIL",
         "poppy",
+        "specutils",
         "synphot",
         "lacosmic",
         "photutils",

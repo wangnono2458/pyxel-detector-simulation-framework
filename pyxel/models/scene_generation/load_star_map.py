@@ -19,7 +19,7 @@ import numpy as np
 import requests
 import xarray as xr
 from astropy.units import Quantity
-from specutils import Spectrum1D
+from specutils import Spectrum
 from synphot import SourceSpectrum
 
 from pyxel import util
@@ -83,7 +83,7 @@ def compute_flux(wavelength: Quantity, flux: Quantity) -> Quantity:
     <Quantity [0.18009338, 0.18009338, 0.18009338, ..., 0.18009338, 0.18009338,
                0.18009338] ph / (nm s cm2)>
     """
-    spectrum_1d = Spectrum1D(spectral_axis=wavelength, flux=flux)
+    spectrum_1d = Spectrum(spectral_axis=wavelength, flux=flux)
     source_spectrum = SourceSpectrum.from_spectrum1d(spectrum_1d)
 
     flux_photlam: Quantity = source_spectrum(wavelength)
