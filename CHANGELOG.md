@@ -62,13 +62,23 @@ Example:
 ### 🆕 New function to create a basic GUI
 
 New function [`pyxel.launch_basic_gui`](https://esa.gitlab.io/pyxel/doc/stable/references/api/notebook.html#pyxel.launch_basic_gui)
-to launch a GUI for a pre-defined detector pipeline configuration.
+to launch a GUI for a pre-defined detector pipeline configuration and generate a basic YAML configuration file.
 
 Example:
 ```python
 >>> import pyxel
 >>> pyxel.launch_basic_gui()
 ```
+
+You can also launch this Pyxel's graphical interface from the command line:
+```bash
+$ pyxel-sim --version
+pyxel-sim, version 2.11
+Python (CPython) 3.13.5
+
+$ pyxel-sim gui
+```
+
 ### Breaking changes
 
 The minimum versions of some dependencies were also changed:
@@ -100,6 +110,8 @@ The minimum versions of some dependencies were also changed:
   (See [!1060](https://gitlab.com/esa/pyxel/-/merge_requests/1060)).
 * Fix issues in function `pyxel.launch_basic_gui`.
   (See [!1067](https://gitlab.com/esa/pyxel/-/merge_requests/1067)).
+* Add CLI `pyxel-sim gui` to start a basic GUI.
+  (See [!1069](https://gitlab.com/esa/pyxel/-/merge_requests/1069)).
 
 ### Documentation
 * Add a convention about the order of ['Channels'](https://esa.gitlab.io/pyxel/doc/stable/background/channels.html)

@@ -117,7 +117,7 @@ Check the current version of the latest Pyxel release by entering:
 3. Download the Tutorial Notebooks
 ``````````````````````````````````
 
-Then you can download the Pyxel Tutorial Notebooks into the `pyxel-examples` folder with
+Then you can download the Pyxel Tutorial Notebooks into the ``pyxel-examples`` folder with
 the following commands:
 
 .. code-block:: bash
@@ -127,17 +127,17 @@ the following commands:
     Done in folder /../pyxel-examples.
 
 
-4. Run Pyxel with Jupyter lab
-`````````````````````````````
+4. Run Pyxel with JupyterLab
+````````````````````````````
 
-Then you can start a Jupyter Lab server with the latest version of Pyxel:
+Then you can start a JupyterLab server with the latest version of Pyxel:
 
 .. code-block:: bash
 
     $ cd pyxel-examples
     $ uvx --python 3.12 --with pyxel-sim[model] jupyter lab
 
-Alternatively, start Jupyter Lab server with a specific version of Pyxel and Python:
+Alternatively, start JupyterLab server with a specific version of Pyxel and Python:
 
 .. code-block:: bash
 
@@ -145,7 +145,7 @@ Alternatively, start Jupyter Lab server with a specific version of Pyxel and Pyt
     $ uvx --python 3.12 --with "pyxel-sim[model]==2.10" jupyter lab
 
 
-or with the current Pyxel development code in Gitlab
+or with the current Pyxel development code in GitLab
 
 .. code-block:: bash
 
@@ -153,29 +153,54 @@ or with the current Pyxel development code in Gitlab
     $ uvx --python 3.12 --with git+https://gitlab.com/esa/pyxel.git[model] jupyter lab
 
 
-.. note::
+5. (Extra) Run the basic GUI to generate a YAML file
+````````````````````````````````````````````````````
+You can now launch Pyxel's graphical interface and generate a basic YAML configuration file directly from the command line:
 
-    You can also run Pyxel with `Spyder IDE <https://www.spyder-ide.org>`_:
+.. code-block:: bash
 
-    .. code-block:: bash
+    $ uvx pyxel-sim gui
 
-        $ cd pyxel-examples
-        $ uvx --with pyxel-sim[model] spyder
 
-    or with `IPython <https://ipython.readthedocs.io>`_:
 
-     .. code-block:: bash
+6. (Bonus) Run Pyxel with Marimo, Spyder or IPython
+```````````````````````````````````````````````````
+**With Marimo**
 
-        $ cd pyxel-examples
-        $ uvx --with pyxel-sim[model] ipython
+It is easy to use Pyxel with `uv <https://docs.astral.sh/uv/>`_
+and `marimo <https://marimo.io>`_, an open-source reactive notebook for Python.:
 
-    or directly from the command line:
+.. code-block:: bash
 
-    .. code-block:: bash
+    $ cd pyxel-examples
+    $ uvx --with pyxel-sim[model] marimo edit
 
-        $ cd pyxel-examples
-        $ cd tutorial
-        $ uvx pyxel-sim run exposure.yaml
+
+**Spyder IDE**
+
+You can also run Pyxel with `Spyder IDE <https://www.spyder-ide.org>`_:
+
+.. code-block:: bash
+
+    $ cd pyxel-examples
+    $ uvx --with pyxel-sim[model] spyder
+
+**IPython**
+
+With `IPython <https://ipython.readthedocs.io>`_, run the following commands:
+
+ .. code-block:: bash
+
+    $ cd pyxel-examples
+    $ uvx --with pyxel-sim[model] ipython
+
+or directly from the command line:
+
+.. code-block:: bash
+
+    $ cd pyxel-examples
+    $ cd tutorial
+    $ uvx pyxel-sim run exposure.yaml
 
 
 🐌 Quickstart Setup with 'normal' installation with `Miniconda <https://docs.anaconda.com/miniconda>`_ 🐌
