@@ -1,0 +1,26 @@
+# Conda environment for Pyxel version 2.11.1
+# Install:    conda env create -f pyxel-2.11.1-environment.yaml
+# Activate:   conda activate pyxel-2.11.1
+# Deactivate: conda deactivate
+
+# Upgrade:    conda update -f pyxel-2.11.1-environment.yaml
+# Remove:     conda remove -n pyxel-2.11.1 --all
+# List envs:  conda env list
+
+name: pyxel-2.11.1
+
+channels:
+  - conda-forge
+dependencies:
+  - pyxel-sim=2.11.1
+  - python=3.12
+  - pip
+  - ipykernel!=6.18.0   # Version 6.18.0 is not working
+  - poppy>=1.1.0
+# Optional packages
+  - jupyterlab          # Install JupyterLab
+  - dask-labextension   # Install an extension for JupyterLab
+  - ipympl              # Interactive Matplotlib in Jupyter
+# Pip packages
+  - pip:
+    - lacosmic
