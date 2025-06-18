@@ -14,6 +14,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
  ### Core
 
  ### Documentation
+* Add email information.
+  (See [!1072](https://gitlab.com/esa/pyxel/-/merge_requests/1072)).
 
  ### Models
 

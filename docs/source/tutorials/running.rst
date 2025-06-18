@@ -10,13 +10,13 @@ Pyxel can be run either from the command line or used as a library, such as in J
 
    .. code-block:: bash
 
-       pyxel download-examples
+       pyxel-sim download-examples
 
    or
 
    .. code-block:: bash
 
-       python -m pyxel download-examples
+       python -m pyxel-sim download-examples
 
 
    Alternatively, you can use `uv <https://docs.astral.sh/uv/>`_ (see the installation
@@ -38,13 +38,13 @@ To run Pyxel locally, simply use the command-line:
 
 .. code-block:: bash
 
-    pyxel run input.yaml
+    pyxel-sim run input.yaml
 
 or
 
 .. code-block:: bash
 
-    python -m pyxel run input.yaml
+    python -m pyxel-sim run input.yaml
 
 
 Alternatively, with `uv <https://docs.astral.sh/uv/>`_ (see `here <https://docs.astral.sh/uv/#getting-started>`_)
@@ -58,7 +58,7 @@ Usage:
 
 .. code-block:: bash
 
-    Usage: pyxel run [OPTIONS] CONFIG
+    Usage: pyxel-sim run [OPTIONS] CONFIG
 
       Run Pyxel with a YAML configuration file.
 
@@ -93,11 +93,8 @@ An example of running Pyxel as a library:
     import pyxel
 
     configuration = pyxel.load("configuration.yaml")
-    exposure = configuration.exposure
-    detector = configuration.detector
-    pipeline = configuration.pipeline
 
-    pyxel.run_mode(mode=exposure, detector=detector, pipeline=pipeline)
+    pyxel.run_mode(configuration)
 
 .. Note::
    You need install a Jupyter Server yourself (e.g. Jupyter Notebook, Jupyter Lab, Jupyter Hub...).
