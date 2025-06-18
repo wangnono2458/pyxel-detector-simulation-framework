@@ -17,3 +17,5 @@ good answer.
    See also `this blogpost <http://matthewrocklin.com/blog/work/2018/02/28/minimal-bug-reports>`_
    about crafting minimal bug reports.
    These have much higher likelihood of being answered.
+
+**Contact**: pyxel@esa.int

@@ -28,6 +28,8 @@ made by CCD or CMOS-based detectors.
 If you'd like to contribute to *Pyxel* you're most welcome.
 Please read [the little guide](https://esa.gitlab.io/pyxel/doc/stable/references/contributing.html) to get you started.
 
+**Contact**: pyxel@esa.int
+
 ## Documentation
 
 Learn more about *Pyxel* in its offical [blog](https://esa.gitlab.io/pyxel) and its official documentation at [https://esa.gitlab.io/pyxel/doc](https://esa.gitlab.io/pyxel/doc).

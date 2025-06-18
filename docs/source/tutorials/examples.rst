@@ -12,6 +12,8 @@ All tutorials and examples can be found in a separate public repository
 `Pyxel Data <https://gitlab.com/esa/pyxel-data>`_, to access the corresponding Jupyter book click on the link below.
 Please note, that the Jupyter book is just for viewing the examples and not interactive.
 
+**Contact**: pyxel@esa.int
+
 .. button-link:: https://esa.gitlab.io/pyxel-data/intro.html
     :color: primary
     :outline:

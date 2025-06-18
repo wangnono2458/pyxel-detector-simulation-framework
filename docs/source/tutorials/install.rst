@@ -12,6 +12,12 @@ and your work with well defined computing environments.
 If you want to learn about using virtual environments see :ref:`Virtual Environments <virtualenvs>`.
 You can also install :ref:`Pyxel for development <contributing.gitlab>`.
 
+Don't hesitate to create a `GitLab issues <https://gitlab.com/esa/pyxel/-/issues>`_
+to report bugs, ask for new functionalities, ... .
+
+**Contact**: pyxel@esa.int
+
+
 ..
     Pyxel can be installed with `conda <https://docs.conda.io/>`_,
     `pip <https://pip.pypa.io/>`_ or from source.

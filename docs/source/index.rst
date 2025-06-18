@@ -17,6 +17,7 @@ made by :term:`CCD` or :term:`CMOS`-based detectors.
 `Source repository <https://gitlab.com/esa/pyxel>`__ |
 `Example repository <https://gitlab.com/esa/pyxel-data>`__
 
+**Contact**: pyxel@esa.int
 
 How the documentation is organized
 ==================================
