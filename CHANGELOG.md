@@ -9,6 +9,18 @@ Minor releases include updated stdlib stubs from typeshed.
 
 Pyxel doesn't use SemVer anymore, since most minor releases have at least minor backward incompatible changes.
 
+ ## UNRELEASED
+
+ ### Core
+
+ ### Documentation
+
+ ### Models
+
+ ### Others
+* Fix issues for ruff 0.12.
+  (See [!1071](https://gitlab.com/esa/pyxel/-/merge_requests/1071)).
+
 
 ## 2.11 / 2025-06-13
 
