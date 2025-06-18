@@ -239,7 +239,7 @@ def load_image(filename: str | Path) -> np.ndarray:
 # TODO: needs tests!
 # TODO: add units
 # TODO: reduce complexity and remove ruff noqa.
-# ruff: noqa: C901, PTH123
+# ruff: noqa: PTH123
 def load_image_v2(
     filename: str | Path,
     rename_dims: dict,

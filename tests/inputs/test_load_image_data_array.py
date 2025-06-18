@@ -22,7 +22,6 @@ pytest_httpserver = pytest.importorskip(
 )
 
 
-# ruff: noqa: C901
 @pytest.fixture(
     params=[
         pytest.param(("file", "image.fits"), id="fits"),

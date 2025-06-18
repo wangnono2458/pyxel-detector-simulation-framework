@@ -313,7 +313,6 @@ pipeline:
 
         return self._array
 
-    # ruff: noqa: C901
     @array.setter
     def array(self, value: np.ndarray) -> None:
         cls_name: str = self.__class__.__name__
