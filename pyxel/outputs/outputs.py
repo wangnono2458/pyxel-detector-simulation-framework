@@ -770,7 +770,6 @@ class Outputs:
 
         return full_filename
 
-    # ruff: noqa: C901
     @deprecated("Will be replaced by function 'save_to_files'")
     def save_to_file(
         self,

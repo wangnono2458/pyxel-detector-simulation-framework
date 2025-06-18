@@ -1184,7 +1184,6 @@ def get_output_filenames(
     return df_filenames
 
 
-# ruff: noqa: C901
 def run(
     input_filename: str | Path,
     override: Sequence[str] | None = None,

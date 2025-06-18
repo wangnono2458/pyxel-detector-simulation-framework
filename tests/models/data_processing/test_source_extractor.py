@@ -89,7 +89,7 @@ def test_source_extractor_charge(ccd_10x10: CCD):
 #     """Test to ensure warning isn't triggered for filled array"""
 
 
-def test_source_extractor_incorrect_array_type(ccd_10x10: CCD, array_type="test"):
+def test_source_extractor_incorrect_array_type(ccd_10x10: CCD):
     ccd_10x10.pixel.array = np.random.rand(10, 10)
     """Test to ensure warning isn't triggered for filled array"""
 

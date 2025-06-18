@@ -78,7 +78,6 @@ class ModelGroup:
     def __dir__(self):
         return dir(type(self)) + [model.name for model in self.models]
 
-    # ruff: noqa: C901
     def run(
         self,
         detector: "Detector",

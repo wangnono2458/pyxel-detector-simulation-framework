@@ -187,7 +187,6 @@ class Exposure:
 
 
 # TODO: This function will be deprecated
-# ruff: noqa: C901
 @deprecated("This function will be removed")
 def _run_exposure_pipeline_deprecated(
     processor: Processor,
