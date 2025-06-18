@@ -29,11 +29,11 @@ or using Pyxel by running the command:
 
 .. code-block:: console
 
-    pyxel download-examples
+    pyxel-sim download-examples
 
     or
 
-    python -m pyxel download-examples
+    python -m pyxel-sim download-examples
 
 Now you can launch JupyterLab to explore them:
 
