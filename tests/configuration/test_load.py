@@ -481,6 +481,15 @@ def test_load_two_detectors(config_two_detectors: Path):
         _ = pyxel.load(filename)
 
 
+def test_load_no_config(tmp_path: Path):
+    """Test function 'pyxel.load' with no YAML file."""
+    filename = tmp_path / "missing_config.yaml"
+    assert not filename.exists()
+
+    with pytest.raises(FileNotFoundError, match="Cannot find configuration file"):
+        _ = pyxel.load(filename)
+
+
 def test_load_observation_without_parameters(tmp_path: Path):
     """Test function 'pyxel.load' with Observation mode but without 'parameters'."""
     content = """
@@ -524,57 +533,12 @@ pipeline:
         pyxel.load(filename)
 
 
-@pytest.mark.parametrize(
-    "detector_name",
-    ["ccd_detector", "cmos_detector", "mkid_detector"],
-)
-def test_load_exposure_minimalist_config(detector_name: str, tmp_path: Path):
+def test_load_exposure_minimalist_config(
+    valid_minimalist_exposure_config: str, tmp_path: Path
+):
     """Test function 'pyxel.load' with a minimalist YAML file."""
-    content = f"""
-exposure:
-  readout:
-    times: [1., 3., 5.]
-    non_destructive:  true
-
-    # No 'outputs'.
-
-{detector_name}:
-  geometry:
-    row: 10
-    col: 20
-
-  # No 'environment' and 'characteristics'
-"""
-
-    filename = tmp_path / "exposure_minimalist.yaml"
-    filename.write_text(content)
-
-    cfg = pyxel.load(filename)
-    assert isinstance(cfg, Configuration)
-
-
-def test_load_exposure_minimalist_config_apd(tmp_path: Path):
-    """Test function 'pyxel.load' with a minimalist YAML file."""
-    content = """
-exposure:
-  readout:
-    times: [1., 3., 5.]
-    non_destructive:  true
-
-    # No 'outputs'.
-
-apd_detector:
-  geometry:
-    row: 10
-    col: 20
-
-  characteristics:
-    roic_gain: 1.0
-    avalanche_gain: 1.0
-    common_voltage: 0.0
-
-  # No 'environment'
-"""
+    content: str = valid_minimalist_exposure_config
+    assert isinstance(content, str)
 
     filename = tmp_path / "exposure_minimalist.yaml"
     filename.write_text(content)

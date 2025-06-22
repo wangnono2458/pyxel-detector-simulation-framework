@@ -128,6 +128,15 @@ from pyxel.configuration.configuration import _add_comments
             id="Extra space - charge_collection",
         ),
         pytest.param(
+            "pipeline:\n  charge_transfer:",
+            """pipeline:
+
+# Manipulate pixel charge in electrons during transfer in the `Pixel` bucket
+# Pixel [e⁻] -> Pixel [e⁻]
+  charge_transfer:""",
+            id="Extra space - charge_transfer",
+        ),
+        pytest.param(
             "pipeline:\n  charge_measurement:",
             """pipeline:
 
