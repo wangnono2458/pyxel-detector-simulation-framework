@@ -541,7 +541,7 @@ def test_load_exposure_minimalist_config(
     assert isinstance(content, str)
 
     filename = tmp_path / "exposure_minimalist.yaml"
-    filename.write_text(content)
+    filename.write_text(content, encoding="utf-8")
 
     cfg = pyxel.load(filename)
     assert isinstance(cfg, Configuration)
