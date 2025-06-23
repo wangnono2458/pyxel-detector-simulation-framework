@@ -205,7 +205,7 @@ class ModelFunction:
         cls_name: str = self.__class__.__name__
 
         return (
-            f"{cls_name}(name={self.name!r}, func={self._func}, "
+            f"{cls_name}(name={self.name!r}, func={self._func_name}, "
             f"arguments={self.arguments!r}, enabled={self.enabled!r})"
         )
 

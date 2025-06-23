@@ -9,6 +9,16 @@ Minor releases include updated stdlib stubs from typeshed.
 
 Pyxel doesn't use SemVer anymore, since most minor releases have at least minor backward incompatible changes.
 
+## UNRELEASED
+
+This is a major bug fix release.
+
+### Core
+* Fix issue with unicode in [`pyxel.load`](https://esa.gitlab.io/pyxel/doc/stable/references/api/configuration.html#pyxel.load) 
+  and [`Configuration.to_yaml`](https://esa.gitlab.io/pyxel/doc/stable/references/api/configuration.html#pyxel.Configuration.to_yaml).
+  (See [!1075](https://gitlab.com/esa/pyxel/-/merge_requests/1075)).
+
+
  ## 2.11.1 / 2025-06-18
 
 This is a minor bug fix release.

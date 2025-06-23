@@ -354,7 +354,7 @@ class Configuration:
         if filename is None:
             return content_with_comments
         else:
-            _ = Path(filename).write_text(content_with_comments)
+            _ = Path(filename).write_text(content_with_comments, encoding="utf-8")
             return None
 
 
@@ -363,9 +363,8 @@ def load(yaml_file: str | Path) -> Configuration:
     filename = Path(yaml_file).resolve()
     if not filename.exists():
         raise FileNotFoundError(f"Cannot find configuration file '{filename}'.")
-    with filename.open("r") as file_obj:
-        dct = load_yaml(file_obj)
 
+    dct = load_yaml(filename.read_text(encoding="utf-8"))
     return _build_configuration(dct)
 
 
