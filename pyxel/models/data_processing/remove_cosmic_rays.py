@@ -53,7 +53,7 @@ def compute_cosmic_rays(
     """
 
     try:
-        import lacosmic
+        from lacosmic.core import lacosmic
     except ModuleNotFoundError as exc:
         raise ModuleNotFoundError(
             "Missing optional package 'lacosmic'.\n"
@@ -61,7 +61,7 @@ def compute_cosmic_rays(
             "or 'pip install pyxel-sim[all]' or 'pip install lacosmic'"
         ) from exc
 
-    cleaned_image, cr_mask = lacosmic.lacosmic(
+    cleaned_image, cr_mask = lacosmic(
         data_2d,
         contrast=contrast,
         cr_threshold=cr_threshold,
