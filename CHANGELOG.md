@@ -9,7 +9,20 @@ Minor releases include updated stdlib stubs from typeshed.
 
 Pyxel doesn't use SemVer anymore, since most minor releases have at least minor backward incompatible changes.
 
-## 2.111.2 / 2025-06-23
+## UNRELEASED
+
+### Core
+
+### Documentation
+
+### Models
+
+### Others
+* Add compatibility with `lacosmic` 1.3+.
+  (See [!1077](https://gitlab.com/esa/pyxel/-/merge_requests/1077)).
+
+
+## 2.11.2 / 2025-06-23
 
 This is a major bug fix release.
 
