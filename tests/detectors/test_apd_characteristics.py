@@ -792,3 +792,362 @@ def test_to_dict_from_dict(characteristics, exp_dct):
 
     obj = APDCharacteristics.from_dict(exp_dct)
     assert obj == characteristics
+
+
+def test_bias_to_node_func_callable():
+    apd = APDCharacteristics(
+        roic_gain=0.5,
+        avalanche_gain=5.0,
+        pixel_reset_voltage=2.5,
+        detector_type="new",
+        bias_to_node_func=lambda b: 42 - b,
+        gain_to_bias_func=lambda g: 0.2 * g + 1.0,
+    )
+    result = apd.bias_to_node_capacitance_new(2.0)
+    assert result == pytest.approx(40.0e-15)
+
+
+def test_bias_to_node_func_list():
+    from collections.abc import Callable
+
+    func_data = [(1.0, 40.0), (2.0, 38.0), (3.0, 36.0)]
+    apd = APDCharacteristics(
+        roic_gain=0.5,
+        avalanche_gain=3.0,
+        pixel_reset_voltage=3.5,
+        detector_type="new",
+        bias_to_node_func=func_data,
+        bias_to_gain_func=lambda b: b + 1,
+    )
+
+    assert isinstance(apd.bias_to_node_capacitance_new, Callable)
+    assert apd.bias_to_node_capacitance(2.0) == pytest.approx(38.0e-15)
+
+
+def test_bias_to_node_func_csv():
+    import csv
+    import os
+    import tempfile
+    from collections.abc import Callable
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", delete=False, newline="", suffix=".csv"
+    ) as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["bias", "capacitance"])
+        writer.writerow([1.0, 40.0])
+        writer.writerow([2.0, 38.0])
+        writer.writerow([3.0, 36.0])
+        csv_path = csvfile.name
+
+    try:
+        apd = APDCharacteristics(
+            roic_gain=0.5,
+            avalanche_gain=3.0,
+            pixel_reset_voltage=3.5,
+            detector_type="new",
+            bias_to_node_func=csv_path,
+            bias_to_gain_func=lambda b: b + 1,
+        )
+
+        assert isinstance(apd.bias_to_node_capacitance_new, Callable)
+        assert apd.bias_to_node_capacitance(2.0) == pytest.approx(38.0e-15)
+
+    finally:
+        os.remove(csv_path)
+
+
+def test_gain_to_bias_func_list():
+    from collections.abc import Callable
+
+    func_data = [(1.0, 2.5), (2.0, 3.0), (3.0, 3.5)]
+
+    apd = APDCharacteristics(
+        roic_gain=0.5,
+        avalanche_gain=2.0,
+        pixel_reset_voltage=5.5,
+        detector_type="new",
+        gain_to_bias_func=func_data,
+        bias_to_node_func=lambda b: 40.0 - b,
+    )
+
+    assert isinstance(apd.gain_to_bias_new, Callable)
+    assert apd.gain_to_bias(2.0) == pytest.approx(3.0)
+
+
+def test_gain_to_bias_inverted_from_bias_to_gain():
+    from collections.abc import Callable
+
+    bias_to_gain = lambda b: b + 1
+
+    apd = APDCharacteristics(
+        roic_gain=0.5,
+        avalanche_gain=3.0,
+        pixel_reset_voltage=5.5,
+        detector_type="new",
+        bias_to_gain_func=bias_to_gain,
+        bias_to_node_func=lambda b: 40.0 - b,
+    )
+
+    gain_to_bias_func = apd.gain_to_bias_new
+
+    assert isinstance(gain_to_bias_func, Callable)
+    assert gain_to_bias_func(3.0) == pytest.approx(2.0)
+
+
+def test_bias_to_gain_inverted_from_gain_to_bias():
+    from collections.abc import Callable
+
+    # Exact inverse: gain = bias + 1
+    gain_to_bias = lambda g: g - 1
+
+    apd = APDCharacteristics(
+        roic_gain=0.5,
+        avalanche_gain=3.0,
+        pixel_reset_voltage=4.0,
+        detector_type="new",
+        gain_to_bias_func=gain_to_bias,
+        bias_to_node_func=lambda b: 40.0 - b,
+    )
+
+    bias_to_gain_func = apd.bias_to_gain_new
+
+    # Check that the inversion is callable and returns expected value
+    assert isinstance(bias_to_gain_func, Callable)
+    assert bias_to_gain_func(2.0) == pytest.approx(3.0)
+
+
+def test_invalid_bias_to_gain_func_range():
+    # This function returns values outside the valid gain range [1.0, 1000.0]
+    def bad_bias_to_gain(bias: float) -> float:
+        if bias < 1.0:
+            return 0.5  # Too low
+        elif bias > 2.0:
+            return 2000.0  # Too high
+        return 10.0  # Valid in the middle
+
+    with pytest.raises(ValueError, match="'apd_gain' must be between 1.0 and 1000.0"):
+        APDCharacteristics(
+            roic_gain=0.5,
+            avalanche_gain=2000.0,  # Will trigger validation after func call
+            pixel_reset_voltage=3.5,
+            detector_type="new",
+            bias_to_gain_func=bad_bias_to_gain,
+            bias_to_node_func=lambda b: 30.0,  # Arbitrary valid function
+        )
+
+
+def test_gain_to_bias_inversion_from_bias_to_gain_func():
+    # Simple monotonic function
+    bias_to_gain = lambda b: 2 * b  # Gain = 2 * Bias -> Bias = Gain / 2
+
+    apd = APDCharacteristics(
+        roic_gain=0.5,
+        avalanche_gain=6.0,
+        pixel_reset_voltage=3.0,
+        detector_type="new",
+        bias_to_gain_func=bias_to_gain,
+        bias_to_node_func=lambda b: 40.0,
+    )
+
+    gain_to_bias_func = apd.gain_to_bias_new
+    assert callable(gain_to_bias_func)
+    assert gain_to_bias_func(6.0) == pytest.approx(3.0)
+
+
+def test_inversion_failure():
+    # Constant function (not invertible)
+    bias_to_gain = lambda b: 5.0
+
+    apd = APDCharacteristics(
+        roic_gain=0.5,
+        pixel_reset_voltage=3.5,
+        common_voltage=0.5,
+        detector_type="new",
+        bias_to_gain_func=bias_to_gain,
+        bias_to_node_func=lambda b: 40.0,
+    )
+
+    gain_to_bias_func = apd.gain_to_bias_new
+
+    with pytest.raises(ValueError, match="Cannot invert function"):
+        gain_to_bias_func(6.0)
+
+
+def test_gain_to_bias_from_csv(tmp_path):
+    import tempfile
+
+    import pandas as pd
+
+    df = pd.DataFrame({"gain": [1.0, 2.0, 3.0], "bias": [2.0, 3.0, 4.0]})
+    csv_path = tmp_path / "gain_bias.csv"
+    df.to_csv(csv_path, index=False)
+
+    apd = APDCharacteristics(
+        roic_gain=0.5,
+        avalanche_gain=2.0,
+        pixel_reset_voltage=5.0,
+        detector_type="new",
+        gain_to_bias_func=str(csv_path),
+        bias_to_node_func=lambda b: 30.0,
+    )
+
+    func = apd.gain_to_bias_new
+    assert callable(func)
+    assert func(2.0) == pytest.approx(3.0)
+
+
+def test_invalid_gain_to_bias_input_type():
+    with pytest.raises(TypeError, match="Function input must be callable"):
+        APDCharacteristics(
+            roic_gain=0.5,
+            avalanche_gain=5.0,
+            pixel_reset_voltage=3.0,
+            detector_type="new",
+            gain_to_bias_func=1234,  # Invalid
+            bias_to_node_func=lambda b: 30.0,
+        )
+
+
+class DummyGeometry:
+    def __init__(self, shape, channel_map):
+        from types import SimpleNamespace
+
+        self.shape = shape
+        self.channels = SimpleNamespace(readout_position=channel_map)
+        self._channel_coords = {
+            "A": (slice(0, 2), slice(0, 2)),
+            "B": (slice(0, 2), slice(2, 4)),
+        }
+
+    def get_channel_coord(self, channel):
+        return self._channel_coords[channel]
+
+
+def test_per_channel_charge_to_volt_conversion():
+    import numpy as np
+
+    # Create a dictionary with gain per channel
+    channel_gains = {
+        "A": 0.9,
+        "B": 0.5,
+    }
+
+    # Create a dummy detector
+    apd = APDCharacteristics(
+        roic_gain=0.5,
+        avalanche_gain=3.0,
+        pixel_reset_voltage=3.5,
+        detector_type="new",
+        bias_to_gain_func=lambda b: b + 1,
+        bias_to_node_func=lambda b: 30.0,
+    )
+
+    # Override charge_to_volt_conversion with channel dict
+    apd._charge_to_volt_conversion = channel_gains
+
+    # Create and assign dummy geometry (4x4 pixels split in two 2x2 regions)
+    geometry = DummyGeometry(shape=(2, 4), channel_map=channel_gains)
+    apd.initialize(geometry)
+
+    # Check that the 2D gain map is correctly built
+    assert apd._channels_gain.shape == (2, 4)
+    assert np.all(apd._channels_gain[:, 0:2] == 0.9)  # Channel A
+    assert np.all(apd._channels_gain[:, 2:4] == 0.5)  # Channel B
+
+
+def test_charge_to_volt_conversion_new_auto():
+    apd = APDCharacteristics(
+        roic_gain=0.5,
+        avalanche_gain=3.0,
+        pixel_reset_voltage=3.5,
+        detector_type="new",
+        bias_to_node_func=lambda b: 40,
+        bias_to_gain_func=lambda b: b + 1,
+    )
+
+    expected = apd.detector_gain(capacitance=40e-15, roic_gain=0.5)
+    assert apd.charge_to_volt_conversion == pytest.approx(expected, rel=1e-6)
+
+
+def test_system_gain_new():
+    apd = APDCharacteristics(
+        roic_gain=0.5,
+        quantum_efficiency=0.8,
+        avalanche_gain=2.0,
+        pixel_reset_voltage=3.5,
+        adc_bit_resolution=12,
+        adc_voltage_range=(0.0, 3.3),
+        detector_type="new",
+        bias_to_node_func=lambda b: 40,
+        bias_to_gain_func=lambda b: b + 1,
+    )
+
+    expected_ctov = apd.detector_gain(40e-15, 0.5)
+    expected_gain = 0.8 * 2.0 * expected_ctov * (2**12) / (3.3 - 0.0)
+    assert apd.system_gain == pytest.approx(expected_gain)
+
+
+def test_initialize_with_global_gain():
+    import numpy as np
+
+    class MockGeometry:
+        shape = (2, 2)
+
+        class Channels:
+            readout_position = {"A": (0, 0), "B": (0, 1)}
+
+        channels = Channels()
+
+        def get_channel_coord(self, ch):
+            return ((0, 1), (0, 1)) if ch == "A" else ((1, 2), (1, 2))
+
+    apd = APDCharacteristics(
+        roic_gain=1e-6,
+        avalanche_gain=2.0,
+        pixel_reset_voltage=3.5,
+        detector_type="new",
+        bias_to_node_func=lambda b: 1e-10,  # large capacitance
+        bias_to_gain_func=lambda b: b + 1,
+    )
+
+    apd.initialize(MockGeometry())
+
+    # Check scalar gain
+    assert isinstance(apd._channels_gain, float | np.floating)
+    assert apd._channels_gain < 100.0
+
+
+def test_initialize_with_per_channel_gains():
+    import numpy as np
+
+    class MockGeometry:
+        shape = (2, 2)
+
+        class Channels:
+            readout_position = {"A": (0, 0), "B": (0, 1)}
+
+        channels = Channels()
+
+        def get_channel_coord(self, ch):
+            return (
+                (slice(0, 1), slice(0, 1)) if ch == "A" else (slice(1, 2), slice(0, 1))
+            )
+
+    apd = APDCharacteristics(
+        roic_gain=1e-6,
+        avalanche_gain=2.0,
+        pixel_reset_voltage=3.5,
+        detector_type="new",
+        bias_to_node_func=lambda b: 1e-10,
+        bias_to_gain_func=lambda b: b + 1,
+    )
+
+    # Manually call _build_channels_gain with a dict (simulates per-channel override)
+    apd._geometry = MockGeometry()
+    apd._build_channels_gain({"A": 0.5, "B": 0.8})
+
+    assert isinstance(apd._channels_gain, np.ndarray)
+    assert apd._channels_gain.shape == (2, 2)
+    assert apd._channels_gain[0, 0] == 0.5  # Channel A
+    assert apd._channels_gain[1, 0] == 0.8  # Channel B
