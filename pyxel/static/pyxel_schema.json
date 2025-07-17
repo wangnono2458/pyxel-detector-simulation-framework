@@ -6715,40 +6715,40 @@
     },
     "ModelSceneGenerationLoadStarMap": {
       "additionalProperties": false,
-      "description": "Generate scene from scopesim Source object loading stars from the GAIA catalog.",
+      "description": "Generate scene from a selected catalog.",
       "properties": {
         "arguments": {
           "additionalProperties": false,
           "properties": {
-            "band": {
-              "default": "blue_photometer",
-              "description": "Define the band to use. Available values:  * 'blue_photometer' is the band from 330 nm to 680 nm * 'gaia_band' is the band from 330 nm to 1050 nm * 'red_photometer' is the band from 640 nm to 1050 nm",
+            "catalog": {
+              "default": "gaia",
+              "description": "Name of the catalog to use. Default is 'gaia'",
               "enum": [
-                "blue_photometer",
-                "gaia_band",
-                "red_photometer"
+                "gaia",
+                "tycho",
+                "hipparcos"
               ],
-              "title": "band",
+              "title": "catalog",
               "type": "string"
             },
             "declination": {
-              "description": "DEC coordinate in degree.",
+              "description": "Declination (DEC) of the pointing center in degree.",
               "title": "declination",
               "type": "number"
             },
             "fov_radius": {
-              "description": "FOV radius of telescope optics.",
+              "description": "Radius of the field of view (FOV) aroung the pointing center in degree.",
               "title": "fov_radius",
               "type": "number"
             },
             "right_ascension": {
-              "description": "RA coordinate in degree.",
+              "description": "Right ascension (RA) of the pointing center in degree.",
               "title": "right_ascension",
               "type": "number"
             },
             "with_caching": {
               "default": true,
-              "description": "Enable/Disable caching request to GAIA catalog.",
+              "description": "Enable/Disable caching queries.",
               "title": "with_caching",
               "type": "boolean"
             }
