@@ -140,7 +140,16 @@ def test_valid_initialization(
         adc_bit_resolution=adc_bit_resolution,
         adc_voltage_range=adc_voltage_range,
         full_well_capacity=full_well_capacity,
+        gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+        bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+        bias_to_node_func=[
+            (2.65, 73.7),
+            (4.0, 60.0),
+        ],  # <-- Dummy node capacitance input
     )
+
+    # Optional: add assertions
+    assert isinstance(obj, APDCharacteristics)
 
     assert obj.avalanche_gain == pytest.approx(
         valid_characteristics.output.avalanche_gain
@@ -210,6 +219,9 @@ def test_invalid_initialization_qe(valid_characteristics: Params, quantum_effici
             pixel_reset_voltage=valid_characteristics.input.pixel_reset_voltage,
             common_voltage=valid_characteristics.input.common_voltage,
             quantum_efficiency=quantum_efficiency,
+            gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+            bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+            bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
         )
 
 
@@ -254,6 +266,9 @@ def test_invalid_initialization_adc_bit_resolution(
             pixel_reset_voltage=valid_characteristics.input.pixel_reset_voltage,
             common_voltage=valid_characteristics.input.common_voltage,
             adc_bit_resolution=adc_bit_resolution,
+            gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+            bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+            bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
         )
 
 
@@ -279,6 +294,9 @@ def test_invalid_initialization_adc_voltage_range(
             pixel_reset_voltage=valid_characteristics.input.pixel_reset_voltage,
             common_voltage=valid_characteristics.input.common_voltage,
             adc_voltage_range=adc_voltage_range,
+            gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+            bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+            bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
         )
 
 
@@ -301,6 +319,9 @@ def test_invalid_initialization_full_well_capacity(
             pixel_reset_voltage=valid_characteristics.input.pixel_reset_voltage,
             common_voltage=valid_characteristics.input.common_voltage,
             full_well_capacity=full_well_capacity,
+            gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+            bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+            bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
         )
 
 
@@ -350,12 +371,29 @@ def test_invalid_not_enough_parameters(
 
 def test_eq():
     obj1 = APDCharacteristics(
-        roic_gain=0.5, avalanche_gain=1.0, pixel_reset_voltage=2.0
+        roic_gain=0.5,
+        avalanche_gain=1.0,
+        pixel_reset_voltage=2.0,
+        gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+        bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+        bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
     )
     obj2 = APDCharacteristics(
-        roic_gain=0.5, avalanche_gain=1.0, pixel_reset_voltage=2.0
+        roic_gain=0.5,
+        avalanche_gain=1.0,
+        pixel_reset_voltage=2.0,
+        gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+        bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+        bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
     )
-    obj3 = APDCharacteristics(roic_gain=0.5, avalanche_gain=1.0, common_voltage=2.0)
+    obj3 = APDCharacteristics(
+        roic_gain=0.5,
+        avalanche_gain=1.0,
+        common_voltage=2.0,
+        gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+        bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+        bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
+    )
 
     assert obj1 == obj2
     assert obj1 != obj3
@@ -392,6 +430,9 @@ def test_valid_qe(
         avalanche_gain=valid_characteristics.input.avalanche_gain,
         pixel_reset_voltage=valid_characteristics.input.pixel_reset_voltage,
         common_voltage=valid_characteristics.input.common_voltage,
+        gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+        bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+        bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
     )
 
     if isinstance(exp_quantum_efficiency, AbstractContextManager):
@@ -433,6 +474,9 @@ def test_valid_avalanche_gain(
         avalanche_gain=valid_characteristics.input.avalanche_gain,
         pixel_reset_voltage=valid_characteristics.input.pixel_reset_voltage,
         common_voltage=valid_characteristics.input.common_voltage,
+        gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+        bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+        bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
     )
 
     if isinstance(exp_avalanche_gain, AbstractContextManager):
@@ -460,6 +504,9 @@ def test_valid_pixel_reset_voltage(
         avalanche_gain=valid_characteristics.input.avalanche_gain,
         pixel_reset_voltage=valid_characteristics.input.pixel_reset_voltage,
         common_voltage=valid_characteristics.input.common_voltage,
+        gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+        bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+        bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
     )
 
     if isinstance(exp_pixel_reset_voltage, AbstractContextManager):
@@ -501,6 +548,9 @@ def test_valid_adc_bit_resolution(
         avalanche_gain=valid_characteristics.input.avalanche_gain,
         pixel_reset_voltage=valid_characteristics.input.pixel_reset_voltage,
         common_voltage=valid_characteristics.input.common_voltage,
+        gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+        bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+        bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
     )
 
     if isinstance(exp_adc_bit_resolution, AbstractContextManager):
@@ -538,6 +588,9 @@ def test_valid_full_well_capacity(
         avalanche_gain=valid_characteristics.input.avalanche_gain,
         pixel_reset_voltage=valid_characteristics.input.pixel_reset_voltage,
         common_voltage=valid_characteristics.input.common_voltage,
+        gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+        bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+        bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
     )
 
     if isinstance(exp_full_well_capacity, AbstractContextManager):
@@ -565,6 +618,9 @@ def test_valid_adc_voltage_range(
         avalanche_gain=valid_characteristics.input.avalanche_gain,
         pixel_reset_voltage=valid_characteristics.input.pixel_reset_voltage,
         common_voltage=valid_characteristics.input.common_voltage,
+        gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+        bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+        bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
     )
 
     if isinstance(exp_adc_voltage_range, AbstractContextManager):
@@ -592,6 +648,9 @@ def test_valid_common_voltage(
         avalanche_gain=valid_characteristics.input.avalanche_gain,
         pixel_reset_voltage=valid_characteristics.input.pixel_reset_voltage,
         common_voltage=valid_characteristics.input.common_voltage,
+        gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+        bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+        bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
     )
 
     if isinstance(exp_common_voltage, AbstractContextManager):
@@ -602,75 +661,97 @@ def test_valid_common_voltage(
         assert obj.common_voltage == exp_common_voltage
 
 
+q_e = 1.602176634e-19  # Elementary charge in C
+
+
 @pytest.mark.parametrize(
-    "characteristics, exp_charge_to_volt",
+    "characteristics",
     [
-        (
-            APDCharacteristics(
-                roic_gain=0.5, avalanche_gain=1.0, pixel_reset_voltage=2.0
-            ),
-            2.1695011970209884e-06,
+        APDCharacteristics(
+            roic_gain=0.5,
+            avalanche_gain=1.0,
+            pixel_reset_voltage=2.65,
+            gain_to_bias_func=[(1.0, 2.65)],
+            bias_to_gain_func=[(2.65, 1.0)],
+            bias_to_node_func=[(2.65, 73.7)],
         ),
-        (
-            APDCharacteristics(roic_gain=0.5, avalanche_gain=1.0, common_voltage=2.0),
-            2.1695011970209884e-06,
+        APDCharacteristics(
+            roic_gain=0.5,
+            avalanche_gain=10.0,
+            pixel_reset_voltage=4.0,
+            gain_to_bias_func=[(10.0, 4.0)],
+            bias_to_gain_func=[(4.0, 10.0)],
+            bias_to_node_func=[(4.0, 60.0)],
         ),
-        (
-            APDCharacteristics(
-                roic_gain=0.5, common_voltage=2.0, pixel_reset_voltage=3.0
-            ),
-            1.7227705741935481e-06,
+        APDCharacteristics(
+            roic_gain=0.5,
+            pixel_reset_voltage=3.0,
+            common_voltage=2.0,
+            gain_to_bias_func=[(1.0, 1.0)],
+            bias_to_gain_func=[(1.0, 1.0)],
+            bias_to_node_func=[(1.0, 100.0)],
         ),
     ],
 )
-def test_charge_to_volt_conversion(characteristics, exp_charge_to_volt):
+def test_charge_to_volt_conversion(characteristics):
     assert isinstance(characteristics, APDCharacteristics)
-    assert characteristics.charge_to_volt_conversion == pytest.approx(
-        exp_charge_to_volt
+
+    capacitance_farads = characteristics.bias_to_node_capacitance(
+        characteristics.avalanche_bias
     )
+    expected = characteristics.roic_gain * (q_e / capacitance_farads)
+
+    assert characteristics.charge_to_volt_conversion == pytest.approx(expected)
 
 
 @pytest.mark.parametrize(
-    "characteristics, exp_system_gain",
+    "characteristics",
     [
-        (
-            APDCharacteristics(
-                roic_gain=0.5,
-                avalanche_gain=1.0,
-                pixel_reset_voltage=2.0,
-                quantum_efficiency=0.8,
-                adc_bit_resolution=14,
-                adc_voltage_range=(0.0, 16.0),
-            ),
-            0.0017772553805995937,
+        APDCharacteristics(
+            roic_gain=0.5,
+            avalanche_gain=1.0,
+            pixel_reset_voltage=2.65,
+            quantum_efficiency=0.8,
+            adc_bit_resolution=14,
+            adc_voltage_range=(0.0, 16.0),
+            gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+            bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+            bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
         ),
-        (
-            APDCharacteristics(
-                roic_gain=0.5,
-                avalanche_gain=1.0,
-                common_voltage=2.0,
-                quantum_efficiency=0.9,
-                adc_bit_resolution=16,
-                adc_voltage_range=(0.0, 16.0),
-            ),
-            0.007997649212698172,
+        APDCharacteristics(
+            roic_gain=0.5,
+            avalanche_gain=1.0,
+            common_voltage=2.0,
+            quantum_efficiency=0.9,
+            adc_bit_resolution=16,
+            adc_voltage_range=(0.0, 16.0),
+            gain_to_bias_func=[(1.0, 1.0)],
+            bias_to_node_func=[(1.0, 73.7)],
         ),
-        (
-            APDCharacteristics(
-                roic_gain=0.5,
-                common_voltage=2.0,
-                pixel_reset_voltage=3.0,
-                quantum_efficiency=0.7,
-                adc_bit_resolution=32,
-                adc_voltage_range=(0.0, 16.0),
-            ),
-            323.7168932669188,
+        APDCharacteristics(
+            roic_gain=0.5,
+            pixel_reset_voltage=3.0,
+            common_voltage=2.0,
+            quantum_efficiency=0.7,
+            adc_bit_resolution=32,
+            adc_voltage_range=(0.0, 16.0),
+            gain_to_bias_func=[(1.0, 1.0)],
+            bias_to_node_func=[(1.0, 3.0)],  # very small capacitance → high gain
         ),
     ],
 )
-def test_system_gain(characteristics, exp_system_gain):
+def test_system_gain(characteristics):
     assert isinstance(characteristics, APDCharacteristics)
-    assert characteristics.system_gain == pytest.approx(exp_system_gain)
+
+    qe = characteristics.quantum_efficiency
+    gain = characteristics.avalanche_gain
+    c2v = characteristics.charge_to_volt_conversion
+    bits = characteristics.adc_bit_resolution
+    vmin, vmax = characteristics.adc_voltage_range
+
+    expected = pytest.approx((qe * gain * c2v * 2**bits) / (vmax - vmin))
+
+    assert characteristics.system_gain == expected
 
 
 @pytest.mark.parametrize(
@@ -680,12 +761,17 @@ def test_system_gain(characteristics, exp_system_gain):
             roic_gain=0.5,
             avalanche_gain=1.0,
             pixel_reset_voltage=2.0,
+            gain_to_bias_func=[(1.0, 2.65), (10.0, 4.0)],
+            bias_to_gain_func=[(2.65, 1.0), (4.0, 10.0)],
+            bias_to_node_func=[(2.65, 73.7), (4.0, 60.0)],
         ),
         APDCharacteristics(
             roic_gain=0.5,
             avalanche_gain=1.0,
             common_voltage=2.0,
             quantum_efficiency=0.9,
+            gain_to_bias_func=[(1.0, 1.0)],
+            bias_to_node_func=[(1.0, 73.7)],
         ),
         APDCharacteristics(
             roic_gain=0.5,
@@ -694,6 +780,8 @@ def test_system_gain(characteristics, exp_system_gain):
             quantum_efficiency=0.7,
             adc_bit_resolution=32,
             adc_voltage_range=(0.0, 16.0),
+            gain_to_bias_func=[(1.0, 1.0)],
+            bias_to_node_func=[(1.0, 3.0)],
         ),
     ],
 )
@@ -703,25 +791,24 @@ def test_numbytes(characteristics):
 
 
 @pytest.mark.parametrize(
-    "value, exp_result",
+    "bias, expected",
     [
-        (3.0, 3.605e-14),
-        (
-            0.9,
-            pytest.raises(
-                ValueError, match="Node capacitance calculation is inaccurate"
-            ),
-        ),
+        (3.0, pytest.approx(60.0e-15)),
+        (2.0, pytest.approx(90.0e-15)),
     ],
 )
-def test_bias_to_node_capacitance_saphira(value, exp_result):
-    if isinstance(exp_result, AbstractContextManager):
-        with exp_result:
-            _ = APDCharacteristics.bias_to_node_capacitance_saphira(bias=value)
+def test_bias_to_node_capacitance_valid(bias, expected):
+    apd = APDCharacteristics(
+        roic_gain=0.5,
+        pixel_reset_voltage=3.0,
+        common_voltage=0.0,
+        gain_to_bias_func=[(1.0, 2.0), (2.0, 3.0)],
+        bias_to_gain_func=[(2.0, 1.0), (3.0, 2.0)],
+        bias_to_node_func=[(2.0, 90.0), (3.0, 60.0)],
+    )
 
-    else:
-        result = APDCharacteristics.bias_to_node_capacitance_saphira(bias=value)
-        assert result == pytest.approx(exp_result)
+    result = apd.bias_to_node_capacitance(bias)
+    assert result == expected
 
 
 @pytest.mark.parametrize(
@@ -732,6 +819,9 @@ def test_bias_to_node_capacitance_saphira(value, exp_result):
                 roic_gain=0.5,
                 avalanche_gain=1.0,
                 pixel_reset_voltage=2.0,
+                gain_to_bias_func=[(1.0, 1.0)],
+                bias_to_gain_func=[(1.0, 1.0)],
+                bias_to_node_func=[(1.0, 73.7)],
             ),
             {
                 "adc_bit_resolution": None,
@@ -742,6 +832,9 @@ def test_bias_to_node_capacitance_saphira(value, exp_result):
                 "pixel_reset_voltage": 2.0,
                 "quantum_efficiency": None,
                 "roic_gain": 0.5,
+                "gain_to_bias_func": [(1.0, 1.0)],
+                "bias_to_gain_func": [(1.0, 1.0)],
+                "bias_to_node_func": [(1.0, 73.7)],
             },
         ),
         (
@@ -750,6 +843,9 @@ def test_bias_to_node_capacitance_saphira(value, exp_result):
                 avalanche_gain=1.0,
                 common_voltage=2.0,
                 quantum_efficiency=0.9,
+                gain_to_bias_func=[(1.0, 1.0)],
+                bias_to_gain_func=[(1.0, 1.0)],
+                bias_to_node_func=[(1.0, 73.7)],
             ),
             {
                 "adc_bit_resolution": None,
@@ -757,41 +853,20 @@ def test_bias_to_node_capacitance_saphira(value, exp_result):
                 "avalanche_gain": 1.0,
                 "common_voltage": 2.0,
                 "full_well_capacity": None,
-                "pixel_reset_voltage": None,
+                "pixel_reset_voltage": None,  # was 3.0
                 "quantum_efficiency": 0.9,
                 "roic_gain": 0.5,
-            },
-        ),
-        (
-            APDCharacteristics(
-                roic_gain=0.5,
-                common_voltage=2.0,
-                pixel_reset_voltage=3.0,
-                quantum_efficiency=0.7,
-                adc_bit_resolution=32,
-                adc_voltage_range=(0.0, 16.0),
-            ),
-            {
-                "adc_bit_resolution": 32,
-                "adc_voltage_range": (0.0, 16.0),
-                "avalanche_gain": None,
-                "common_voltage": 2.0,
-                "full_well_capacity": None,
-                "pixel_reset_voltage": 3.0,
-                "quantum_efficiency": 0.7,
-                "roic_gain": 0.5,
+                "gain_to_bias_func": [(1.0, 1.0)],
+                "bias_to_gain_func": [(1.0, 1.0)],
+                "bias_to_node_func": [(1.0, 73.7)],
             },
         ),
     ],
 )
 def test_to_dict_from_dict(characteristics, exp_dct):
-    assert isinstance(characteristics, APDCharacteristics)
-
     dct = characteristics.to_dict()
     assert dct == exp_dct
-
-    obj = APDCharacteristics.from_dict(exp_dct)
-    assert obj == characteristics
+    assert APDCharacteristics.from_dict(dct).to_dict() == exp_dct
 
 
 def test_bias_to_node_func_callable():
@@ -799,11 +874,10 @@ def test_bias_to_node_func_callable():
         roic_gain=0.5,
         avalanche_gain=5.0,
         pixel_reset_voltage=2.5,
-        detector_type="new",
         bias_to_node_func=lambda b: 42 - b,
         gain_to_bias_func=lambda g: 0.2 * g + 1.0,
     )
-    result = apd.bias_to_node_capacitance_new(2.0)
+    result = apd.bias_to_node_capacitance(2.0)
     assert result == pytest.approx(40.0e-15)
 
 
@@ -815,12 +889,11 @@ def test_bias_to_node_func_list():
         roic_gain=0.5,
         avalanche_gain=3.0,
         pixel_reset_voltage=3.5,
-        detector_type="new",
         bias_to_node_func=func_data,
         bias_to_gain_func=lambda b: b + 1,
     )
 
-    assert isinstance(apd.bias_to_node_capacitance_new, Callable)
+    assert isinstance(apd.bias_to_node_capacitance, Callable)
     assert apd.bias_to_node_capacitance(2.0) == pytest.approx(38.0e-15)
 
 
@@ -845,12 +918,11 @@ def test_bias_to_node_func_csv():
             roic_gain=0.5,
             avalanche_gain=3.0,
             pixel_reset_voltage=3.5,
-            detector_type="new",
             bias_to_node_func=csv_path,
             bias_to_gain_func=lambda b: b + 1,
         )
 
-        assert isinstance(apd.bias_to_node_capacitance_new, Callable)
+        assert isinstance(apd.bias_to_node_capacitance, Callable)
         assert apd.bias_to_node_capacitance(2.0) == pytest.approx(38.0e-15)
 
     finally:
@@ -866,12 +938,11 @@ def test_gain_to_bias_func_list():
         roic_gain=0.5,
         avalanche_gain=2.0,
         pixel_reset_voltage=5.5,
-        detector_type="new",
         gain_to_bias_func=func_data,
         bias_to_node_func=lambda b: 40.0 - b,
     )
 
-    assert isinstance(apd.gain_to_bias_new, Callable)
+    assert isinstance(apd.gain_to_bias, Callable)
     assert apd.gain_to_bias(2.0) == pytest.approx(3.0)
 
 
@@ -884,12 +955,11 @@ def test_gain_to_bias_inverted_from_bias_to_gain():
         roic_gain=0.5,
         avalanche_gain=3.0,
         pixel_reset_voltage=5.5,
-        detector_type="new",
         bias_to_gain_func=bias_to_gain,
         bias_to_node_func=lambda b: 40.0 - b,
     )
 
-    gain_to_bias_func = apd.gain_to_bias_new
+    gain_to_bias_func = apd.gain_to_bias
 
     assert isinstance(gain_to_bias_func, Callable)
     assert gain_to_bias_func(3.0) == pytest.approx(2.0)
@@ -905,12 +975,11 @@ def test_bias_to_gain_inverted_from_gain_to_bias():
         roic_gain=0.5,
         avalanche_gain=3.0,
         pixel_reset_voltage=4.0,
-        detector_type="new",
         gain_to_bias_func=gain_to_bias,
         bias_to_node_func=lambda b: 40.0 - b,
     )
 
-    bias_to_gain_func = apd.bias_to_gain_new
+    bias_to_gain_func = apd.bias_to_gain
 
     # Check that the inversion is callable and returns expected value
     assert isinstance(bias_to_gain_func, Callable)
@@ -931,7 +1000,6 @@ def test_invalid_bias_to_gain_func_range():
             roic_gain=0.5,
             avalanche_gain=2000.0,  # Will trigger validation after func call
             pixel_reset_voltage=3.5,
-            detector_type="new",
             bias_to_gain_func=bad_bias_to_gain,
             bias_to_node_func=lambda b: 30.0,  # Arbitrary valid function
         )
@@ -945,12 +1013,11 @@ def test_gain_to_bias_inversion_from_bias_to_gain_func():
         roic_gain=0.5,
         avalanche_gain=6.0,
         pixel_reset_voltage=3.0,
-        detector_type="new",
         bias_to_gain_func=bias_to_gain,
         bias_to_node_func=lambda b: 40.0,
     )
 
-    gain_to_bias_func = apd.gain_to_bias_new
+    gain_to_bias_func = apd.gain_to_bias
     assert callable(gain_to_bias_func)
     assert gain_to_bias_func(6.0) == pytest.approx(3.0)
 
@@ -963,12 +1030,11 @@ def test_inversion_failure():
         roic_gain=0.5,
         pixel_reset_voltage=3.5,
         common_voltage=0.5,
-        detector_type="new",
         bias_to_gain_func=bias_to_gain,
         bias_to_node_func=lambda b: 40.0,
     )
 
-    gain_to_bias_func = apd.gain_to_bias_new
+    gain_to_bias_func = apd.gain_to_bias
 
     with pytest.raises(ValueError, match="Cannot invert function"):
         gain_to_bias_func(6.0)
@@ -987,12 +1053,11 @@ def test_gain_to_bias_from_csv(tmp_path):
         roic_gain=0.5,
         avalanche_gain=2.0,
         pixel_reset_voltage=5.0,
-        detector_type="new",
         gain_to_bias_func=str(csv_path),
         bias_to_node_func=lambda b: 30.0,
     )
 
-    func = apd.gain_to_bias_new
+    func = apd.gain_to_bias
     assert callable(func)
     assert func(2.0) == pytest.approx(3.0)
 
@@ -1003,7 +1068,6 @@ def test_invalid_gain_to_bias_input_type():
             roic_gain=0.5,
             avalanche_gain=5.0,
             pixel_reset_voltage=3.0,
-            detector_type="new",
             gain_to_bias_func=1234,  # Invalid
             bias_to_node_func=lambda b: 30.0,
         )
@@ -1038,7 +1102,6 @@ def test_per_channel_charge_to_volt_conversion():
         roic_gain=0.5,
         avalanche_gain=3.0,
         pixel_reset_voltage=3.5,
-        detector_type="new",
         bias_to_gain_func=lambda b: b + 1,
         bias_to_node_func=lambda b: 30.0,
     )
@@ -1061,7 +1124,6 @@ def test_charge_to_volt_conversion_new_auto():
         roic_gain=0.5,
         avalanche_gain=3.0,
         pixel_reset_voltage=3.5,
-        detector_type="new",
         bias_to_node_func=lambda b: 40,
         bias_to_gain_func=lambda b: b + 1,
     )
@@ -1078,7 +1140,6 @@ def test_system_gain_new():
         pixel_reset_voltage=3.5,
         adc_bit_resolution=12,
         adc_voltage_range=(0.0, 3.3),
-        detector_type="new",
         bias_to_node_func=lambda b: 40,
         bias_to_gain_func=lambda b: b + 1,
     )
@@ -1106,7 +1167,6 @@ def test_initialize_with_global_gain():
         roic_gain=1e-6,
         avalanche_gain=2.0,
         pixel_reset_voltage=3.5,
-        detector_type="new",
         bias_to_node_func=lambda b: 1e-10,  # large capacitance
         bias_to_gain_func=lambda b: b + 1,
     )
@@ -1138,7 +1198,6 @@ def test_initialize_with_per_channel_gains():
         roic_gain=1e-6,
         avalanche_gain=2.0,
         pixel_reset_voltage=3.5,
-        detector_type="new",
         bias_to_node_func=lambda b: 1e-10,
         bias_to_gain_func=lambda b: b + 1,
     )
