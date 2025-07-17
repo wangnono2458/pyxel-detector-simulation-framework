@@ -202,6 +202,9 @@ check_untyped_defs = true
 # no_implicit_reexport = true
 strict_equality = true
 
+enable_error_code = [ "exhaustive-match" ]
+
+
 [[tool.mypy.overrides]]
 module = [
     "pyxel._version",
