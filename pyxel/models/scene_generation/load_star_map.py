@@ -12,12 +12,17 @@ import sys
 import time
 import warnings
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from enum import Enum
+from typing import TYPE_CHECKING, Literal
 
+import astropy.units as u
 import numpy as np
 import requests
 import xarray as xr
+from astropy.coordinates import SkyCoord
+from astropy.table import Column, Table
 from astropy.units import Quantity
+from astroquery.vizier import Vizier
 from specutils import Spectrum
 from synphot import SourceSpectrum
 
@@ -28,6 +33,34 @@ if TYPE_CHECKING:
     import pandas as pd
     from astropy.io.votable import tree
     from astropy.table import Table
+
+
+class VizierCatalog(Enum):
+    """Supported Vizier catalogs from Vizier service."""
+
+    hipparcos = "I/239/hip_main"
+    TYCHO2 = "I/259/tyc2"
+
+    def id(self) -> str:
+        """Return the catalog ID string for Vizier query."""
+        return self.value
+
+
+class CatalogType(Enum):
+    GAIA = "gaia"
+    hipparcos = "hipparcos"
+    TYCHO2 = "tycho"
+
+    def is_vizier(self) -> bool:
+        return self in {CatalogType.hipparcos, CatalogType.TYCHO2}
+
+    def to_vizier_catalog(self) -> VizierCatalog:
+        if self == CatalogType.hipparcos:
+            return VizierCatalog.hipparcos
+        elif self == CatalogType.TYCHO2:
+            return VizierCatalog.TYCHO2
+        else:
+            raise ValueError(f"{self.name} is not a Vizier catalog.")
 
 
 def get_vega_spectrum(
@@ -775,15 +808,247 @@ def load_objects_from_gaia(
     return ds
 
 
+def retrieve_from_vizier_catalog(
+    ra: float,
+    dec: float,
+    radius: float,
+    catalog: VizierCatalog,
+    row_limit: int = -1,
+) -> Table:
+    """
+    Retrieve sources from a Vizier catalog given coordinates and FOV.
+
+    Parameters
+    ----------
+    ra : float
+        Right Ascension in degrees.
+    dec : float
+        Declination in degrees.
+    radius : float
+        Search radius in degrees.
+    catalog : VizierCatalog
+        Catalog enum (HIPPARCOS, TYCHO2).
+    row_limit : int
+        Maximum number of rows to return. Use -1 for unlimited.
+
+    Returns
+    -------
+    Table
+        Astropy Table with source data.
+
+    Raises
+    ------
+    ValueError
+        If no results are found or required columns are missing.
+    """
+    coord = SkyCoord(ra=ra, dec=dec, unit="deg")
+    vizier = Vizier(columns=["*"])
+    vizier.ROW_LIMIT = row_limit
+
+    result = vizier.query_region(
+        coord, radius=Quantity(radius, unit="deg"), catalog=catalog.id()
+    )
+
+    if not result:
+        raise ValueError(
+            f"No sources found in catalog '{catalog.name}' at given coordinates."
+        )
+
+    table = result[0]
+
+    if len(table) == 0:
+        raise ValueError(f"Catalog '{catalog.name}' returned an empty table.")
+
+    return table
+
+
+def normalize_vizier_dataset(ds: xr.Dataset) -> xr.Dataset:
+    """
+    Normalize field names in a Vizier-derived xarray.Dataset.
+
+    This function renames common coordinate/magnitude fields to standard names
+    used across different catalogs.
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        Dataset from Vizier query.
+
+    Returns
+    -------
+    xr.Dataset
+        Dataset with normalized variable names: 'ra', 'dec', 'mag'...
+    """
+    rename_map = {}
+
+    # Coordinate fields (most common variants)
+    for ra_candidate in ["RAICRS", "RA_ICRS", "RAJ2000", "RAdeg"]:
+        if ra_candidate in ds:
+            rename_map[ra_candidate] = "ra"
+            break
+
+    for dec_candidate in ["DEICRS", "DE_ICRS", "DEJ2000", "DEdeg"]:
+        if dec_candidate in ds:
+            rename_map[dec_candidate] = "dec"
+            break
+
+    # Magnitude fields (often named differently)
+    for mag_candidate in ["Hpmag", "VTmag", "Vmag", "BTmag", "phot_g_mean_mag"]:
+        if mag_candidate in ds:
+            rename_map[mag_candidate] = "mag"
+            break
+
+    # Apply renaming
+    ds = ds.rename(rename_map)
+
+    # Optional: units
+    if "ra" in ds:
+        ds["ra"].attrs.setdefault("units", "deg")
+    if "dec" in ds:
+        ds["dec"].attrs.setdefault("units", "deg")
+    if "mag" in ds:
+        ds["mag"].attrs.setdefault("units", "mag")
+
+    return ds
+
+
+def convert_vizier_table_to_dataset(table: "Table") -> xr.Dataset:
+    """
+    Convert an Astropy Table (from Vizier) into an xarray.Dataset.
+
+    Parameters
+    ----------
+    table : Table
+        Astropy Table returned by Vizier.
+
+    Returns
+    -------
+    xr.Dataset
+        Dataset with all columns and metadata from the table.
+    """
+    df = table.to_pandas().reset_index(drop=True)
+    ds = df.to_xarray()
+
+    # Copy units (if present) from the Table to Dataset attrs
+    for col in table.colnames:
+        if hasattr(table[col], "unit") and table[col].unit is not None:
+            ds[col].attrs["units"] = str(table[col].unit)
+
+    return ds
+
+
+def skycoord_to_xy(
+    ra: np.ndarray,
+    dec: np.ndarray,
+    center_ra: float,
+    center_dec: float,
+    fov_radius: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    sources = SkyCoord(ra=ra * u.deg, dec=dec * u.deg, frame="icrs")
+    center = SkyCoord(ra=center_ra * u.deg, dec=center_dec * u.deg, frame="icrs")
+
+    separation = center.separation(sources).deg
+    angle = center.position_angle(sources).rad
+
+    dx = separation * np.sin(angle)
+    dy = separation * np.cos(angle)
+
+    x = dx / fov_radius
+    y = dy / fov_radius
+
+    return x, y
+
+
+def load_objects_from_vizier(
+    right_ascension: float,
+    declination: float,
+    fov_radius: float,
+    catalog: VizierCatalog,
+    rows: int,
+    cols: int,
+) -> xr.Dataset:
+    """
+    Load sources from Vizier catalog and return them as a Pyxel-ready Dataset,
+    with positions in arcsec centered on the field center, matching the GAIA logic.
+    """
+    table = retrieve_from_vizier_catalog(
+        ra=right_ascension,
+        dec=declination,
+        radius=fov_radius,
+        catalog=catalog,
+    )
+
+    ds = convert_vizier_table_to_dataset(table)
+    ds = normalize_vizier_dataset(ds)
+
+    # ra = ds["ra"].values
+    # dec = ds["dec"].values
+    mag = ds["mag"].values
+    flux = 10 ** (-0.4 * mag)
+    # weight = flux.copy()
+
+    if catalog == VizierCatalog.TYCHO2:
+        wavelength = 530.0
+    elif catalog == VizierCatalog.hipparcos:
+        wavelength = 518.0
+    else:
+        wavelength = 550.0
+
+    # # RA/DEC offset from center → in degrees
+    # x_deg, y_deg = skycoord_to_xy(
+    #     ra=ra,
+    #     dec=dec,
+    #     center_ra=right_ascension,
+    #     center_dec=declination,
+    #     fov_radius=fov_radius,
+    # )
+
+    # Convert to arcsec (matching GAIA logic)
+    # x_arcsec = x_deg * 3600
+    # y_arcsec = y_deg * 3600
+
+    ra = Quantity(ds["ra"], unit=ds["ra"].units).to("arcsec")
+    dec = Quantity(ds["dec"], unit=ds["dec"].units).to("arcsec")
+
+    ref = np.arange(len(ra))
+
+    dataset = xr.Dataset(
+        data_vars={
+            "x": (("ref",), ra.value, {"units": str(ra.unit)}),
+            "y": (("ref",), dec.value, {"units": str(dec.unit)}),
+            "weight": (("ref",), np.ones_like(flux), {"units": ""}),
+            "flux": (
+                ("ref", "wavelength"),
+                np.expand_dims(flux, axis=1),
+                {"units": "ph / (s * nm * cm2)"},
+            ),
+        },
+        coords={
+            "ref": ref,
+            "wavelength": np.array([wavelength]),
+        },
+        attrs={
+            "catalog": catalog.name,
+            "right_ascension": str(Quantity(right_ascension, "deg")),
+            "declination": str(Quantity(declination, "deg")),
+            "fov_radius": str(Quantity(fov_radius, "deg")),
+        },
+    )
+
+    return dataset
+
+
 def load_star_map(
     detector: Detector,
     right_ascension: float,
     declination: float,
     fov_radius: float,
     extrapolated_spectra: bool = True,
+    band: Literal["Vmag", "VTmag"] | None = None,
+    catalog: Literal["gaia", "tycho", "hipparcos"] = "gaia",
     with_caching: bool = True,
 ):
-    """Generate scene from scopesim Source object loading stars from the GAIA catalog.
+    """Generate scene from scopesim Source object loading stars from the selected catalog.
 
     Parameters
     ----------
@@ -805,13 +1070,35 @@ def load_star_map(
     For more information, you can find an example here:
     :external+pyxel_data:doc:`examples/models/scene_generation/tutorial_example_scene_generation`.
     """
-    ds: xr.Dataset = load_objects_from_gaia(
-        right_ascension=right_ascension,
-        declination=declination,
-        fov_radius=fov_radius,
-        extrapolated_spectra=extrapolated_spectra,
-        with_caching=with_caching,
-    )
+    cat_type = CatalogType(catalog)
 
-    # Check that there are no other scene
+    # Band validation
+    valid_band_map = {CatalogType.TYCHO2: {"VTmag"}, CatalogType.hipparcos: {"Vmag"}}
+
+    if band not in valid_band_map.get(cat_type, set()):
+        raise ValueError(
+            f"Invalid band '{band}' for catalog '{catalog}'. "
+            f"Allowed: {valid_band_map.get(cat_type, set())}"
+        )
+
+    # Load data
+    if cat_type == CatalogType.GAIA:
+        ds = load_objects_from_gaia(
+            right_ascension=right_ascension,
+            declination=declination,
+            fov_radius=fov_radius,
+            extrapolated_spectra=extrapolated_spectra,
+            with_caching=with_caching,
+        )
+    else:
+        vizier_cat = cat_type.to_vizier_catalog()
+        ds = load_objects_from_vizier(
+            right_ascension=right_ascension,
+            declination=declination,
+            fov_radius=fov_radius,
+            catalog=vizier_cat,
+            rows=detector.geometry.row,
+            cols=detector.geometry.col,
+        )
+
     detector.scene.add_source(ds)
