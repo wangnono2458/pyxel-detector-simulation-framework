@@ -11,15 +11,21 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 
 ## UNRELEASED
 
+
+
 ### Core
 
 ### Documentation
 
 ### Models
+* Cosmix model incorrectly checks if particle within detector.
+  See issue [#836](https://gitlab.com/esa/pyxel/-/issues/936).
+  (See [!1079](https://gitlab.com/esa/pyxel/-/merge_requests/1079)).
 
 ### Others
 * Add compatibility with `lacosmic` 1.3+.
-  (See [!1077](https://gitlab.com/esa/pyxel/-/merge_requests/1077)).
+  (See [!1077](https://gitlab.com/esa/pyxel/-/merge_requests/1077)
+  and [!1078](https://gitlab.com/esa/pyxel/-/merge_requests/1078).
 
 
 ## 2.11.2 / 2025-06-23
