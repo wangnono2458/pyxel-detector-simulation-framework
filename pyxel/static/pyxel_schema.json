@@ -6715,29 +6715,18 @@
     },
     "ModelSceneGenerationLoadStarMap": {
       "additionalProperties": false,
-      "description": "Generate scene from a selected catalog.",
+      "description": "Generate scene from scopesim Source object loading stars from the GAIA catalog.",
       "properties": {
         "arguments": {
           "additionalProperties": false,
           "properties": {
-            "catalog": {
-              "default": "gaia",
-              "description": "Name of the catalog to use. Default is 'gaia'",
-              "enum": [
-                "gaia",
-                "tycho",
-                "hipparcos"
-              ],
-              "title": "catalog",
-              "type": "string"
-            },
             "declination": {
               "description": "Declination (DEC) of the pointing center in degree.",
               "title": "declination",
               "type": "number"
             },
             "fov_radius": {
-              "description": "Radius of the field of view (FOV) aroung the pointing center in degree.",
+              "description": "Radius of the field of view (FOV) around the pointing center in degree.",
               "title": "fov_radius",
               "type": "number"
             },
