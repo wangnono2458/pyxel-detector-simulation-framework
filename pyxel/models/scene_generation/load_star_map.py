@@ -12,8 +12,7 @@ import sys
 import time
 import warnings
 from collections.abc import Sequence
-from enum import Enum
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 import numpy as np
 import requests
@@ -28,35 +27,6 @@ from pyxel.detectors import Detector
 if TYPE_CHECKING:
     from astropy.io.votable import tree
     from astropy.table import Column, Table
-
-
-class GaiaPassBand(Enum):
-    """Define different type of magnitude provided by the Gaia database.
-
-    More information available here: https://www.cosmos.esa.int/web/gaia/iow_20180316
-    """
-
-    BluePhotometer = "blue_photometer"  # Wavelength from 330 nm to 680 nm
-    GaiaBand = "gaia_band"  # Wavelength from 330 nm to 1050 nm
-    RedPhotometer = "red_photometer"  # Wavelength from 640 nm to 1050 nm
-
-    def get_magnitude_key(self) -> str:
-        """Return the Gaia magnitude keyword.
-
-        Examples
-        --------
-        >>> band = GaiaPassBand.BluePhotometer
-        >>> band.get_magnitude_key()
-        'phot_bp_mean_map'
-        """
-        if self is GaiaPassBand.BluePhotometer:
-            return "phot_bp_mean_mag"
-        elif self is GaiaPassBand.GaiaBand:
-            return "phot_g_mean_mag"
-        elif self is GaiaPassBand.RedPhotometer:
-            return "phot_rp_mean_mag"
-        else:
-            raise NotImplementedError
 
 
 def compute_flux(wavelength: Quantity, flux: Quantity) -> Quantity:
@@ -649,7 +619,6 @@ def load_star_map(
     right_ascension: float,
     declination: float,
     fov_radius: float,
-    band: Literal["blue_photometer", "gaia_band", "red_photometer"] = "blue_photometer",
     with_caching: bool = True,
 ):
     """Generate scene from scopesim Source object loading stars from the GAIA catalog.
@@ -663,9 +632,7 @@ def load_star_map(
     declination : float
         Declination (DEC) of the pointing center in degree.
     fov_radius : float
-        Radius of the field of view (FOV) aroung the pointing center in degree.
-    catalog : 'gaia', 'tycho' or 'hipparcos'
-        Name of the catalog to use. Default is 'gaia'
+        Radius of the field of view (FOV) around the pointing center in degree.
     with_caching : bool
         Enable/Disable caching queries.
 
@@ -674,13 +641,10 @@ def load_star_map(
     For more information, you can find an example here:
     :external+pyxel_data:doc:`examples/models/scene_generation/tutorial_example_scene_generation`.
     """
-    band_pass: GaiaPassBand = GaiaPassBand(band)
-
     ds: xr.Dataset = load_objects_from_gaia(
         right_ascension=right_ascension,
         declination=declination,
         fov_radius=fov_radius,
-        band_pass=band_pass,
         with_caching=with_caching,
     )
 
