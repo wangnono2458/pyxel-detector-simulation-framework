@@ -11,16 +11,20 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 
 ## UNRELEASED
 
-
-
 ### Core
 
 ### Documentation
 
 ### Models
-* Cosmix model incorrectly checks if particle within detector.
+* [`Cosmix`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_generation_models.html#cosmix-cosmic-ray-model)
+   model in [Charge Generation](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_generation_models.html#)
+   model groups incorrectly checks if particle within detector.
   See issue [#836](https://gitlab.com/esa/pyxel/-/issues/936).
   (See [!1079](https://gitlab.com/esa/pyxel/-/merge_requests/1079)).
+* Use `weight` in model [`load_star_map`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/scene_generation_models.html#load-star-map)
+  from [Scene Generation](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/scene_generation_models.html#)
+  model groups.
+  (See [!1080](https://gitlab.com/esa/pyxel/-/merge_requests/1080)).
 
 ### Others
 * Add compatibility with `lacosmic` 1.3+.
