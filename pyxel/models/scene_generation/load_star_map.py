@@ -389,7 +389,7 @@ def _retrieve_objects_from_gaia(
     )
 
     vega_table: Table = Table.from_pandas(
-        vega_dataarray.to_pandas().reset_index(),
+        vega_dataarray.to_pandas().reset_index("wavelength"),
         units={
             "wavelength": vega_dataarray["wavelength"].units,
             "flux": vega_dataarray.units,
