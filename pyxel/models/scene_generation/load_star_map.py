@@ -14,13 +14,9 @@ import warnings
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-import astropy.units as u
 import numpy as np
-import pandas as pd
 import requests
 import xarray as xr
-from astropy.coordinates import SkyCoord
-from astropy.table import Table
 from astropy.units import Quantity
 from specutils import Spectrum
 from synphot import SourceSpectrum
@@ -29,8 +25,82 @@ from pyxel import util
 from pyxel.detectors import Detector
 
 if TYPE_CHECKING:
+    import pandas as pd
     from astropy.io.votable import tree
-    from astropy.table import Column, Table
+    from astropy.table import Table
+
+
+def get_vega_spectrum(
+    start_wavelength: float = 336.0,
+    stop_wavelength: float = 1020.0,
+    step_wavelength: float = 2.0,
+) -> xr.DataArray:
+    """Return the spectral energy distribution spectrum of the reference Vega star.
+
+    Parameters
+    ----------
+    start_wavelength : float, optional
+        The starting wavelength of the spectrum in nm. Default: 336.0
+    stop_wavelength : float, optional
+        The ending wavelength of the spectrum in nm. Default: 1020.0
+    step_wavelength : float, optional
+        The sampling interval between wavelengths in nm. Default: 2.0
+
+    Returns
+    -------
+    DataArray
+
+    Examples
+    --------
+    >>> spectrum = get_vega_spectrum()
+    <xarray.DataArray 'flux' (wavelength: 343)> Size: 3kB
+    array([3.26469623e-11, 3.26203266e-11, 3.30065817e-11, 3.26932451e-11,
+    ...
+           6.09989571e-12, 6.11400767e-12, 6.09219194e-12])
+    Coordinates:
+    * wavelength  (wavelength) float64 3kB 336.0 338.0 ... 1.018e+03 1.02e+03
+    Attributes:
+        units:    W / (nm m2)
+    """
+    # Late import
+    import numpy as np
+    import xarray as xr
+    from astropy.units import Quantity, spectral_density
+    from synphot import SourceSpectrum
+
+    # Get the wavelengths in nm
+    wavelengths_1d = Quantity(
+        np.arange(
+            start=start_wavelength,
+            stop=stop_wavelength + step_wavelength,
+            step=step_wavelength,
+        ),
+        unit="nm",
+    )
+
+    wavelengths = xr.DataArray(
+        np.array(wavelengths_1d),
+        dims="wavelength",
+        coords={"wavelength": np.array(wavelengths_1d)},
+        attrs={"units": str(wavelengths_1d.unit)},
+    )
+
+    # Load Vega spectrum
+    vega = SourceSpectrum.from_vega()
+
+    # Convert the Vega spectrum from "PHOTLAM" (="ph / (Angstrom s cm2)") to "W / (nm m2)"
+    spectrum_1d: Quantity = vega(wavelengths_1d).to(
+        "W / (nm m2)",
+        equivalencies=spectral_density(wavelengths_1d),
+    )
+
+    return xr.DataArray(
+        np.array(spectrum_1d),
+        dims="wavelength",
+        coords={"wavelength": wavelengths},
+        name="flux",
+        attrs={"units": str(spectrum_1d.unit)},
+    )
 
 
 def compute_flux(wavelength: Quantity, flux: Quantity) -> Quantity:
@@ -314,38 +384,23 @@ def _retrieve_objects_from_gaia(
         lambda x: 10 ** (-0.4 * x)
     )
 
-    # Get A0V spectrum
-    start_wavelength, stop_wavelength = 336.0, 1020
-    step_wavelength = 2.0
-
-    a0v_dataarray: xr.DataArray = get_vega_a0v_spectrum()
-
-    wavelengths_1d = np.arange(
-        start=start_wavelength,
-        stop=stop_wavelength + step_wavelength,
-        step=step_wavelength,
-    )
-    wavelengths = xr.DataArray(
-        wavelengths_1d,
-        dims="wavelength",
-        coords={"wavelength": wavelengths_1d},
-        attrs={"units": a0v_dataarray["wavelength"].units},
+    vega_dataarray: xr.DataArray = get_vega_spectrum(
+        start_wavelength=336.0, stop_wavelength=1020.0, step_wavelength=2.0
     )
 
-    a0v_spectra: xr.DataArray = a0v_dataarray.interp(wavelength=wavelengths).rename(
-        "flux"
-    )
-    a0v_spectra["wavelength"].attrs = {"units": wavelengths.units}
-    a0v_table: Table = Table.from_pandas(
-        a0v_spectra.to_pandas().reset_index(),
+    vega_table: Table = Table.from_pandas(
+        vega_dataarray.to_pandas().reset_index(),
         units={
-            "wavelength": a0v_spectra["wavelength"].units,
-            "flux": a0v_spectra.units,
+            "wavelength": vega_dataarray["wavelength"].units,
+            "flux": vega_dataarray.units,
         },
     )
 
+    # TODO: Build a Dataset with
+    #       - weight   (ref)
+    #       - flux     (ref, wavelength)
     spectra_extrapolated: dict[int, tuple[Table, float]] = {
-        int(row[source_key]): (a0v_table, float(row["weight"]))
+        int(row[source_key]): (vega_table, float(row["weight"]))
         for _, row in df_without_spectra.iterrows()
     }
 
@@ -504,7 +559,7 @@ def retrieve_from_gaia(
 
     ds["wavelength"].attrs = {"units": str(first_spectrum["wavelength"].unit)}
     ds["flux"].attrs = {"units": str(first_spectrum["flux"].unit)}
-    ds["flux_error"].attrs = {"units": str(first_spectrum["flux_error"].unit)}
+    # ds["flux_error"].attrs = {"units": str(first_spectrum["flux_error"].unit)}
     # ds["flux_photlam"].attrs = {"units": str(first_spectrum["flux_photlam"].unit)}
 
     ds["ra"].attrs = {
@@ -512,18 +567,18 @@ def retrieve_from_gaia(
         "units": str(positions_table["ra"].unit),
     }
     ds["dec"].attrs = {"name": "Declination", "units": str(positions_table["dec"].unit)}
-    ds["phot_bp_mean_mag"].attrs = {
-        "name": "Mean magnitude in the integrated BP band (from 330 nm to 680 nm)",
-        "units": str(positions_table["phot_bp_mean_mag"].unit),
-    }
+    # ds["phot_bp_mean_mag"].attrs = {
+    #     "name": "Mean magnitude in the integrated BP band (from 330 nm to 680 nm)",
+    #     "units": str(positions_table["phot_bp_mean_mag"].unit),
+    # }
     ds["phot_g_mean_mag"].attrs = {
         "name": "Mean magnitude in the G band (from 330 nm to 1050 nm)",
         "units": str(positions_table["phot_g_mean_mag"].unit),
     }
-    ds["phot_rp_mean_mag"].attrs = {
-        "name": "Mean magnitude in the integrated RP band (from 640 nm to 1050 nm)",
-        "units": str(positions_table["phot_rp_mean_mag"].unit),
-    }
+    # ds["phot_rp_mean_mag"].attrs = {
+    #     "name": "Mean magnitude in the integrated RP band (from 640 nm to 1050 nm)",
+    #     "units": str(positions_table["phot_rp_mean_mag"].unit),
+    # }
 
     return ds
 
@@ -725,7 +780,7 @@ def load_star_map(
     right_ascension: float,
     declination: float,
     fov_radius: float,
-    extrapolated_spectra: bool = False,
+    extrapolated_spectra: bool = True,
     with_caching: bool = True,
 ):
     """Generate scene from scopesim Source object loading stars from the GAIA catalog.
