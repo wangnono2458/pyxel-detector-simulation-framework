@@ -21,10 +21,12 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
    model groups incorrectly checks if particle within detector.
   See issue [#836](https://gitlab.com/esa/pyxel/-/issues/936).
   (See [!1079](https://gitlab.com/esa/pyxel/-/merge_requests/1079)).
-* Use `weight` in model [`load_star_map`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/scene_generation_models.html#load-star-map)
+* Add option to retrieve all source objects from 
+  [`load_star_map`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/scene_generation_models.html#load-star-map)
   from [Scene Generation](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/scene_generation_models.html#)
   model groups.
-  (See [!1080](https://gitlab.com/esa/pyxel/-/merge_requests/1080)).
+  (See [!1080](https://gitlab.com/esa/pyxel/-/merge_requests/1080)
+  and [!1081](https://gitlab.com/esa/pyxel/-/merge_requests/1081)).
 
 ### Others
 * Add compatibility with `lacosmic` 1.3+.
