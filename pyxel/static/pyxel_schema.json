@@ -6725,6 +6725,12 @@
               "title": "declination",
               "type": "number"
             },
+            "extrapolated_spectra": {
+              "default": true,
+              "description": "If True (default), extrapolates A0V spectra for Gaia sources that lack XP spectra.",
+              "title": "extrapolated_spectra",
+              "type": "boolean"
+            },
             "fov_radius": {
               "description": "Radius of the field of view (FOV) around the pointing center in degree.",
               "title": "fov_radius",
