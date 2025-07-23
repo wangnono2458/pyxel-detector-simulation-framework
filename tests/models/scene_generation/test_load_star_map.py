@@ -174,7 +174,7 @@ def spectra_dct(
     spectra2: xr.Dataset,
     spectra3: xr.Dataset,
     spectra4: xr.Dataset,
-) -> dict[int, Table]:
+) -> dict[int, tuple[Table, float]]:
     """Return spectra for the four objects as dictionary."""
     dct = {}
     for source_id, spectra in zip(
@@ -185,7 +185,7 @@ def spectra_dct(
         table["flux"].unit = "W / (nm * m2)"
         table["flux_error"].unit = "W / (nm * m2)"
 
-        dct[source_id] = table
+        dct[source_id] = table, 1.0
 
     return dct
 
@@ -200,7 +200,7 @@ def source1_gaia(
     spectra4: xr.Dataset,
 ) -> xr.Dataset:
     """Build a Dataset object retrieved from the Gaia database."""
-    return xr.merge(
+    ds = xr.merge(
         [
             positions,
             xr.concat(
@@ -216,6 +216,9 @@ def source1_gaia(
             ),
         ]
     )
+    ds["weight"] = xr.DataArray([1.0, 1.0, 1.0, 1.0], dims="source_id")
+
+    return ds
 
 
 @pytest.fixture
@@ -253,6 +256,7 @@ def test_retrieve_from_gaia(
         right_ascension=0.0,  # This parameter is not important
         declination=0.0,  # This parameter is not important
         fov_radius=0.0,  # This parameter is not important
+        extrapolated_spectra=False,
     )
 
     expected_ds = source1_gaia
@@ -301,13 +305,13 @@ def test_compute_flux_compare_to_manual_conversion():
 
 @pytest.mark.skipif(sys.version_info < (3, 11), reason="Requires Python 3.11+")
 def test_load_star_map(
-    mocker: pytest_mock.MockerFixture,
-    ccd_10x10: CCD,
-    positions_table: Table,
-    spectra_dct: dict[int, Table],
-    wavelengths: xr.DataArray,
-    source1_gaia,
-    source1_pyxel: xr.DataTree,
+    mocker: pytest_mock.MockerFixture,  # Fixture
+    ccd_10x10: CCD,  # Fixture
+    positions_table: Table,  # Fixture
+    spectra_dct: dict[int, Table],  # Fixture
+    wavelengths: xr.DataArray,  # Fixture
+    source1_gaia,  # Fixture
+    source1_pyxel: xr.DataTree,  # Fixture
 ):
     """Test model 'load_star_map'."""
 
