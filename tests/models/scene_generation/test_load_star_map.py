@@ -6,17 +6,17 @@
 #  the terms contained in the file ‘LICENCE.txt’.
 import sys
 
-import astropy.constants as const
-import astropy.units as u
 import numpy as np
 import pytest
 import xarray as xr
+from astropy import constants
 from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
+from astropy.units import Quantity, Unit, spectral_density
 
 from pyxel.detectors import CCD
 from pyxel.models.scene_generation import load_star_map
-from pyxel.models.scene_generation.load_star_map import GaiaPassBand, retrieve_from_gaia
+from pyxel.models.scene_generation.load_star_map import retrieve_from_gaia
 from pyxel.util import get_cache
 
 # This is equivalent to 'import pytest_mock'
@@ -76,11 +76,11 @@ def positions(source_ids: list[int]) -> xr.Dataset:
 def positions_table(positions: xr.Dataset) -> Table:
     """Return source objects as an Astropy Table."""
     table = Table.from_pandas(positions.to_pandas().reset_index())
-    table["ra"].unit = u.deg
-    table["dec"].unit = u.deg
-    table["phot_bp_mean_mag"].unit = u.mag
-    table["phot_g_mean_mag"].unit = u.mag
-    table["phot_rp_mean_mag"].unit = u.mag
+    table["ra"].unit = "deg"
+    table["dec"].unit = "deg"
+    table["phot_bp_mean_mag"].unit = "mag"
+    table["phot_g_mean_mag"].unit = "mag"
+    table["phot_rp_mean_mag"].unit = "mag"
 
     return table
 
@@ -181,9 +181,9 @@ def spectra_dct(
         source_ids, [spectra1, spectra2, spectra3, spectra4], strict=False
     ):
         table: Table = Table.from_pandas(spectra.to_pandas().reset_index())
-        table["wavelength"].unit = u.nm
-        table["flux"].unit = u.W / (u.nm * u.m * u.m)
-        table["flux_error"].unit = u.W / (u.nm * u.m * u.m)
+        table["wavelength"].unit = "nm"
+        table["flux"].unit = "W / (nm * m2)"
+        table["flux_error"].unit = "W / (nm * m2)"
 
         dct[source_id] = table
 
@@ -259,46 +259,21 @@ def test_retrieve_from_gaia(
     xr.testing.assert_equal(ds, expected_ds)
 
 
-@pytest.mark.parametrize(
-    "name, exp_band",
-    [
-        ("blue_photometer", GaiaPassBand.BluePhotometer),
-        ("gaia_band", GaiaPassBand.GaiaBand),
-        ("red_photometer", GaiaPassBand.RedPhotometer),
-    ],
-)
-def test_gaia_passband(name: str, exp_band: GaiaPassBand):
-    """Test class 'GaiaPassBand'."""
-    band = GaiaPassBand(name)
-    assert band is exp_band
-
-
-@pytest.mark.parametrize(
-    "band, exp_result", [(GaiaPassBand.BluePhotometer, "phot_bp_mean_mag")]
-)
-def test_gaia_pass_band_magnitude_key(band: GaiaPassBand, exp_result: str):
-    """Test method 'GaiaPassBand.get_magnitude_key()."""
-    assert isinstance(band, GaiaPassBand)
-
-    result = band.get_magnitude_key()
-    assert result == exp_result
-
-
 def test_compute_flux_compare_to_astropy():
     """Test function 'compute_flux'."""
-    wavelengths = u.Quantity([336.0, 338.0, 1018.0, 1020.0], unit=u.nm)
-    flux = u.Quantity(
+    wavelengths = Quantity([336.0, 338.0, 1018.0, 1020.0], unit="nm")
+    flux = Quantity(
         [4.1858373e-17, 4.1012171e-17, 1.3888942e-17, 1.3445790e-17],
         unit="W / (nm * m2)",
     )
-    expected_flux = u.Quantity(
+    expected_flux = Quantity(
         [0.00070802, 0.00069783, 0.00071177, 0.00069041],
         unit="ph / (Angstrom s cm2)",
     )
 
     # Compute new flux using astropy
     new_flux = [
-        y.to(u.Unit("ph / (Angstrom s cm2)"), equivalencies=u.spectral_density(x))
+        y.to("ph / (Angstrom s cm2)", equivalencies=spectral_density(x))
         for x, y in zip(wavelengths, flux, strict=False)
     ]
 
@@ -307,18 +282,18 @@ def test_compute_flux_compare_to_astropy():
 
 def test_compute_flux_compare_to_manual_conversion():
     """Test function 'compute_flux'."""
-    wavelengths = u.Quantity([336.0, 338.0, 1018.0, 1020.0], unit=u.nm)
-    flux = u.Quantity(
+    wavelengths = Quantity([336.0, 338.0, 1018.0, 1020.0], unit="nm")
+    flux = Quantity(
         [4.1858373e-17, 4.1012171e-17, 1.3888942e-17, 1.3445790e-17],
         unit="W / (nm * m2)",
     )
-    expected_flux = u.Quantity(
+    expected_flux = Quantity(
         [0.00070802, 0.00069783, 0.00071177, 0.00069041],
         unit="ph / (Angstrom s cm2)",
     )
 
     # Compute new flux using the Plank's equation 'E = h * v = h * (c / wavelength)'
-    photon_energy = (const.h * const.c / wavelengths).to(u.J) / u.ph
+    photon_energy = (constants.h * constants.c / wavelengths).to("J") / Unit("ph")
     new_flux = (flux / photon_energy).to("ph / (Angstrom s cm2)")
 
     assert_quantity_allclose(actual=new_flux, desired=expected_flux, rtol=1e-5)
@@ -375,16 +350,16 @@ def test_load_star_map(
         np.array(expected_y), dims="ref", coords={"ref": [0, 1, 2, 3]}
     )
     exp_ds["weight"] = xr.DataArray(
-        np.array(source1_gaia["phot_bp_mean_mag"]),
+        [1.0, 1.0, 1.0, 1.0],
         dims="ref",
         coords={"ref": [0, 1, 2, 3]},
     )
 
-    x = u.Quantity(wavelengths, unit="nm")
-    flux = u.Quantity(source1_gaia["flux"], unit="W / (nm * m2)")
+    x = Quantity(wavelengths, unit="nm")
+    flux = Quantity(source1_gaia["flux"], unit="W / (nm * m2)")
 
     # Compute new flux using the Plank's equation 'E = h * v = h * (c / wavelength)'
-    photon_energy = (const.h * const.c / x).to(u.J) / u.ph
+    photon_energy = (constants.h * constants.c / x).to("J") / Unit("ph")
     new_flux = (flux / photon_energy).to("ph / (nm s cm2)")
 
     flux_converted: xr.DataArray = xr.zeros_like(scene["/list/0"]["flux"])

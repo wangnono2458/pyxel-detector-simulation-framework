@@ -12,8 +12,7 @@ import sys
 import time
 import warnings
 from collections.abc import Sequence
-from enum import Enum
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 import numpy as np
 import requests
@@ -28,35 +27,6 @@ from pyxel.detectors import Detector
 if TYPE_CHECKING:
     from astropy.io.votable import tree
     from astropy.table import Column, Table
-
-
-class GaiaPassBand(Enum):
-    """Define different type of magnitude provided by the Gaia database.
-
-    More information available here: https://www.cosmos.esa.int/web/gaia/iow_20180316
-    """
-
-    BluePhotometer = "blue_photometer"  # Wavelength from 330 nm to 680 nm
-    GaiaBand = "gaia_band"  # Wavelength from 330 nm to 1050 nm
-    RedPhotometer = "red_photometer"  # Wavelength from 640 nm to 1050 nm
-
-    def get_magnitude_key(self) -> str:
-        """Return the Gaia magnitude keyword.
-
-        Examples
-        --------
-        >>> band = GaiaPassBand.BluePhotometer
-        >>> band.get_magnitude_key()
-        'phot_bp_mean_map'
-        """
-        if self is GaiaPassBand.BluePhotometer:
-            return "phot_bp_mean_mag"
-        elif self is GaiaPassBand.GaiaBand:
-            return "phot_g_mean_mag"
-        elif self is GaiaPassBand.RedPhotometer:
-            return "phot_rp_mean_mag"
-        else:
-            raise NotImplementedError
 
 
 def compute_flux(wavelength: Quantity, flux: Quantity) -> Quantity:
@@ -469,7 +439,6 @@ def _load_objects_from_gaia(
     right_ascension: float,
     declination: float,
     fov_radius: float,
-    band: GaiaPassBand = GaiaPassBand.BluePhotometer,
 ) -> xr.Dataset:
     """Load objects from GAIA Catalog for given coordinates and FOV.
 
@@ -481,13 +450,6 @@ def _load_objects_from_gaia(
         DEC coordinate in degree.
     fov_radius : float
         FOV radius of telescope optics.
-    band : GaiaPassBand
-        Define the passband to select.
-        Available values:
-
-        * 'GaiaPassBand.BluePhotometer' is the band from 330 nm to 680 nm
-        * 'GaiaPassBand.GaiaBand' is the band from 330 nm to 1050 nm
-        * 'GaiaPassBand.RedPhotometer' is the band from 640 nm to 1050 nm
 
     Returns
     -------
@@ -538,7 +500,7 @@ def _load_objects_from_gaia(
     y: Quantity = dec_arcsec  # - dec_arcsec.mean()
 
     # Get weights
-    weights_from_gaia: xr.DataArray = ds_from_gaia[band.get_magnitude_key()]
+    weights_from_gaia: np.ndarray = np.ones_like(ds_from_gaia["source_id"], dtype=float)
 
     num_sources = len(ds_from_gaia["source_id"])
     ref_sequence: Sequence[int] = range(num_sources)
@@ -549,13 +511,7 @@ def _load_objects_from_gaia(
     ds["weight"] = xr.DataArray(
         np.asarray(weights_from_gaia, dtype=float),
         dims="ref",
-        attrs={
-            "units": weights_from_gaia.attrs["units"],
-            "name": weights_from_gaia.attrs.get(
-                "name",
-                "Weight",  # default value
-            ),
-        },
+        attrs={"units": "", "name": "weight"},
     )
     ds["flux"] = xr.DataArray(
         np.asarray(flux_converted, dtype=float),
@@ -582,7 +538,6 @@ def load_objects_from_gaia(
     right_ascension: float,
     declination: float,
     fov_radius: float,
-    band_pass: GaiaPassBand = GaiaPassBand.BluePhotometer,
     with_caching: bool = True,
 ) -> xr.Dataset:
     """Load objects from GAIA Catalog for given coordinates and FOV.
@@ -595,13 +550,6 @@ def load_objects_from_gaia(
         DEC coordinate in degree.
     fov_radius : float
         FOV radius of telescope optics.
-    band_pass : GaiaPassBand
-        Define the passband to select.
-        Available values:
-
-        * 'GaiaPassBand.BluePhotometer' is the band from 330 nm to 680 nm
-        * 'GaiaPassBand.GaiaBand' is the band from 330 nm to 1050 nm
-        * 'GaiaPassBand.RedPhotometer' is the band from 640 nm to 1050 nm
     with_caching : bool
         Enable/Disable caching request to GAIA catalog.
 
@@ -630,7 +578,7 @@ def load_objects_from_gaia(
         flux        (ref, wavelength) float64 2.228e-16 2.432e-16 ... 3.693e-15
     """
     # Define a unique key to find/retrieve data in the cache
-    key_cache = (__name__, right_ascension, declination, fov_radius, band_pass)
+    key_cache = (__name__, right_ascension, declination, fov_radius)
 
     start_time: float = time.perf_counter()
 
@@ -650,7 +598,6 @@ def load_objects_from_gaia(
             right_ascension=right_ascension,
             declination=declination,
             fov_radius=fov_radius,
-            band=band_pass,
         )
 
         if with_caching:
@@ -672,7 +619,6 @@ def load_star_map(
     right_ascension: float,
     declination: float,
     fov_radius: float,
-    band: Literal["blue_photometer", "gaia_band", "red_photometer"] = "blue_photometer",
     with_caching: bool = True,
 ):
     """Generate scene from scopesim Source object loading stars from the GAIA catalog.
@@ -682,33 +628,23 @@ def load_star_map(
     detector : Detector
         Pyxel Detector object.
     right_ascension : float
-        RA coordinate in degree.
+        Right ascension (RA) of the pointing center in degree.
     declination : float
-        DEC coordinate in degree.
+        Declination (DEC) of the pointing center in degree.
     fov_radius : float
-        FOV radius of telescope optics.
-    band : 'blue_photometer', 'gaia_band' or 'red_photometer'
-        Define the band to use.
-        Available values:
-
-        * 'blue_photometer' is the band from 330 nm to 680 nm
-        * 'gaia_band' is the band from 330 nm to 1050 nm
-        * 'red_photometer' is the band from 640 nm to 1050 nm
+        Radius of the field of view (FOV) around the pointing center in degree.
     with_caching : bool
-        Enable/Disable caching request to GAIA catalog.
+        Enable/Disable caching queries.
 
     Notes
     -----
     For more information, you can find an example here:
     :external+pyxel_data:doc:`examples/models/scene_generation/tutorial_example_scene_generation`.
     """
-    band_pass: GaiaPassBand = GaiaPassBand(band)
-
     ds: xr.Dataset = load_objects_from_gaia(
         right_ascension=right_ascension,
         declination=declination,
         fov_radius=fov_radius,
-        band_pass=band_pass,
         with_caching=with_caching,
     )
 

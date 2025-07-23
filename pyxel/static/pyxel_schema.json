@@ -6720,35 +6720,24 @@
         "arguments": {
           "additionalProperties": false,
           "properties": {
-            "band": {
-              "default": "blue_photometer",
-              "description": "Define the band to use. Available values:  * 'blue_photometer' is the band from 330 nm to 680 nm * 'gaia_band' is the band from 330 nm to 1050 nm * 'red_photometer' is the band from 640 nm to 1050 nm",
-              "enum": [
-                "blue_photometer",
-                "gaia_band",
-                "red_photometer"
-              ],
-              "title": "band",
-              "type": "string"
-            },
             "declination": {
-              "description": "DEC coordinate in degree.",
+              "description": "Declination (DEC) of the pointing center in degree.",
               "title": "declination",
               "type": "number"
             },
             "fov_radius": {
-              "description": "FOV radius of telescope optics.",
+              "description": "Radius of the field of view (FOV) around the pointing center in degree.",
               "title": "fov_radius",
               "type": "number"
             },
             "right_ascension": {
-              "description": "RA coordinate in degree.",
+              "description": "Right ascension (RA) of the pointing center in degree.",
               "title": "right_ascension",
               "type": "number"
             },
             "with_caching": {
               "default": true,
-              "description": "Enable/Disable caching request to GAIA catalog.",
+              "description": "Enable/Disable caching queries.",
               "title": "with_caching",
               "type": "boolean"
             }

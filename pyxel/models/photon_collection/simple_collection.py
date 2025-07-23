@@ -540,11 +540,15 @@ def simple_collection(
 
     else:
         # get flux in ph/(s nm cm^2)
-        flux = Quantity(np.asarray(scene_data["flux"]), unit=scene_data["flux"].units)
+        flux_with_weight: xr.DataArray = scene_data["flux"] * scene_data["weight"]
+
+        flux = Quantity(flux_with_weight, unit=scene_data["flux"].units)
 
         # get flux converted to ph/nm
         converted_flux_3d: Quantity = convert_flux(
-            flux=flux, t_exp=time, aperture=aperture
+            flux=flux,
+            t_exp=time,
+            aperture=aperture,
         )
 
         # load converted flux to scene_data dataset
