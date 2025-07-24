@@ -28,8 +28,7 @@ current status, in Image Sensing Technologies: Materials, Devices, Systems, and 
 2019, vol. 10980, no. May, p. 20.
 """
 
-import math
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -437,10 +436,10 @@ class APDCharacteristics:
         def inverse(y: float) -> float:
             try:
                 return float(brentq(lambda x: func(x) - y, x_min, x_max))
-            except ValueError:
+            except ValueError as exc:
                 raise ValueError(
                     f"Cannot invert function in range [{x_min}, {x_max}] for value {y}"
-                ) from None
+                ) from exc
 
         return inverse
 
