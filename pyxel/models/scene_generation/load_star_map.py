@@ -12,7 +12,7 @@ import sys
 import time
 import warnings
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 import numpy as np
 import requests
@@ -30,6 +30,10 @@ from pyxel.detectors import Detector
 if TYPE_CHECKING:
     import pandas as pd
     from astropy.io.votable import tree
+
+# Define constants for the Catalog Identifiers
+HIPPARCOS: Final[str] = "I/239/hip_main"
+TYCHO2: Final[str] = "I/259/tyc2"
 
 
 def get_vega_spectrum_photon(
@@ -1101,9 +1105,9 @@ def load_star_map(
 
         case "hipparcos" | "tycho":
             if catalog == "hipparcos":
-                catalog_id = "I/239/hip_main"
+                catalog_id = HIPPARCOS
             else:
-                catalog_id = "I/259/tyc2"
+                catalog_id = TYCHO2
 
             ds = load_objects_from_vizier(
                 right_ascension=right_ascension,

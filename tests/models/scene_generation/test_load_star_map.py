@@ -17,6 +17,8 @@ from astropy.units import Quantity, Unit, spectral_density
 from pyxel.detectors import CCD
 from pyxel.models.scene_generation import load_star_map
 from pyxel.models.scene_generation.load_star_map import (
+    HIPPARCOS,
+    TYCHO2,
     retrieve_from_gaia,
     retrieve_from_vizier_catalog,
 )
@@ -381,8 +383,8 @@ def test_load_star_map(
 @pytest.mark.parametrize(
     "catalog_id",
     [
-        pytest.param("I/239/hip_main", id="hipparcos"),
-        pytest.param("I/259/tyc2", id="tycho"),
+        pytest.param(HIPPARCOS, id="hipparcos"),
+        pytest.param(TYCHO2, id="tycho"),
     ],
 )
 def test_retrieve_from_vizier_catalog_valid(catalog_id):
@@ -431,7 +433,7 @@ def test_retrieve_from_vizier_catalog_no_sources():
     """Test case when the region contains no sources."""
     with pytest.raises(ValueError, match="No sources found in catalog"):
         retrieve_from_vizier_catalog(
-            catalog_id="I/239/hip_main",
+            catalog_id=HIPPARCOS,
             ra=0.0,
             dec=0.0,
             radius=0.001,  # Very small FOV in empty region
@@ -441,7 +443,7 @@ def test_retrieve_from_vizier_catalog_no_sources():
 def test_retrieve_from_vizier_catalog_row_limit():
     """Test that row_limit is respected."""
     table = retrieve_from_vizier_catalog(
-        catalog_id="I/259/tyc2",
+        catalog_id=TYCHO2,
         ra=88.8,
         dec=7.4,
         radius=10.0,  # large radius to ensure many stars
@@ -459,7 +461,7 @@ def test_retrieve_from_vizier_catalog_column_check():
     (in Vizier naming style) are present.
     """
     table = retrieve_from_vizier_catalog(
-        catalog_id="I/259/tyc2",
+        catalog_id=TYCHO2,
         ra=88.8,
         dec=7.4,
         radius=2.0,
@@ -477,14 +479,14 @@ def test_retrieve_from_multiple_vizier_catalogs():
     ra, dec, radius = 88.8, 7.4, 2.0
 
     table_hip = retrieve_from_vizier_catalog(
-        catalog_id="I/239/hip_main",
+        catalog_id=HIPPARCOS,
         ra=ra,
         dec=dec,
         radius=radius,
     )
 
     table_tycho = retrieve_from_vizier_catalog(
-        catalog_id="I/259/tyc2",
+        catalog_id=TYCHO2,
         ra=ra,
         dec=dec,
         radius=radius,
@@ -502,7 +504,7 @@ def test_retrieve_vizier_sources_within_radius():
     ra, dec, radius_deg = 88.8, 7.4, 2.0
 
     table = retrieve_from_vizier_catalog(
-        catalog_id="I/259/tyc2",
+        catalog_id=TYCHO2,
         ra=ra,
         dec=dec,
         radius=radius_deg,
@@ -524,7 +526,7 @@ def test_retrieve_vizier_sources_within_radius():
 def test_retrieve_vizier_large_radius():
     """Check catalog handles wide field queries."""
     table = retrieve_from_vizier_catalog(
-        catalog_id="I/239/hip_main",
+        catalog_id=HIPPARCOS,
         ra=88.8,
         dec=7.4,
         radius=15.0,
