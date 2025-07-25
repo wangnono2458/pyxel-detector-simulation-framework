@@ -245,6 +245,7 @@ module = [
     "jinja2.*",
     "click.*",
     "astroquery.gaia.*",
+    "astroquery.vizier.*",
     "specutils.*",
     "synphot.*",
     "pyxel.models.phasing.mkid_models.*"

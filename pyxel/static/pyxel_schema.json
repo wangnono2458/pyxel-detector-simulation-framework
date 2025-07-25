@@ -6715,7 +6715,7 @@
     },
     "ModelSceneGenerationLoadStarMap": {
       "additionalProperties": false,
-      "description": "Generate scene from scopesim Source object loading stars from the GAIA catalog.",
+      "description": "Generate scene from scopesim Source object loading stars from the selected catalog.",
       "properties": {
         "arguments": {
           "additionalProperties": false,

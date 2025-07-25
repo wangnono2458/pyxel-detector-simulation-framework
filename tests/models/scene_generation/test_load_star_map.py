@@ -17,7 +17,6 @@ from astropy.units import Quantity, Unit, spectral_density
 from pyxel.detectors import CCD
 from pyxel.models.scene_generation import load_star_map
 from pyxel.models.scene_generation.load_star_map import (
-    VizierCatalog,
     retrieve_from_gaia,
     retrieve_from_vizier_catalog,
 )
@@ -380,9 +379,13 @@ def test_load_star_map(
 
 
 @pytest.mark.parametrize(
-    "catalog_enum", [VizierCatalog.hipparcos, VizierCatalog.TYCHO2]
+    "catalog_id",
+    [
+        pytest.param("I/239/hip_main", id="hipparcos"),
+        pytest.param("I/259/tyc2", id="tycho"),
+    ],
 )
-def test_retrieve_from_vizier_catalog_valid(catalog_enum: VizierCatalog):
+def test_retrieve_from_vizier_catalog_valid(catalog_id):
     """
     Test 'retrieve_from_vizier_catalog' for known Vizier catalogs.
 
@@ -398,7 +401,7 @@ def test_retrieve_from_vizier_catalog_valid(catalog_enum: VizierCatalog):
 
     try:
         table = retrieve_from_vizier_catalog(
-            catalog=catalog_enum,
+            catalog_id=catalog_id,
             ra=ra,
             dec=dec,
             radius=radius,
@@ -410,14 +413,14 @@ def test_retrieve_from_vizier_catalog_valid(catalog_enum: VizierCatalog):
 
     except ValueError as e:
         # If no sources are found, skip the test gracefully
-        pytest.skip(f"No sources found for {catalog_enum.name} catalog: {e}")
+        pytest.skip(f"No sources found for {catalog_id.name} catalog: {e}")
 
 
 def test_retrieve_from_vizier_catalog_invalid_catalog_type():
     """Test that passing a wrong catalog value raises an error."""
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError, match=r"No sources found in catalog"):
         retrieve_from_vizier_catalog(
-            catalog="I/239/hip_main",  # string instead of VizierCatalog enum
+            catalog_id="xxx",  # Wrong 'catalog_id'
             ra=88.8,
             dec=7.4,
             radius=1.0,
@@ -428,7 +431,7 @@ def test_retrieve_from_vizier_catalog_no_sources():
     """Test case when the region contains no sources."""
     with pytest.raises(ValueError, match="No sources found in catalog"):
         retrieve_from_vizier_catalog(
-            catalog=VizierCatalog.hipparcos,
+            catalog_id="I/239/hip_main",
             ra=0.0,
             dec=0.0,
             radius=0.001,  # Very small FOV in empty region
@@ -438,7 +441,7 @@ def test_retrieve_from_vizier_catalog_no_sources():
 def test_retrieve_from_vizier_catalog_row_limit():
     """Test that row_limit is respected."""
     table = retrieve_from_vizier_catalog(
-        catalog=VizierCatalog.TYCHO2,
+        catalog_id="I/259/tyc2",
         ra=88.8,
         dec=7.4,
         radius=10.0,  # large radius to ensure many stars
@@ -456,7 +459,7 @@ def test_retrieve_from_vizier_catalog_column_check():
     (in Vizier naming style) are present.
     """
     table = retrieve_from_vizier_catalog(
-        catalog=VizierCatalog.TYCHO2,
+        catalog_id="I/259/tyc2",
         ra=88.8,
         dec=7.4,
         radius=2.0,
@@ -470,20 +473,18 @@ def test_retrieve_from_vizier_catalog_column_check():
 
 
 def test_retrieve_from_multiple_vizier_catalogs():
-    """
-    Ensure both hipparcos and TYCHO2 return distinct results.
-    """
+    """Ensure both hipparcos and TYCHO2 return distinct results."""
     ra, dec, radius = 88.8, 7.4, 2.0
 
     table_hip = retrieve_from_vizier_catalog(
-        catalog=VizierCatalog.hipparcos,
+        catalog_id="I/239/hip_main",
         ra=ra,
         dec=dec,
         radius=radius,
     )
 
     table_tycho = retrieve_from_vizier_catalog(
-        catalog=VizierCatalog.TYCHO2,
+        catalog_id="I/259/tyc2",
         ra=ra,
         dec=dec,
         radius=radius,
@@ -501,7 +502,7 @@ def test_retrieve_vizier_sources_within_radius():
     ra, dec, radius_deg = 88.8, 7.4, 2.0
 
     table = retrieve_from_vizier_catalog(
-        catalog=VizierCatalog.TYCHO2,
+        catalog_id="I/259/tyc2",
         ra=ra,
         dec=dec,
         radius=radius_deg,
@@ -516,14 +517,14 @@ def test_retrieve_vizier_sources_within_radius():
 
     # Assert all sources fall within the desired angular radius
     assert all(
-        separations <= radius_deg * u.deg
+        separations <= Quantity(radius_deg, unit="deg")
     ), "Some sources are outside the requested search radius."
 
 
 def test_retrieve_vizier_large_radius():
     """Check catalog handles wide field queries."""
     table = retrieve_from_vizier_catalog(
-        catalog=VizierCatalog.hipparcos,
+        catalog_id="I/239/hip_main",
         ra=88.8,
         dec=7.4,
         radius=15.0,
