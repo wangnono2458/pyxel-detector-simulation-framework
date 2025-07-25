@@ -984,8 +984,69 @@ def convert_vizier_table_to_dataset(table: "Table") -> xr.Dataset:
     return ds
 
 
-# TODO: Rewrite doc and rename it '_load_objects_from_vizier'
 def load_objects_from_vizier(
+    right_ascension: float,
+    declination: float,
+    fov_radius: float,
+    catalog_id: str,
+    with_caching: bool = True,
+) -> xr.Dataset:
+    """Load objects from Vizier Catalog for given coordinates and FOV.
+
+    Parameters
+    ----------
+    right_ascension: float
+        Right ascension (RA) of the center of the search cone, in degrees.
+    declination: float
+        Declination (DEC) of the center of the search cone, in degrees.
+    fov_radius: float
+        Radius of the search cone (field-of-view), in degrees.
+    catalog_id
+    with_caching : bool
+        Enable/Disable caching request to GAIA catalog.
+
+    Returns
+    -------
+    Dataset
+    """
+    # Define a unique key to find/retrieve data in the cache
+    key_cache = (__name__, right_ascension, declination, fov_radius)
+
+    start_time: float = time.perf_counter()
+
+    if with_caching and key_cache in (cache := util.get_cache()):
+        # Retrieve cached dataset
+        ds: xr.Dataset = cache[key_cache]
+
+        end_time: float = time.perf_counter()
+        logging.info(
+            "Retrieve 'dataset' for model 'load_star_map' from cache '%r' in %f s",
+            cache.directory,
+            end_time - start_time,
+        )
+    else:
+        ds = _load_objects_from_vizier(
+            right_ascension=right_ascension,
+            declination=declination,
+            fov_radius=fov_radius,
+            catalog_id=catalog_id,
+        )
+
+        if with_caching:
+            # Store dataset in the cache
+            cache[key_cache] = ds
+
+            end_time = time.perf_counter()
+            logging.info(
+                "Store 'dataset' for model 'load_star_map' in cache '%r' in %f s",
+                cache.directory,
+                end_time - start_time,
+            )
+
+    return ds
+
+
+def _load_objects_from_vizier(
     right_ascension: float,
     declination: float,
     fov_radius: float,
@@ -1114,6 +1175,7 @@ def load_star_map(
                 declination=declination,
                 fov_radius=fov_radius,
                 catalog_id=catalog_id,
+                with_caching=with_caching,
             )
 
         case _:
