@@ -20,7 +20,7 @@ import numpy as np
 import requests
 import xarray as xr
 from astropy.coordinates import SkyCoord
-from astropy.table import Column, Table
+from astropy.table import Table
 from astropy.units import Quantity
 from astroquery.vizier import Vizier
 from specutils import Spectrum
@@ -815,8 +815,7 @@ def retrieve_from_vizier_catalog(
     catalog: VizierCatalog,
     row_limit: int = -1,
 ) -> Table:
-    """
-    Retrieve sources from a Vizier catalog given coordinates and FOV.
+    """Retrieve sources from a Vizier catalog given coordinates and FOV.
 
     Parameters
     ----------
@@ -841,12 +840,16 @@ def retrieve_from_vizier_catalog(
     ValueError
         If no results are found or required columns are missing.
     """
-    coord = SkyCoord(ra=ra, dec=dec, unit="deg")
+    # Initialize the VizieR query interface
     vizier = Vizier(columns=["*"])
     vizier.ROW_LIMIT = row_limit
 
+    # Perform the region query
+    coord = SkyCoord(ra=ra, dec=dec, unit="deg")
     result = vizier.query_region(
-        coord, radius=Quantity(radius, unit="deg"), catalog=catalog.id()
+        coord,
+        radius=Quantity(radius, unit="deg"),
+        catalog=catalog.id(),
     )
 
     if not result:
@@ -854,7 +857,7 @@ def retrieve_from_vizier_catalog(
             f"No sources found in catalog '{catalog.name}' at given coordinates."
         )
 
-    table = result[0]
+    table: Table = result[0]
 
     if len(table) == 0:
         raise ValueError(f"Catalog '{catalog.name}' returned an empty table.")
@@ -862,6 +865,7 @@ def retrieve_from_vizier_catalog(
     return table
 
 
+# TODO: Keep only data variables 'ra', 'dec' and 'mag' ?
 def normalize_vizier_dataset(ds: xr.Dataset) -> xr.Dataset:
     """
     Normalize field names in a Vizier-derived xarray.Dataset.
@@ -899,19 +903,20 @@ def normalize_vizier_dataset(ds: xr.Dataset) -> xr.Dataset:
             break
 
     # Apply renaming
-    ds = ds.rename(rename_map)
+    # ds = ds.rename(rename_map)
 
-    # Optional: units
-    if "ra" in ds:
-        ds["ra"].attrs.setdefault("units", "deg")
-    if "dec" in ds:
-        ds["dec"].attrs.setdefault("units", "deg")
-    if "mag" in ds:
-        ds["mag"].attrs.setdefault("units", "mag")
+    # # Optional: units
+    # if "ra" in ds:
+    #     ds["ra"].attrs.setdefault("units", "deg")
+    # if "dec" in ds:
+    #     ds["dec"].attrs.setdefault("units", "deg")
+    # if "mag" in ds:
+    #     ds["mag"].attrs.setdefault("units", "mag")
 
-    return ds
+    return ds.rename(rename_map)
 
 
+# TODO: This could be a more general function to convert from a Table to a Dataset
 def convert_vizier_table_to_dataset(table: "Table") -> xr.Dataset:
     """
     Convert an Astropy Table (from Vizier) into an xarray.Dataset.
@@ -923,16 +928,20 @@ def convert_vizier_table_to_dataset(table: "Table") -> xr.Dataset:
 
     Returns
     -------
-    xr.Dataset
+    Dataset
         Dataset with all columns and metadata from the table.
     """
-    df = table.to_pandas().reset_index(drop=True)
+    # df = table.to_pandas().reset_index(drop=True)
+    df = table.to_pandas().set_index("HIP")
     ds = df.to_xarray()
 
-    # Copy units (if present) from the Table to Dataset attrs
+    # Copy units and description (if present) from the Table to Dataset attrs
     for col in table.colnames:
-        if hasattr(table[col], "unit") and table[col].unit is not None:
+        if table[col].unit:
             ds[col].attrs["units"] = str(table[col].unit)
+
+        if table[col].description:
+            ds[col].attrs["long_name"] = table[col].description
 
     return ds
 
@@ -959,19 +968,17 @@ def skycoord_to_xy(
     return x, y
 
 
+# TODO: Rewrite doc and rename it '_load_objects_from_vizier'
 def load_objects_from_vizier(
     right_ascension: float,
     declination: float,
     fov_radius: float,
     catalog: VizierCatalog,
-    rows: int,
-    cols: int,
 ) -> xr.Dataset:
-    """
-    Load sources from Vizier catalog and return them as a Pyxel-ready Dataset,
+    """Load sources from Vizier catalog and return them as a Pyxel-ready Dataset,
     with positions in arcsec centered on the field center, matching the GAIA logic.
     """
-    table = retrieve_from_vizier_catalog(
+    table: Table = retrieve_from_vizier_catalog(
         ra=right_ascension,
         dec=declination,
         radius=fov_radius,
@@ -981,11 +988,20 @@ def load_objects_from_vizier(
     ds = convert_vizier_table_to_dataset(table)
     ds = normalize_vizier_dataset(ds)
 
+    # TODO: ds['mag'] is a magnitude in Johnson V (H5)
+    #       Do we have to first get the Vega spectrum and then apply this bandpass filter ?
+    #       import matplotlib.pyplot as plt
+    #       from synphot import SpectralElement
+    #       v = SpectralElement.from_filter('johnson_v')
+    #       plt.plot(v.waveset, v(v.waveset))
     # ra = ds["ra"].values
     # dec = ds["dec"].values
     mag = ds["mag"].values
     flux = 10 ** (-0.4 * mag)
     # weight = flux.copy()
+
+    # TODO: Compute weight based on 'mag'
+    # TODO: Get flux from 'Vega' ? or A0V ...?
 
     if catalog == VizierCatalog.TYCHO2:
         wavelength = 530.0
@@ -1091,14 +1107,12 @@ def load_star_map(
             with_caching=with_caching,
         )
     else:
-        vizier_cat = cat_type.to_vizier_catalog()
+        vizier_cat: VizierCatalog = cat_type.to_vizier_catalog()
         ds = load_objects_from_vizier(
             right_ascension=right_ascension,
             declination=declination,
             fov_radius=fov_radius,
             catalog=vizier_cat,
-            rows=detector.geometry.row,
-            cols=detector.geometry.col,
         )
 
     detector.scene.add_source(ds)
