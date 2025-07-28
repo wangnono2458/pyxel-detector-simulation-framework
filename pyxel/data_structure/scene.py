@@ -160,7 +160,7 @@ class Scene:
             return f"{cls_name}<no source>"
 
         # Get number of nodes at 'list' level
-        num_sources: int = self._source["list"].width
+        num_sources: int = len(self._source["list"])
         return f"{cls_name}<{num_sources} source(s)>"
 
     def __eq__(self, other) -> bool:
