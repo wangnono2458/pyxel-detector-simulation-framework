@@ -1131,7 +1131,11 @@ def load_star_map(
     catalog: Literal["gaia", "tycho", "hipparcos"] = "gaia",
     with_caching: bool = True,
 ):
-    """Generate scene from scopesim Source object loading stars from the selected catalog.
+    """Generate scene loading stars from the selected catalog.
+
+    This model populates `detector.scene` with sources retrieved from one of the supported
+    astronomical catalogs: `Gaia`, `Hipparcos` or `Tycho-2` based on a given sky position and
+    field-of-view radius.
 
     Parameters
     ----------
@@ -1144,7 +1148,14 @@ def load_star_map(
     fov_radius : float
         Radius of the field of view (FOV) around the pointing center in degree.
     extrapolated_spectra : bool, optional
-        If True (default), extrapolates A0V spectra for Gaia sources that lack XP spectra.
+        If True (default), extrapolates Vega spectra for Gaia sources that lack XP spectra.
+        (e.g. for Gaia sources lacking a spectra)
+    catalog : 'gaia', 'hipparcos' or 'tycho', optional. Default: 'gaia'
+        The source catalog to query:
+
+            - 'gaia': ESA Gaia DR3 catalog
+            - 'hipparcos': ESA Hipparcos main catalog (VizieR: I/239/hip_main)
+            - 'tycho': Tycho-2 catalog (VizieR: I/259/tyc2)
     with_caching : bool
         Enable/Disable caching queries.
 
