@@ -856,7 +856,7 @@ def retrieve_from_vizier_catalog(
     #   - RAhms: Right ascension
     #   - DEdms: Declination
     #   - Vmag: Magnitude in Johnson V (not used)
-    #   - Hpmag: Median magnitude in Hipparcos system
+    #   - Hpmag: Median magnitude in Hipparcos system from 500 nm to 600 nm (TBC)
     #   - SpType: Spectral type (e.g. 'A0V', ...)
     #
     # From Tycho2 catalog (I/259/tyc2)
@@ -864,8 +864,8 @@ def retrieve_from_vizier_catalog(
     #   - Hip: Identifier
     #   - RA(ICRS): Observed Tycho-2 Right Ascension
     #   - DE(ICRS): Observed Tycho-2 Declination
-    #   - BT_Mag: Tycho B-band (blue) magnitude from 420 nm to 490 nm
-    #   - VT_Mag: Tycho V-band (visible) magnitude from 500 nm to 600 nm
+    #   - BT_Mag: Tycho B-band (blue) magnitude from 420 nm to 490 nm (TBC)
+    #   - VT_Mag: Tycho V-band (visible) magnitude from 500 nm to 600 nm (TBC)
     vizier = Vizier(
         columns=[
             "*",  # TODO: Is it still useful ?
