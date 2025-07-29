@@ -57,6 +57,17 @@ def get_vega_spectrum_photon(
     DataArray
         1D data array of photon flux density in units of ph / (nm s cm²).
 
+    Examples
+    --------
+    >>> get_vega_spectrum_photon()
+    <xarray.DataArray 'flux' (wavelength: 343)> Size: 3kB
+    array([ 5522.11342341,  5550.45099356,  5649.40530857,  5628.69094514,
+    ...
+            3119.89074473,  3133.26425759,  3128.21804433])
+    Coordinates:
+      * wavelength  (wavelength) float64 3kB 336.0 338.0 ... 1.018e+03 1.02e+03
+    Attributes:
+        units:    ph / (nm s cm2)
     """
     # Late import
     import numpy as np
