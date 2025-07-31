@@ -85,6 +85,7 @@ Example of the configuration file:
         right_ascension: 56.75 # deg
         declination: 24.1167 # deg
         fov_radius: 0.5 # deg
+        catalog: gaia  # Valid catalogs: 'gaia', 'hipparcos', 'tycho'
 
 .. note::
     You can find an example of this model in this Jupyter Notebook
