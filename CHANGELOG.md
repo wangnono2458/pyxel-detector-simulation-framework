@@ -9,11 +9,47 @@ Minor releases include updated stdlib stubs from typeshed.
 
 Pyxel doesn't use SemVer anymore, since most minor releases have at least minor backward incompatible changes.
 
-## UNRELEASED
+## 2.12 / 2025-07-31
 
-### Core
+This release includes various bug fixes and feature enhancements to improve usability and flexibility.
 
-### Documentation
+### Improved `load_star_map` model
+
+Model [`load_star_map`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/scene_generation_models.html#load-star-map)
+from [Scene Generation](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/scene_generation_models.html#)
+now supports additional source catalogs: ESA Gaia DR3 catalog, ESA Hipparcos and ESA Tycho-2.
+ 
+Example of YAML file to retrieve sources from the three catalogs
+```yaml
+  scene_generation:
+    - name: scene_generator_gaia
+      func: pyxel.models.scene_generation.load_star_map
+      enabled: true
+      arguments:
+        right_ascension: 88.8
+        declination: 7.4
+        fov_radius: 3
+        catalog: "gaia"
+    
+    - name: scene_generator_hipparcos
+      func: pyxel.models.scene_generation.load_star_map
+      enabled: true
+      arguments:
+        right_ascension: 88.8
+        declination: 7.4
+        fov_radius: 3
+        catalog: "hipparcos"
+
+    - name: scene_generator_tycho
+      func: pyxel.models.scene_generation.load_star_map
+      enabled: true
+      arguments:
+        right_ascension: 88.8
+        declination: 7.4
+        fov_radius: 3
+        catalog: "tycho"
+```
+
 
 ### Models
 * [`Cosmix`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/charge_generation_models.html#cosmix-cosmic-ray-model)

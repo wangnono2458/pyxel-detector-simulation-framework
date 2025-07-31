@@ -1158,8 +1158,8 @@ def load_star_map(
 ):
     """Generate scene loading stars from the selected catalog.
 
-    This model populates `detector.scene` with sources retrieved from one of the supported
-    astronomical catalogs: `Gaia`, `Hipparcos` or `Tycho-2` based on a given sky position and
+    This model populates ``detector.scene`` with sources retrieved from one of the supported
+    astronomical catalogs: **Gaia**, **Hipparcos** or **Tycho-2** based on a given sky position and
     field-of-view radius.
 
     Parameters
@@ -1178,9 +1178,9 @@ def load_star_map(
     catalog : 'gaia', 'hipparcos' or 'tycho', optional. Default: 'gaia'
         The source catalog to query:
 
-            - 'gaia': ESA Gaia DR3 catalog
-            - 'hipparcos': ESA Hipparcos main catalog (VizieR: I/239/hip_main)
-            - 'tycho': Tycho-2 catalog (VizieR: I/259/tyc2)
+            - ``gaia``: ESA Gaia DR3 catalog
+            - ``hipparcos``: ESA Hipparcos main catalog (VizieR: I/239/hip_main)
+            - ``tycho``: Tycho-2 catalog (VizieR: I/259/tyc2)
     with_caching : bool
         Enable/Disable caching queries.
 

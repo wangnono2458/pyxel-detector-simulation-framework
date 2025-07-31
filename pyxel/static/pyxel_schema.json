@@ -6722,7 +6722,7 @@
           "properties": {
             "catalog": {
               "default": "gaia",
-              "description": "The source catalog to query:      - 'gaia': ESA Gaia DR3 catalog     - 'hipparcos': ESA Hipparcos main catalog (VizieR: I/239/hip_main)     - 'tycho': Tycho-2 catalog (VizieR: I/259/tyc2)",
+              "description": "The source catalog to query:      - ``gaia``: ESA Gaia DR3 catalog     - ``hipparcos``: ESA Hipparcos main catalog (VizieR: I/239/hip_main)     - ``tycho``: Tycho-2 catalog (VizieR: I/259/tyc2)",
               "enum": [
                 "gaia",
                 "tycho",

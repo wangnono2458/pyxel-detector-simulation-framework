@@ -28,5 +28,6 @@ models:
           right_ascension: 56.75 # deg
           declination: 24.1167 # deg
           fov_radius: 0.5 # deg
+          catalog: gaia  # Valid catalogs: 'gaia', 'hipparcos', 'tycho'
     notebooks:
       - examples/models/scene_generation/tutorial_example_scene_generation
