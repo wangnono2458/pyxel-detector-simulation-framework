@@ -31,6 +31,9 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
   [`load_star_map`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/scene_generation_models.html#load-star-map)
   from [Scene Generation](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/scene_generation_models.html#).
   (See [!1083](https://gitlab.com/esa/pyxel/-/merge_requests/1083)).
+* Fix bugs in model [`load_star_map`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/scene_generation_models.html#load-star-map)
+  from [Scene Generation](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/scene_generation_models.html#).
+  (See [!1085](https://gitlab.com/esa/pyxel/-/merge_requests/1085)).
 
 ### Others
 * Add compatibility with `lacosmic` 1.3+.
