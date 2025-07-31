@@ -245,7 +245,7 @@ class Scene:
         if "list" not in self.data:
             key: int = 0
         else:
-            key = self.data.width
+            key = len(self.data["/list"])
 
         self.data[f"/list/{key}"] = xr.DataTree(source)
 
