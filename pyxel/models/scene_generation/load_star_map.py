@@ -12,6 +12,7 @@ import sys
 import time
 import warnings
 from collections.abc import Sequence
+from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal
 
 import numpy as np
@@ -23,6 +24,7 @@ from astropy.units import Quantity, spectral_density
 from astroquery.vizier import Vizier
 from specutils import Spectrum
 from synphot import SourceSpectrum
+from tqdm.auto import tqdm
 
 from pyxel import util
 from pyxel.detectors import Detector
@@ -470,19 +472,31 @@ def _retrieve_objects_from_gaia(
     #####################################
     # Get the unique source identifiers (unique within a particular data release)
     source_ids_with_spectra: pd.Series = df.query("has_xp_sampled == True")[source_key]
-    if len(source_ids_with_spectra) > 5000:
-        # TODO: Fix this
-        raise NotImplementedError("Cannot retrieve more than 5000 sources")
 
     try:
-        # load spectra from stars
-        spectra_dct: dict[str, list[tree.Table]] = Gaia.load_data(
-            ids=source_ids_with_spectra,
-            retrieval_type=retrieval_type,
-            data_release=data_release,
-            data_structure=data_structure,
-            format="votable",  # Note: It's not yet possible to use format 'votable_gzip'
-        )
+        spectra_dct: dict[str, list[tree.Table]] = {}
+
+        num_sources_with_spectra = len(source_ids_with_spectra)
+        chunk_size = 500
+
+        for idx in tqdm(
+            range(0, num_sources_with_spectra, chunk_size), desc="Get Spectra"
+        ):
+            source_ids_with_spectra_chunk = source_ids_with_spectra.iloc[
+                idx : idx + chunk_size
+            ]
+
+            # load spectra from stars
+            spectra_dct_partial: dict[str, list[tree.Table]] = Gaia.load_data(
+                ids=source_ids_with_spectra_chunk,
+                retrieval_type=retrieval_type,
+                data_release=data_release,
+                data_structure=data_structure,
+                format="votable",  # Note: It's not yet possible to use format 'votable_gzip'
+            )
+
+            spectra_dct |= spectra_dct_partial
+
     except requests.HTTPError as exc:
         my_exception = ConnectionError(
             "Error when trying to load data from the Gaia database"
@@ -497,7 +511,7 @@ def _retrieve_objects_from_gaia(
 
     # Extract and combine the spectra
     spectra: dict[int, tuple[Table, float]] = {}
-    for xml_filename, all_spectra in spectra_dct.items():
+    for xml_filename, all_spectra in tqdm(spectra_dct.items(), desc="Combine spectra"):
         try:
             for spectrum in all_spectra:
                 source_id = int(spectrum.get_field_by_id("source_id").value)
@@ -723,6 +737,7 @@ def _load_objects_from_gaia(
     )
 
     ds.attrs = {
+        "catalog": "Gaia DR3",
         "right_ascension": str(Quantity(right_ascension, unit="deg")),
         "declination": str(Quantity(declination, unit="deg")),
         "fov_radius": str(Quantity(fov_radius, unit="deg")),
@@ -794,7 +809,10 @@ def load_objects_from_gaia(
 
     start_time: float = time.perf_counter()
 
-    if with_caching and key_cache in (cache := util.get_cache()):
+    # TODO: Improve this !
+    folder_cache = Path.home().joinpath(".cache/pyxel-sim").as_posix()
+
+    if with_caching and key_cache in (cache := util.get_cache(folder_cache)):
         # Retrieve cached dataset
         ds: xr.Dataset = cache[key_cache]
 
@@ -1021,11 +1039,14 @@ def load_objects_from_vizier(
     Dataset
     """
     # Define a unique key to find/retrieve data in the cache
-    key_cache = (__name__, right_ascension, declination, fov_radius)
+    key_cache = (__name__, right_ascension, declination, fov_radius, catalog_id)
 
     start_time: float = time.perf_counter()
 
-    if with_caching and key_cache in (cache := util.get_cache()):
+    # TODO: Improve this !
+    folder_cache = Path.home().joinpath(".cache/pyxel-sim").as_posix()
+
+    if with_caching and key_cache in (cache := util.get_cache(folder_cache)):
         # Retrieve cached dataset
         ds: xr.Dataset = cache[key_cache]
 
