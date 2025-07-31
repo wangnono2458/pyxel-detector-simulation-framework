@@ -6715,11 +6715,22 @@
     },
     "ModelSceneGenerationLoadStarMap": {
       "additionalProperties": false,
-      "description": "Generate scene from scopesim Source object loading stars from the GAIA catalog.",
+      "description": "Generate scene loading stars from the selected catalog.",
       "properties": {
         "arguments": {
           "additionalProperties": false,
           "properties": {
+            "catalog": {
+              "default": "gaia",
+              "description": "The source catalog to query:      - 'gaia': ESA Gaia DR3 catalog     - 'hipparcos': ESA Hipparcos main catalog (VizieR: I/239/hip_main)     - 'tycho': Tycho-2 catalog (VizieR: I/259/tyc2)",
+              "enum": [
+                "gaia",
+                "tycho",
+                "hipparcos"
+              ],
+              "title": "catalog",
+              "type": "string"
+            },
             "declination": {
               "description": "Declination (DEC) of the pointing center in degree.",
               "title": "declination",
@@ -6727,7 +6738,7 @@
             },
             "extrapolated_spectra": {
               "default": true,
-              "description": "If True (default), extrapolates A0V spectra for Gaia sources that lack XP spectra.",
+              "description": "If True (default), extrapolates Vega spectra for Gaia sources that lack XP spectra. (e.g. for Gaia sources lacking a spectra)",
               "title": "extrapolated_spectra",
               "type": "boolean"
             },

@@ -15,7 +15,11 @@ models:
     detector: all
     status: null
     description: >
-      Generate a scene from `ScopeSim <https://scopesim.readthedocs.io/en/latest/>`_ source object loading objects from the GAIA catalog for given coordinates and FOV.
+      Generate scene loading stars from the selected catalog.
+
+      This model populates `detector.scene` with sources retrieved from one of the supported
+      astronomical catalogs: `Gaia`, `Hipparcos` or `Tycho-2` based on a given sky position and
+      field-of-view radius.
     config: >
       - name: load_star_map
         func: pyxel.models.scene_generation.load_star_map
