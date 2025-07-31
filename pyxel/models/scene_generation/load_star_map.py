@@ -32,8 +32,8 @@ if TYPE_CHECKING:
     from astropy.io.votable import tree
 
 # Define constants for the Catalog Identifiers
-HIPPARCOS: Final[str] = "I/239/hip_main"
-TYCHO2: Final[str] = "I/259/tyc2"
+HIPPARCOS_ID: Final[str] = "I/239/hip_main"
+TYCHO2_ID: Final[str] = "I/259/tyc2"
 
 
 def get_vega_spectrum_photon(
@@ -1089,13 +1089,6 @@ def _load_objects_from_vizier(
     ds = convert_vizier_table_to_dataset(table)
     ds = normalize_vizier_dataset(ds)
 
-    # TODO: ds['mag'] is a magnitude in Johnson V (H5)
-    #       Do we have to first get the Vega spectrum and then apply this bandpass filter ?
-    #       import matplotlib.pyplot as plt
-    #       from synphot import SpectralElement
-    #       v = SpectralElement.from_filter('johnson_v')
-    #       plt.plot(v.waveset, v(v.waveset))
-
     # TODO: Get source type from 'SpType'
     mag_1d: xr.DataArray = ds["mag"].rename(index="ref")
     weight_1d: xr.DataArray = 10 ** (-0.4 * mag_1d)
@@ -1188,9 +1181,9 @@ def load_star_map(
 
         case "hipparcos" | "tycho":
             if catalog == "hipparcos":
-                catalog_id = HIPPARCOS
+                catalog_id = HIPPARCOS_ID
             else:
-                catalog_id = TYCHO2
+                catalog_id = TYCHO2_ID
 
             ds = load_objects_from_vizier(
                 right_ascension=right_ascension,
