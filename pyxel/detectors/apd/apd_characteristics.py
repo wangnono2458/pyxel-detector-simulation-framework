@@ -29,10 +29,11 @@ current status, in Image Sensing Technologies: Materials, Devices, Systems, and 
 """
 
 from collections.abc import Callable, Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 import numpy as np
 import pandas as pd
+from typing_extensions import NotRequired, ReadOnly, Required
 
 from pyxel.util import get_size, get_uninitialized_error
 
@@ -94,6 +95,51 @@ def detector_gain(capacitance: float, roic_gain: float) -> float:
     return roic_gain * (const.e.value / capacitance)
 
 
+class ConvertValues(TypedDict):
+    values: list[tuple[float, float]]
+    # filename: str
+    # function: str | Callable[[float], float]
+
+
+class ConvertFilename(TypedDict):
+    # values: list[tuple[float, float]]
+    filename: str
+    # function: str | Callable[[float], float]
+
+
+class ConvertFunction(TypedDict):
+    # values: list[tuple[float, float]]
+    # filename: str
+    function: str | Callable[[float], float]
+
+
+class AvalancheNoGain(TypedDict):
+    # avalanche_gain: float    # unit: electron/electron
+    pixel_reset_voltage: float  # unit: V
+    common_voltage: float  # unit: V
+
+    # gain_to_bias: ConvertionSettings | None = None
+    bias_to_gain: ConvertValues | ConvertFilename | ConvertFunction
+
+
+class AvalancheNoPRV(TypedDict):
+    avalanche_gain: float  # unit: electron/electron
+    # pixel_reset_voltage: float   # unit: V
+    common_voltage: float  # unit: V
+
+    gain_to_bias: ConvertValues | ConvertFilename | ConvertFunction
+    bias_to_gain: ConvertValues | ConvertFilename | ConvertFunction
+
+
+class AvalancheNoSettings(TypedDict):
+    avalanche_gain: float  # unit: electron/electron
+    pixel_reset_voltage: float  # unit: V
+    # common_voltage: float   # unit: V
+
+    gain_to_bias: ConvertValues | ConvertFilename | ConvertFunction | None = None
+    bias_to_gain: ConvertValues | ConvertFilename | ConvertFunction | None = None
+
+
 class APDCharacteristics:
     """Characteristic attributes of the APD detector.
 
@@ -120,13 +166,21 @@ class APDCharacteristics:
     def __init__(
         self,
         roic_gain: float,  # unit: V
+        avalanche_settings: AvalancheNoGain | AvalancheNoPRV | AvalancheNoSettings,
+        bias_to_node: ConvertValues | ConvertFilename | ConvertFunction,
+        #####################
+        # Common parameters #
+        #####################
         quantum_efficiency: float | None = None,  # unit: NA
         full_well_capacity: float | None = None,  # unit: electron
         adc_bit_resolution: int | None = None,
         adc_voltage_range: tuple[float, float] | None = None,  # unit: V
-        avalanche_gain: float | None = None,  # unit: electron/electron
-        pixel_reset_voltage: float | None = None,  # unit: V
-        common_voltage: float | None = None,  # unit: V
+        #########################
+        # DEPRECATED parameters #
+        #########################
+        avalanche_gain: float | None = None,
+        pixel_reset_voltage: float | None = None,
+        common_voltage: float | None = None,
         gain_to_bias_func: Callable[[float], float] | None = None,
         bias_to_gain_func: Callable[[float], float] | None = None,
         bias_to_node_func: Callable[[float], float] | None = None,
