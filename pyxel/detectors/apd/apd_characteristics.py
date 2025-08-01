@@ -40,6 +40,60 @@ if TYPE_CHECKING:
     from pyxel.detectors import APDGeometry
 
 
+def _build_interp_func(
+    data: str | list[tuple[float, float]] | Callable, xname: str, yname: str
+) -> Callable[[float], float]:
+    if callable(data):
+        return data
+    elif isinstance(data, str):
+        df = pd.read_csv(data)
+        if xname not in df.columns or yname not in df.columns:
+            raise ValueError(f"CSV must contain '{xname}' and '{yname}' columns")
+        x = df[xname].values
+        y = df[yname].values
+    elif isinstance(data, list | tuple):
+        x, y = zip(*data, strict=True)
+    else:
+        raise TypeError(
+            "Function input must be callable, CSV path, or list of (x, y) pairs"
+        )
+    return lambda val: float(np.interp(val, x, y))
+
+
+def _invert_function(
+    func: Callable[[float], float], x_min: float, x_max: float
+) -> Callable[[float], float]:
+    from scipy.optimize import brentq
+
+    def inverse(y: float) -> float:
+        try:
+            return float(brentq(lambda x: func(x) - y, x_min, x_max))
+        except ValueError as exc:
+            raise ValueError(
+                f"Cannot invert function in range [{x_min}, {x_max}] for value {y}"
+            ) from exc
+
+    return inverse
+
+
+def detector_gain(capacitance: float, roic_gain: float) -> float:
+    """Saphira detector gain.
+
+    Parameters
+    ----------
+    capacitance: float
+    roic_gain: float
+
+    Returns
+    -------
+    float
+    """
+    # Late import to speedup start-up time
+    import astropy.constants as const
+
+    return roic_gain * (const.e.value / capacitance)
+
+
 class APDCharacteristics:
     """Characteristic attributes of the APD detector.
 
@@ -77,23 +131,22 @@ class APDCharacteristics:
         bias_to_gain_func: Callable[[float], float] | None = None,
         bias_to_node_func: Callable[[float], float] | None = None,
     ):
-
         self._gain_to_bias_data = gain_to_bias_func
         self._bias_to_gain_data = bias_to_gain_func
         self._bias_to_node_data = bias_to_node_func
 
         self._gain_to_bias_func = (
-            self._build_interp_func(gain_to_bias_func, "gain", "bias")
+            _build_interp_func(gain_to_bias_func, "gain", "bias")
             if gain_to_bias_func is not None
             else None
         )
         self._bias_to_gain_func = (
-            self._build_interp_func(bias_to_gain_func, "bias", "gain")
+            _build_interp_func(bias_to_gain_func, "bias", "gain")
             if bias_to_gain_func is not None
             else None
         )
         self._bias_to_node_func = (
-            self._build_interp_func(bias_to_node_func, "bias", "capacitance")
+            _build_interp_func(bias_to_node_func, "bias", "capacitance")
             if bias_to_node_func is not None
             else None
         )
@@ -164,7 +217,9 @@ class APDCharacteristics:
             self.avalanche_bias
         )
         self._roic_gain: float = roic_gain
-        self._charge_to_volt_conversion: float = self.detector_gain(
+
+        # TODO: Is it really needed ? or property 'charge_to_volt_conversion' is enough ?
+        self._charge_to_volt_conversion: float = detector_gain(
             capacitance=self._node_capacitance,
             roic_gain=self.roic_gain,
         )
@@ -325,7 +380,7 @@ class APDCharacteristics:
     def charge_to_volt_conversion(self) -> float:
         """Compute charge-to-voltage conversion factor."""
         capacitance = self.bias_to_node_capacitance(self.avalanche_bias)
-        return self.detector_gain(capacitance=capacitance, roic_gain=self.roic_gain)
+        return detector_gain(capacitance=capacitance, roic_gain=self.roic_gain)
 
     @property
     def adc_bit_resolution(self) -> int:
@@ -407,42 +462,6 @@ class APDCharacteristics:
         self._numbytes = get_size(self)
         return self._numbytes
 
-    @staticmethod
-    def _build_interp_func(
-        data: str | list[tuple[float, float]] | Callable, xname: str, yname: str
-    ) -> Callable[[float], float]:
-        if callable(data):
-            return data
-        elif isinstance(data, str):
-            df = pd.read_csv(data)
-            if xname not in df.columns or yname not in df.columns:
-                raise ValueError(f"CSV must contain '{xname}' and '{yname}' columns")
-            x = df[xname].values
-            y = df[yname].values
-        elif isinstance(data, list | tuple):
-            x, y = zip(*data, strict=True)
-        else:
-            raise TypeError(
-                "Function input must be callable, CSV path, or list of (x, y) pairs"
-            )
-        return lambda val: float(np.interp(val, x, y))
-
-    @staticmethod
-    def _invert_function(
-        func: Callable[[float], float], x_min: float, x_max: float
-    ) -> Callable[[float], float]:
-        from scipy.optimize import brentq
-
-        def inverse(y: float) -> float:
-            try:
-                return float(brentq(lambda x: func(x) - y, x_min, x_max))
-            except ValueError as exc:
-                raise ValueError(
-                    f"Cannot invert function in range [{x_min}, {x_max}] for value {y}"
-                ) from exc
-
-        return inverse
-
     def bias_to_node_capacitance(self, bias: float) -> float:
         """Compute node capacitance from bias voltage using user-provided function."""
         if self._bias_to_node_func is None:
@@ -455,8 +474,8 @@ class APDCharacteristics:
             return self._bias_to_gain_func(bias)
 
         if self._gain_to_bias_func is not None:
-            inverse_func = self._invert_function(
-                self._build_interp_func(self._gain_to_bias_func, "gain", "bias"),
+            inverse_func = _invert_function(
+                _build_interp_func(self._gain_to_bias_func, "gain", "bias"),
                 x_min=1.0,
                 x_max=10.0,
             )
@@ -472,8 +491,8 @@ class APDCharacteristics:
             return self._gain_to_bias_func(gain)
 
         if self._bias_to_gain_func is not None:
-            inverse_func = self._invert_function(
-                self._build_interp_func(self._bias_to_gain_func, "bias", "gain"),
+            inverse_func = _invert_function(
+                _build_interp_func(self._bias_to_gain_func, "bias", "gain"),
                 x_min=0.5,
                 x_max=10.0,  # You can adjust depending on expected gain range
             )
@@ -482,24 +501,6 @@ class APDCharacteristics:
         raise ValueError(
             "Either 'gain_to_bias_func' or 'bias_to_gain_func' must be provided."
         )
-
-    @staticmethod
-    def detector_gain(capacitance: float, roic_gain: float) -> float:
-        """Saphira detector gain.
-
-        Parameters
-        ----------
-        capacitance: float
-        roic_gain: float
-
-        Returns
-        -------
-        float
-        """
-        # Late import to speedup start-up time
-        import astropy.constants as const
-
-        return roic_gain * (const.e.value / capacitance)
 
     def to_dict(self) -> Mapping:
         """Get the attributes of this instance as a `dict`."""
