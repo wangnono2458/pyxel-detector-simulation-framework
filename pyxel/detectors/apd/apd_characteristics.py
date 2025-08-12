@@ -28,12 +28,12 @@ current status, in Image Sensing Technologies: Materials, Devices, Systems, and 
 2019, vol. 10980, no. May, p. 20.
 """
 
+import warnings
 from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, TypedDict
 
 import numpy as np
-import pandas as pd
-from typing_extensions import NotRequired, ReadOnly, Required
+from typing_extensions import ReadOnly, Self, deprecated
 
 from pyxel.util import get_size, get_uninitialized_error
 
@@ -41,53 +41,22 @@ if TYPE_CHECKING:
     from pyxel.detectors import APDGeometry
 
 
-def _build_interp_func(
-    data: str | list[tuple[float, float]] | Callable, xname: str, yname: str
-) -> Callable[[float], float]:
-    if callable(data):
-        return data
-    elif isinstance(data, str):
-        df = pd.read_csv(data)
-        if xname not in df.columns or yname not in df.columns:
-            raise ValueError(f"CSV must contain '{xname}' and '{yname}' columns")
-        x = df[xname].values
-        y = df[yname].values
-    elif isinstance(data, list | tuple):
-        x, y = zip(*data, strict=True)
-    else:
-        raise TypeError(
-            "Function input must be callable, CSV path, or list of (x, y) pairs"
-        )
-    return lambda val: float(np.interp(val, x, y))
-
-
-def _invert_function(
-    func: Callable[[float], float], x_min: float, x_max: float
-) -> Callable[[float], float]:
-    from scipy.optimize import brentq
-
-    def inverse(y: float) -> float:
-        try:
-            return float(brentq(lambda x: func(x) - y, x_min, x_max))
-        except ValueError as exc:
-            raise ValueError(
-                f"Cannot invert function in range [{x_min}, {x_max}] for value {y}"
-            ) from exc
-
-    return inverse
-
-
 def detector_gain(capacitance: float, roic_gain: float) -> float:
-    """Saphira detector gain.
+    """Compute the effective gain of an APD detector.
+
+    The gain is calculated from the ROIC gain and the pixel capacitance.
 
     Parameters
     ----------
-    capacitance: float
-    roic_gain: float
+    capacitance : float
+        Pixel capacitance in Farads.
+    roic_gain : float
+        Gain of the readout circuit in V/electron.
 
     Returns
     -------
     float
+        Effective detector gain.
     """
     # Late import to speedup start-up time
     import astropy.constants as const
@@ -96,48 +65,295 @@ def detector_gain(capacitance: float, roic_gain: float) -> float:
 
 
 class ConvertValues(TypedDict):
-    values: list[tuple[float, float]]
+    """Settings to define values provided by the user."""
+
+    values: ReadOnly[list[tuple[float, float]]]
     # filename: str
     # function: str | Callable[[float], float]
 
 
 class ConvertFilename(TypedDict):
+    """Settings to define filename to read."""
+
     # values: list[tuple[float, float]]
-    filename: str
+    filename: ReadOnly[str]
+    with_header: bool
     # function: str | Callable[[float], float]
 
 
 class ConvertFunction(TypedDict):
+    """Settings to define a function."""
+
     # values: list[tuple[float, float]]
     # filename: str
-    function: str | Callable[[float], float]
+    function: ReadOnly[str | Callable[[float], float]]
+
+
+def create_func_interpolate(xp: np.ndarray, yp: np.ndarray) -> Callable[[float], float]:
+    """Create a 1D linear interpolation function.
+
+    Parameters
+    ----------
+    xp : ndarray
+        Array of x-coordinates (must be monotonic increasing).
+    yp : ndarray:
+        Array of y-coordinates corresponding to `xp`.
+
+    Returns
+    -------
+    Callable[[float], float]
+        Function that interpolates a single float value.
+    """
+    import numpy as np
+
+    def _func_interpolate(x: float) -> float:
+        return float(
+            np.interp(
+                x,
+                xp=np.asarray(xp, dtype=float),
+                fp=np.asarray(yp, dtype=float),
+            )
+        )
+
+    return _func_interpolate
+
+
+def to_callable(
+    dct: ConvertValues | ConvertFilename | ConvertFunction,
+) -> Callable[[float], float]:
+    if "values" in dct and ("filename" not in dct and "function" not in dct):
+        # Case: ConvertValues -> Create an interpolation function from the data points provided.
+        # Late import
+        import pandas as pd
+
+        values: list[tuple[float, float]] = dct["values"]
+
+        try:
+            df = pd.DataFrame(values)
+        except Exception as exc:
+            raise ValueError("Failed to convert a list of values") from exc
+
+        if len(df.columns) != 2:
+            raise ValueError("Values must be have 2-columns")
+
+        if df.empty:
+            raise ValueError("There are no values")
+
+        return create_func_interpolate(
+            xp=np.asarray(df.iloc[:, 0], dtype=float),
+            yp=np.asarray(df.iloc[:, 1], dtype=float),
+        )
+
+    elif "filename" in dct and ("values" not in dct and "function" not in dct):
+        # Case: ConvertFilename -> load a table from a file
+        from pyxel.inputs import load_table_v2
+
+        filename: str = dct["filename"]
+        with_header: bool = dct.get("with_header", False)
+
+        try:
+            df = load_table_v2(filename, header=with_header)
+        except Exception as exc:
+            raise ValueError(f"Failed to convert {filename!r}") from exc
+
+        if len(df.columns) != 2:
+            raise ValueError(f"File {filename!r} must have exactly two columns")
+
+        if df.empty:
+            raise ValueError(f"File {filename!r} is empty")
+
+        func = create_func_interpolate(
+            xp=np.asarray(df.iloc[:, 0], dtype=float),
+            yp=np.asarray(df.iloc[:, 1], dtype=float),
+        )
+
+        return func
+
+    elif "function" in dct and ("values" not in dct and "filename" not in dct):
+        # Case: ConvertFunction -> Return a callable
+        function: str | Callable[[float], float] = dct["function"]
+
+        if isinstance(function, str):
+            # TODO: Check this, this is security-sensitive
+            func = eval(function)
+
+            # TODO: Check that it's a 'Callable[[float], float]'
+            return func
+
+        elif callable(function):
+
+            # TODO: Check that it's a 'Callable[[float], float]'
+            return function
+        else:
+            raise ValueError("Invalid function specification")
+
+    else:
+        raise ValueError("Invalid conversion dictionary format")
 
 
 class AvalancheNoGain(TypedDict):
+    """Settings for APD without 'avalanche_gain'."""
+
     # avalanche_gain: float    # unit: electron/electron
-    pixel_reset_voltage: float  # unit: V
-    common_voltage: float  # unit: V
+    pixel_reset_voltage: ReadOnly[float]  # unit: V
+    common_voltage: ReadOnly[float]  # unit: V
 
     # gain_to_bias: ConvertionSettings | None = None
     bias_to_gain: ConvertValues | ConvertFilename | ConvertFunction
 
 
 class AvalancheNoPRV(TypedDict):
-    avalanche_gain: float  # unit: electron/electron
+    """Settings for APD without 'pixel_reset_voltage'."""
+
+    avalanche_gain: ReadOnly[float]  # unit: electron/electron
     # pixel_reset_voltage: float   # unit: V
-    common_voltage: float  # unit: V
+    common_voltage: ReadOnly[float]  # unit: V
 
     gain_to_bias: ConvertValues | ConvertFilename | ConvertFunction
     bias_to_gain: ConvertValues | ConvertFilename | ConvertFunction
 
 
-class AvalancheNoSettings(TypedDict):
-    avalanche_gain: float  # unit: electron/electron
-    pixel_reset_voltage: float  # unit: V
+class AvalancheNoCOMMON(TypedDict):
+    """Settings for APD without 'common_voltage'."""
+
+    avalanche_gain: ReadOnly[float]  # unit: electron/electron
+    pixel_reset_voltage: ReadOnly[float]  # unit: V
     # common_voltage: float   # unit: V
 
-    gain_to_bias: ConvertValues | ConvertFilename | ConvertFunction | None = None
-    bias_to_gain: ConvertValues | ConvertFilename | ConvertFunction | None = None
+    gain_to_bias: ConvertValues | ConvertFilename | ConvertFunction
+    bias_to_gain: ConvertValues | ConvertFilename | ConvertFunction
+
+
+# TODO: Add a Classmethod to create an instance of AvalancheSettings
+#       from one of the TypedDict
+#       Add also all properties to get 'avalanche_gain', ...
+class AvalancheSettings:
+    """Class to store and compute APD gain/bias settings.
+
+    Parameters
+    ----------
+    avalanche_gain : float
+        Gain of the avalanche multiplication stage.
+    pixel_reset_voltage : float
+        Pixel reset voltage in V.
+    common_voltage : float
+        Commonn voltage in V.
+    gain_to_bias : callable, optional
+        Function to convert from 'avalanche gain' to 'avalanche bias' (in V).
+    bias_to_gain : callable, optional
+        Function to convert fron 'avalanche bias' (in V) to 'avalanche gain'.
+    """
+
+    def __init__(
+        self,
+        avalanche_gain: float,
+        pixel_reset_voltage: float,
+        common_voltage: float,
+        gain_to_bias: Callable[[float], float] | None = None,
+        bias_to_gain: Callable[[float], float] | None = None,
+    ):
+
+        self._avalanche_gain: float = avalanche_gain
+        self._pixel_reset_voltage: float = pixel_reset_voltage
+        self._common_voltage: float = common_voltage
+        self._gain_to_bias: Callable[[float], float] | None = gain_to_bias
+        self._bias_to_gain: Callable[[float], float] | None = bias_to_gain
+
+    @classmethod
+    def build(cls, dct: AvalancheNoGain | AvalancheNoPRV | AvalancheNoCOMMON) -> Self:
+        """Build an 'AvalancheSettings' instance."""
+        if "pixel_reset_voltage" not in dct or "common_voltage" not in dct:
+            # Case: AvalancheNoPRV (No 'pixel_reset_voltage') or AvalancheNoCOMMON (No 'common_voltage')
+            avalanche_gain: float = dct["avalanche_gain"]
+            gain_to_bias: Callable[[float], float] = to_callable(dct["gain_to_bias"])
+            bias_to_gain: Callable[[float], float] = to_callable(dct["bias_to_gain"])
+
+            avalanche_bias: float = gain_to_bias(avalanche_gain)
+
+            if (
+                "avalanche_gain" in dct
+                and "pixel_reset_voltage" in dct
+                and "common_voltage" not in dct
+            ):
+                # Case: AvalancheNoCOMMON (No 'common' voltage)
+                pixel_reset_voltage = dct["pixel_reset_voltage"]
+
+                return cls(
+                    avalanche_gain=avalanche_gain,
+                    pixel_reset_voltage=pixel_reset_voltage,
+                    common_voltage=pixel_reset_voltage - avalanche_bias,
+                    gain_to_bias=gain_to_bias,
+                    bias_to_gain=bias_to_gain,
+                )
+
+            elif (
+                "avalanche_gain" in dct
+                and "common_voltage" in dct
+                and "pixel_reset_voltage" not in dct
+            ):
+                # Case: AvalancheNoPRV (No 'pixel_reset_voltage')
+                common_voltage: float = dct["common_voltage"]
+
+                return cls(
+                    avalanche_gain=avalanche_gain,
+                    pixel_reset_voltage=common_voltage + avalanche_bias,
+                    common_voltage=common_voltage,
+                    gain_to_bias=gain_to_bias,
+                    bias_to_gain=bias_to_gain,
+                )
+
+            else:
+                raise NotImplementedError
+
+        # else:
+        elif (
+            "avalanche_gain" not in dct
+            and "pixel_reset_voltage" in dct
+            and "common_voltage" in dct
+        ):
+            # AvalancheNoGain
+            pixel_reset_voltage = dct["pixel_reset_voltage"]
+            common_voltage = dct["common_voltage"]
+            bias_to_gain = to_callable(dct["bias_to_gain"])
+
+            return cls(
+                avalanche_gain=pixel_reset_voltage - common_voltage,
+                pixel_reset_voltage=pixel_reset_voltage,
+                common_voltage=common_voltage,
+                gain_to_bias=None,
+                bias_to_gain=bias_to_gain,
+            )
+
+        else:
+            raise NotImplementedError
+
+    @property
+    def avalanche_gain(self) -> float:
+        """Avalanche gain in e-/e-."""
+        return self._avalanche_gain
+
+    @property
+    def pixel_reset_voltage(self) -> float:
+        """Pixel reset voltage in V."""
+        return self._pixel_reset_voltage
+
+    @pixel_reset_voltage.setter
+    def pixel_reset_voltage(self, value: float) -> None:
+        self._pixel_reset_voltage = value
+
+    @property
+    def common_voltage(self) -> float:
+        """Common voltage in V."""
+        return self._common_voltage
+
+    @common_voltage.setter
+    def common_voltage(self, value: float) -> None:
+        self._common_voltage = value
+
+    @property
+    def avalanche_bias(self) -> float:
+        """Compute Avalanche bias voltage in V."""
+        return self.pixel_reset_voltage - self.common_voltage
 
 
 class APDCharacteristics:
@@ -166,8 +382,10 @@ class APDCharacteristics:
     def __init__(
         self,
         roic_gain: float,  # unit: V
-        avalanche_settings: AvalancheNoGain | AvalancheNoPRV | AvalancheNoSettings,
         bias_to_node: ConvertValues | ConvertFilename | ConvertFunction,
+        avalanche_settings: (
+            AvalancheNoGain | AvalancheNoPRV | AvalancheNoCOMMON | None
+        ) = None,  # TODO: This parameter should be provided
         #####################
         # Common parameters #
         #####################
@@ -181,77 +399,109 @@ class APDCharacteristics:
         avalanche_gain: float | None = None,
         pixel_reset_voltage: float | None = None,
         common_voltage: float | None = None,
-        gain_to_bias_func: Callable[[float], float] | None = None,
-        bias_to_gain_func: Callable[[float], float] | None = None,
-        bias_to_node_func: Callable[[float], float] | None = None,
     ):
-        self._gain_to_bias_data = gain_to_bias_func
-        self._bias_to_gain_data = bias_to_gain_func
-        self._bias_to_node_data = bias_to_node_func
+        # Build '_avalanche_settings'
+        if avalanche_settings is not None:
+            self._avalanche_settings: (
+                AvalancheNoGain | AvalancheNoPRV | AvalancheNoCOMMON
+            ) = avalanche_settings
+        else:
+            warnings.warn(
+                "Parameters 'avalanche_gain', 'pixel_reset_voltage' and 'common_voltage' are deprecated",
+                DeprecationWarning,
+                stacklevel=1,
+            )
 
-        self._gain_to_bias_func = (
-            _build_interp_func(gain_to_bias_func, "gain", "bias")
-            if gain_to_bias_func is not None
-            else None
-        )
-        self._bias_to_gain_func = (
-            _build_interp_func(bias_to_gain_func, "bias", "gain")
-            if bias_to_gain_func is not None
-            else None
-        )
-        self._bias_to_node_func = (
-            _build_interp_func(bias_to_node_func, "bias", "capacitance")
-            if bias_to_node_func is not None
-            else None
-        )
-
-        self._original_avalanche_gain: float | None = avalanche_gain
-        self._original_pixel_reset_voltage: float | None = pixel_reset_voltage
-        self._original_common_voltage: float | None = common_voltage
-
-        if avalanche_gain is not None:
-            self._avalanche_gain: float = avalanche_gain
-
-            if not (1.0 <= avalanche_gain <= 1000.0):
-                raise ValueError("'apd_gain' must be between 1.0 and 1000.0.")
-
-            if pixel_reset_voltage is not None:
-                if common_voltage is not None:
-                    raise ValueError(
-                        "Please only specify two inputs out of: avalanche gain, pixel reset"
-                        " voltage, common voltage."
-                    )
-
-                self._avalanche_bias: float = self.gain_to_bias(avalanche_gain)
-                self._pixel_reset_voltage: float = pixel_reset_voltage
-                self._common_voltage: float = pixel_reset_voltage - self.avalanche_bias
-
-            elif common_voltage is not None:
-                self._avalanche_bias = self.gain_to_bias(avalanche_gain)
-                self._pixel_reset_voltage = common_voltage + self.avalanche_bias
-                self._common_voltage = common_voltage
+            if (
+                avalanche_gain is None
+                and pixel_reset_voltage is not None
+                and common_voltage is not None
+            ):
+                self._avalanche_settings = {
+                    "pixel_reset_voltage": pixel_reset_voltage,
+                    "common_voltage": common_voltage,
+                    "bias_to_gain": {"function": "xyz"},  # for Saphira
+                }
+            elif (
+                avalanche_gain is not None
+                and pixel_reset_voltage is None
+                and common_voltage is not None
+            ):
+                self._avalanche_settings = {
+                    "avalanche_gain": avalanche_gain,
+                    "common_voltage": common_voltage,
+                    "gain_to_bias": {"function": "xyz"},  # for Saphira
+                    "bias_to_gain": {"function": "xyz"},  # for Saphira
+                }
+            elif (
+                avalanche_gain is not None
+                and pixel_reset_voltage is not None
+                and common_voltage is None
+            ):
+                self._avalanche_settings = {
+                    "avalanche_gain": avalanche_gain,
+                    "pixel_reset_voltage": pixel_reset_voltage,
+                    "gain_to_bias": {"function": "xyz"},  # for Saphira
+                    "bias_to_gain": {"function": "xyz"},  # for Saphira
+                }
 
             else:
-                raise ValueError(
-                    "Only 'avalanche_gain', missing parameter 'pixel_reset_voltage' "
-                    "or 'common_voltage'."
-                )
+                raise ValueError
 
-        elif common_voltage is not None:
-            if pixel_reset_voltage is None:
-                raise ValueError(
-                    "Only 'common_voltage', missing parameter 'pixel_reset_voltage' or "
-                    "'avalanche_gain'"
-                )
-            self._avalanche_bias = pixel_reset_voltage - common_voltage
-            self._pixel_reset_voltage = pixel_reset_voltage
-            self._avalanche_gain = self.bias_to_gain(self.avalanche_bias)
-            self._common_voltage = common_voltage
+        # Build object 'AvalancheSettings'
+        self._bias_to_node: Callable[[float], float] = to_callable(bias_to_node)
+        self._avalanche: AvalancheSettings = AvalancheSettings.build(
+            self._avalanche_settings
+        )
 
-        else:
-            raise ValueError(
-                "Not enough input parameters provided to calculate avalanche bias!"
-            )
+        # if "avalanche_gain" in self._avalanche_settings:
+        #     self._avalanche_gain: float = self._avalanche_settings["avalanche_gain"]
+        #
+        #     if not (1.0 <= self._avalanche_gain <= 1000.0):
+        #         raise ValueError("'apd_gain' must be between 1.0 and 1000.0.")
+        #
+        #         # if pixel_reset_voltage is not None:
+        #         #     if common_voltage is not None:
+        #         #         raise ValueError(
+        #         #             "Please only specify two inputs out of: avalanche gain, pixel reset"
+        #         #             " voltage, common voltage."
+        #         #         )
+        #
+        #     self._avalanche_bias: float = self.gain_to_bias(self._avalanche_gain)
+        #     self._pixel_reset_voltage: float = self._avalanche_settings[
+        #         "pixel_reset_voltage"
+        #     ]
+        #     self._common_voltage: float = (
+        #         self._avalanche_settings["pixel_reset_voltage"]
+        #         - self._avalanche_settings["self.avalanche_bias"]
+        #     )
+
+        # elif "common_voltage" != None:
+        #     self._avalanche_bias = self.gain_to_bias(avalanche_gain)
+        #     self._pixel_reset_voltage = common_voltage + self.avalanche_bias
+        #     self._common_voltage = common_voltage
+        #
+        # else:
+        #     raise ValueError(
+        #         "Only 'avalanche_gain', missing parameter 'pixel_reset_voltage' "
+        #         "or 'common_voltage'."
+        #     )
+        #
+        # elif common_voltage is not None:
+        #     if pixel_reset_voltage is None:
+        #         raise ValueError(
+        #             "Only 'common_voltage', missing parameter 'pixel_reset_voltage' or "
+        #             "'avalanche_gain'"
+        #         )
+        #     self._avalanche_bias = pixel_reset_voltage - common_voltage
+        #     self._pixel_reset_voltage = pixel_reset_voltage
+        #     self._avalanche_gain = self.bias_to_gain(self.avalanche_bias)
+        #     self._common_voltage = common_voltage
+        #
+        # else:
+        #     raise ValueError(
+        #         "Not enough input parameters provided to calculate avalanche bias!"
+        #     )
 
         if quantum_efficiency and not (0.0 <= quantum_efficiency <= 1.0):
             raise ValueError("'quantum_efficiency' must be between 0.0 and 1.0.")
@@ -294,9 +544,7 @@ class APDCharacteristics:
             and self._full_well_capacity == other._full_well_capacity
             and self._adc_bit_resolution == other._adc_bit_resolution
             and self._adc_voltage_range == other._adc_voltage_range
-            and self._avalanche_gain == other._avalanche_gain
-            and self._pixel_reset_voltage == other._pixel_reset_voltage
-            and self._common_voltage == other._common_voltage
+            and self._avalanche_settings == other._avalanche_settings
         )
 
     # TODO: This method exists in class 'Characteristics' and 'APDCharacteristics'
@@ -378,62 +626,76 @@ class APDCharacteristics:
         self._quantum_efficiency = value
 
     @property
+    def avalanche_settings(self) -> AvalancheSettings:
+        return self._avalanche
+
+    @deprecated("Use '.avalanche_settings.avalanche_gain")
+    @property
     def avalanche_gain(self) -> float:
         """Get APD gain."""
-        return self._avalanche_gain
+        return self._avalanche.avalanche_gain
 
     @avalanche_gain.setter
     def avalanche_gain(self, value: float) -> None:
         """Set APD gain."""
-        if np.min(value) < 1.0 or np.max(value) > 1000.0:
-            raise ValueError("'apd_gain' values must be between 1.0 and 1000.")
-        self._avalanche_gain = value
-        self._avalanche_bias = self.gain_to_bias(value)
-        self._common_voltage = self.pixel_reset_voltage - self.avalanche_bias
+        raise NotImplementedError
+        # self._avalanche.avalanche_gain = value
+        # if np.min(value) < 1.0 or np.max(value) > 1000.0:
+        #     raise ValueError("'apd_gain' values must be between 1.0 and 1000.")
+        # self._avalanche_gain = value
+        # self._avalanche_bias = self.gain_to_bias(value)
+        # self._common_voltage = self.pixel_reset_voltage - self.avalanche_bias
 
+    @deprecated("Use '.avalanche_settings.pixel_reset_voltage")
     @property
     def pixel_reset_voltage(self) -> float:
         """Get pixel reset voltage."""
-        return self._pixel_reset_voltage
+        return self._avalanche.pixel_reset_voltage
 
     @pixel_reset_voltage.setter
     def pixel_reset_voltage(self, value: float) -> None:
         """Set pixel reset voltage."""
-        self._avalanche_bias = value - self.common_voltage
-        self._avalanche_gain = self.bias_to_gain(self.avalanche_bias)
-        self._pixel_reset_voltage = value
+        self._avalanche.pixel_reset_voltage = value
+        # self._avalanche_bias = value - self.common_voltage
+        # self._avalanche_gain = self.bias_to_gain(self.avalanche_bias)
+        # self._pixel_reset_voltage = value
 
+    @deprecated("Use '.avalanche_settings.common_voltage")
     @property
     def common_voltage(self) -> float:
         """Get common voltage."""
-        return self._common_voltage
+        return self._avalanche.common_voltage
 
     @common_voltage.setter
     def common_voltage(self, value: float) -> None:
         """Set common voltage."""
-        self._avalanche_bias = self.pixel_reset_voltage - value
-        self._avalanche_gain = self.bias_to_gain(self.avalanche_bias)
-        self._common_voltage = value
+        self._avalanche.common_voltage = value
+        # self._avalanche_bias = self.pixel_reset_voltage - value
+        # self._avalanche_gain = self.bias_to_gain(self.avalanche_bias)
+        # self._common_voltage = value
 
+    @deprecated("Use '.avalanche_settings.avalanche_bias")
     @property
     def avalanche_bias(self) -> float:
         """Get avalanche bias."""
-        return self._avalanche_bias
+        return self._avalanche.avalanche_bias
 
     @property
     def roic_gain(self) -> float:
-        """Get roic gainn."""
+        """Get roic gain."""
         return self._roic_gain
 
     @property
     def node_capacitance(self) -> float:
         """Compute node capacitance dynamically from avalanche bias."""
-        return self.bias_to_node_capacitance(self.avalanche_bias)
+        return self.bias_to_node_capacitance(self.avalanche_settings.avalanche_bias)
 
     @property
     def charge_to_volt_conversion(self) -> float:
         """Compute charge-to-voltage conversion factor."""
-        capacitance = self.bias_to_node_capacitance(self.avalanche_bias)
+        capacitance = self.bias_to_node_capacitance(
+            self.avalanche_settings.avalanche_bias
+        )
         return detector_gain(capacitance=capacitance, roic_gain=self.roic_gain)
 
     @property
@@ -499,7 +761,7 @@ class APDCharacteristics:
         """Compute the full system gain based on detector type."""
         return (
             self.quantum_efficiency
-            * self.avalanche_gain
+            * self.avalanche_settings.avalanche_gain
             * self.charge_to_volt_conversion
             * 2**self.adc_bit_resolution
         ) / (max(self.adc_voltage_range) - min(self.adc_voltage_range))
@@ -518,58 +780,55 @@ class APDCharacteristics:
 
     def bias_to_node_capacitance(self, bias: float) -> float:
         """Compute node capacitance from bias voltage using user-provided function."""
-        if self._bias_to_node_func is None:
+        if self._bias_to_node is None:
             raise ValueError("'bias_to_node_func' must be provided.")
-        return self._bias_to_node_func(bias) * 1e-15  # fF → F
 
-    def bias_to_gain(self, bias: float) -> float:
-        """Compute avalanche gain from bias voltage using user-provided function or inverse."""
-        if self._bias_to_gain_func is not None:
-            return self._bias_to_gain_func(bias)
+        return self._bias_to_node(bias) * 1e-15  # fF → F
 
-        if self._gain_to_bias_func is not None:
-            inverse_func = _invert_function(
-                _build_interp_func(self._gain_to_bias_func, "gain", "bias"),
-                x_min=1.0,
-                x_max=10.0,
-            )
-            return inverse_func(bias)
-
-        raise ValueError(
-            "Either 'bias_to_gain_func' or 'gain_to_bias_func' must be provided."
-        )
-
-    def gain_to_bias(self, gain: float) -> float:
-        """Compute avalanche bias from gain using user-provided function or inverse."""
-        if self._gain_to_bias_func is not None:
-            return self._gain_to_bias_func(gain)
-
-        if self._bias_to_gain_func is not None:
-            inverse_func = _invert_function(
-                _build_interp_func(self._bias_to_gain_func, "bias", "gain"),
-                x_min=0.5,
-                x_max=10.0,  # You can adjust depending on expected gain range
-            )
-            return inverse_func(gain)
-
-        raise ValueError(
-            "Either 'gain_to_bias_func' or 'bias_to_gain_func' must be provided."
-        )
+    # def bias_to_gain(self, bias: float) -> float:
+    #     """Compute avalanche gain from bias voltage using user-provided function or inverse."""
+    #     if self._bias_to_gain_func is not None:
+    #         return self._bias_to_gain_func(bias)
+    #
+    #     if self._gain_to_bias_func is not None:
+    #         inverse_func = _invert_function(
+    #             _build_interp_func(self._gain_to_bias_func, "gain", "bias"),
+    #             x_min=1.0,
+    #             x_max=10.0,
+    #         )
+    #         return inverse_func(bias)
+    #
+    #     raise ValueError(
+    #         "Either 'bias_to_gain_func' or 'gain_to_bias_func' must be provided."
+    #     )
+    #
+    # def gain_to_bias(self, gain: float) -> float:
+    #     """Compute avalanche bias from gain using user-provided function or inverse."""
+    #     if self._gain_to_bias_func is not None:
+    #         return self._gain_to_bias_func(gain)
+    #
+    #     if self._bias_to_gain_func is not None:
+    #         inverse_func = _invert_function(
+    #             _build_interp_func(self._bias_to_gain_func, "bias", "gain"),
+    #             x_min=0.5,
+    #             x_max=10.0,  # You can adjust depending on expected gain range
+    #         )
+    #         return inverse_func(gain)
+    #
+    #     raise ValueError(
+    #         "Either 'gain_to_bias_func' or 'bias_to_gain_func' must be provided."
+    #     )
 
     def to_dict(self) -> Mapping:
         """Get the attributes of this instance as a `dict`."""
         dct = {
-            "avalanche_gain": self._original_avalanche_gain,
-            "common_voltage": self._original_common_voltage,
-            "pixel_reset_voltage": self._original_pixel_reset_voltage,
             "quantum_efficiency": self._quantum_efficiency,
             "full_well_capacity": self._full_well_capacity,
             "adc_voltage_range": self._adc_voltage_range,
             "adc_bit_resolution": self._adc_bit_resolution,
             "roic_gain": self._roic_gain,
-            "gain_to_bias_func": self._gain_to_bias_data,
-            "bias_to_gain_func": self._bias_to_gain_data,
-            "bias_to_node_func": self._bias_to_node_data,
+            "avalanche_settings": self._avalanche_settings,
+            "bias_to_node_func": self._bias_to_node,  # TODO: FIx this
         }
         return dct
 
