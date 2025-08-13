@@ -589,8 +589,8 @@ class APDCharacteristics:
             else:
                 raise ValueError
 
-        # Build object 'AvalancheSettings'
-        self._avalanche_settings = AvalancheSettings.build(avalanche_settings_dct)
+            # Build object 'AvalancheSettings'
+            self._avalanche_settings = AvalancheSettings.build(avalanche_settings_dct)
 
         # if "avalanche_gain" in self._avalanche_settings:
         #     self._avalanche_gain: float = self._avalanche_settings["avalanche_gain"]
