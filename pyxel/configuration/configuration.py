@@ -765,11 +765,7 @@ def to_apd_characteristics(dct: dict | None) -> APDCharacteristics:
     else:
         new_dct = dct.copy()
 
-    if "roic_gain" not in new_dct:
-        raise KeyError("Missing parameter 'roic_gain' in APD Characteristics")
-
-    roic_gain = new_dct.pop("roic_gain")
-    return APDCharacteristics(roic_gain=roic_gain, **new_dct)
+    return APDCharacteristics.build(new_dct)
 
 
 def to_ccd(dct: dict) -> CCD:
