@@ -355,7 +355,7 @@ class AvalancheSettings:
     gain_to_bias : callable, optional
         Function to convert from 'avalanche gain' to 'avalanche bias' (in V).
     bias_to_gain : callable, optional
-        Function to convert fron 'avalanche bias' (in V) to 'avalanche gain'.
+        Function to convert from 'avalanche bias' (in V) to 'avalanche gain'.
     """
 
     avalanche_gain: float
