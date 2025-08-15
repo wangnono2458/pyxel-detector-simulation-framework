@@ -147,8 +147,8 @@ class ConverterValues:
             raise ValueError("There are no values")
 
         # TODO: Check that the first column on 'df' is monotonic
-        first_column: pd.Series = df.iloc[0]
-        second_column: pd.Series = df.iloc[1]
+        first_column: pd.Series = df.iloc[:, 0]
+        second_column: pd.Series = df.iloc[:, 1]
 
         if (
             not first_column.is_monotonic_increasing
@@ -269,11 +269,13 @@ def build_converter(dct: dict) -> ConverterValues | ConverterTable | ConverterFu
         raise ValueError
 
 
-# TODO: Add a Classmethod to create an instance of AvalancheSettings
-#       from one of the TypedDict
-#       Add also all properties to get 'avalanche_gain', ...
 class AvalancheSettings:
-    """Class to store and compute APD gain/bias settings.
+    """Class to store and compute Avalanche Photodiode (APD) gain/bias settings.
+
+    This class encapsulates the relationship between avalanche gain, pixel
+    reset voltage, common voltage, and the avalanche bias. Conversions between
+    gain and bias can be done using provided converter functions, tables, or
+    value mappings.
 
     Parameters
     ----------
@@ -287,30 +289,115 @@ class AvalancheSettings:
         Function to convert from 'avalanche gain' to 'avalanche bias' (in V).
     bias_to_gain : callable, optional
         Function to convert from 'avalanche bias' (in V) to 'avalanche gain'.
+
+    Examples
+    --------
+    >>> from pyxel.detectors.apd import AvalancheSettings
+    >>> gain_to_bias = lambda gain: 0.5 * gain  # Dummy conversion
+    >>> bias_to_gain = lambda bias: bias / 0.5
+    >>> settings = AvalancheSettings(
+    ...     avalanche_gain=10.0,
+    ...     pixel_reset_voltage=3.0,
+    ...     common_voltage=2.0,
+    ...     gain_to_bias=gain_to_bias,
+    ...     bias_to_gain=bias_to_gain,
+    ... )
+    >>> settings.avalanche_bias
+    1.0
+    >>> settings.avalanche_gain = 100.0
+    >>> settings.avalanche_bias
+    50.0
     """
 
     def __init__(
         self,
-        avalanche_gain: float,
-        pixel_reset_voltage: float,
-        common_voltage: float,
-        gain_to_bias: ConverterValues | ConverterTable | ConverterFunction,
-        bias_to_gain: ConverterValues | ConverterTable | ConverterFunction,
+        avalanche_gain: float | None,
+        pixel_reset_voltage: float | None,
+        common_voltage: float | None,
+        gain_to_bias: (
+            ConverterValues
+            | ConverterTable
+            | ConverterFunction
+            | Callable[[float], float]
+        ),
+        bias_to_gain: (
+            ConverterValues
+            | ConverterTable
+            | ConverterFunction
+            | Callable[[float], float]
+        ),
     ):
-        if not (1.0 <= avalanche_gain <= 1000.0):
-            raise ValueError("'apd_gain' must be between 1.0 and 1000.0.")
+        # Ensure that 'gain_to_bias' and 'bias_to_gain' are valid converter functions
+        if isinstance(
+            gain_to_bias, ConverterValues | ConverterTable | ConverterFunction
+        ):
+            gain_to_bias_func = gain_to_bias
+        else:
+            gain_to_bias_func = ConverterFunction(gain_to_bias)
 
-        self._avalanche_gain: float = avalanche_gain
-        self._pixel_reset_voltage: float = pixel_reset_voltage
-        self._common_voltage: float = common_voltage
+        if isinstance(
+            bias_to_gain, ConverterValues | ConverterTable | ConverterFunction
+        ):
+            bias_to_gain_func = bias_to_gain
+        else:
+            bias_to_gain_func = ConverterFunction(bias_to_gain)
+
         self._gain_to_bias: ConverterValues | ConverterTable | ConverterFunction = (
-            gain_to_bias
+            gain_to_bias_func
         )
         self._bias_to_gain: ConverterValues | ConverterTable | ConverterFunction = (
-            bias_to_gain
+            bias_to_gain_func
         )
 
-        self._avalanche_bias: float = 0.0
+        # Case 1: 'avalanche_gain' is provided
+        if avalanche_gain is not None:
+            if not (1.0 <= avalanche_gain <= 1000.0):
+                raise ValueError(
+                    f"Invalid '{avalanche_gain=}'. Value must be between 1.0 and 1000.0."
+                )
+
+            # Provided 'avalanche_gain'
+            self._avalanche_gain: float = avalanche_gain
+            self._avalanche_bias: float = gain_to_bias(avalanche_gain)
+
+            if pixel_reset_voltage is not None:
+                if common_voltage is None:
+                    # Missing 'common_voltage'
+                    self._pixel_reset_voltage = pixel_reset_voltage
+                    self._common_voltage = pixel_reset_voltage - self._avalanche_bias
+                else:
+                    # Too many parameters
+                    raise ValueError
+            else:
+                # Missing 'pixel_reset_voltage'
+                if common_voltage is not None:
+                    self._pixel_reset_voltage = common_voltage + self._avalanche_bias
+                    self._common_voltage = common_voltage
+
+                else:
+                    # Missing too many parameters
+                    raise ValueError
+
+        else:
+            # Missing 'avalanche_gain'
+
+            if pixel_reset_voltage is not None and common_voltage is not None:
+                self._pixel_reset_voltage = pixel_reset_voltage
+                self._common_voltage = common_voltage
+            else:
+                # Missing 'common_voltage'
+                raise ValueError
+
+            self._avalanche_bias = self._pixel_reset_voltage - self._common_voltage
+            self._avalanche_gain = bias_to_gain(self._avalanche_bias)
+
+    def __repr__(self) -> str:
+        cls_name = self.__class__.__name__
+        return (
+            f"{cls_name}(avalanche_gain={self._avalanche_gain}, "
+            f"pixel_reset_voltage={self._pixel_reset_voltage}, common_voltage={self._common_voltage}, "
+            f"gain_to_bias={self._gain_to_bias!r}, bias_to_gain={self._bias_to_gain!r}"
+        )
 
     @property
     def avalanche_gain(self) -> float:
@@ -320,7 +407,10 @@ class AvalancheSettings:
     @avalanche_gain.setter
     def avalanche_gain(self, value: float) -> None:
         if not (1.0 <= value <= 1000.0):
-            raise ValueError("'apd_gain' must be between 1.0 and 1000.0.")
+            raise ValueError(
+                f"Invalid 'avalanche_gain={value!r}'. "
+                f"Value must be between 1.0 and 1000.0."
+            )
 
         self._avalanche_gain = value
         self._avalanche_bias = self._gain_to_bias(value)
@@ -350,7 +440,7 @@ class AvalancheSettings:
 
     @property
     def avalanche_bias(self) -> float:
-        """Compute Avalanche bias voltage in V."""
+        """Avalanche bias in V."""
         return self._avalanche_bias
 
     def to_dict(self) -> dict:
@@ -358,19 +448,25 @@ class AvalancheSettings:
             "avalanche_gain": self.avalanche_gain,
             "pixel_reset_voltage": self.pixel_reset_voltage,
             "common_voltage": self.common_voltage,
-            "gain_to_bias": (self._gain_to_bias.to_dict()),
-            "bias_to_gain": (self._bias_to_gain.to_dict()),
+            "gain_to_bias": self._gain_to_bias.to_dict(),
+            "bias_to_gain": self._bias_to_gain.to_dict(),
         }
 
     @classmethod
     def build(cls, dct: dict) -> Self:
-        """Build an 'AvalancheSettings' instance."""
+        """Build an 'AvalancheSettings' instance from a dictionary."""
         avalanche_gain: float | None = dct.get("avalanche_gain")
         pixel_reset_voltage: float | None = dct.get("pixel_reset_voltage")
         common_voltage: float | None = dct.get("common_voltage")
 
-        if "gain_to_bias" not in dct or "bias_to_gain" not in dct:
-            raise ValueError
+        if "gain_to_bias" not in dct:
+            raise ValueError(
+                "Missing required key: 'gain_to_bias' in settings dictionary."
+            )
+        if "bias_to_gain" not in dct:
+            raise ValueError(
+                "Missing required key: 'bias_to_gain' in settings dictionary."
+            )
 
         gain_to_bias: dict = dct["gain_to_bias"]
         bias_to_gain: dict = dct["bias_to_gain"]
@@ -381,61 +477,14 @@ class AvalancheSettings:
         bias_to_gain_func: ConverterValues | ConverterTable | ConverterFunction = (
             build_converter(bias_to_gain)
         )
-        if (
-            avalanche_gain is not None
-            and isinstance(gain_to_bias, dict)
-            and isinstance(bias_to_gain, dict)
-        ):
-            # Case: AvalancheNoPRV (No 'pixel_reset_voltage') or AvalancheNoCOMMON (No 'common_voltage')
-            avalanche_bias: float = gain_to_bias_func(avalanche_gain)
 
-            if pixel_reset_voltage is not None and common_voltage is None:
-                # Case: AvalancheNoCOMMON (No 'common' voltage)
-                return cls(
-                    avalanche_gain=avalanche_gain,
-                    pixel_reset_voltage=pixel_reset_voltage,
-                    common_voltage=pixel_reset_voltage - avalanche_bias,
-                    gain_to_bias=gain_to_bias_func,
-                    bias_to_gain=bias_to_gain_func,
-                )
-
-            elif (
-                avalanche_gain is not None
-                and common_voltage is not None
-                and pixel_reset_voltage is None
-            ):
-                # Case: AvalancheNoPRV (No 'pixel_reset_voltage')
-                return cls(
-                    avalanche_gain=avalanche_gain,
-                    pixel_reset_voltage=common_voltage + avalanche_bias,
-                    common_voltage=common_voltage,
-                    gain_to_bias=gain_to_bias_func,
-                    bias_to_gain=bias_to_gain_func,
-                )
-
-            else:
-                raise NotImplementedError
-
-        # else:
-        elif (
-            avalanche_gain is None
-            and pixel_reset_voltage is not None
-            and common_voltage is not None
-        ):
-            # AvalancheNoGain
-            pixel_reset_voltage = dct["pixel_reset_voltage"]
-            common_voltage = dct["common_voltage"]
-
-            return cls(
-                avalanche_gain=pixel_reset_voltage - common_voltage,
-                pixel_reset_voltage=pixel_reset_voltage,
-                common_voltage=common_voltage,
-                gain_to_bias=gain_to_bias_func,
-                bias_to_gain=bias_to_gain_func,
-            )
-
-        else:
-            raise NotImplementedError
+        return cls(
+            avalanche_gain=avalanche_gain,
+            pixel_reset_voltage=pixel_reset_voltage,
+            common_voltage=common_voltage,
+            gain_to_bias=gain_to_bias_func,
+            bias_to_gain=bias_to_gain_func,
+        )
 
 
 class APDCharacteristics:
