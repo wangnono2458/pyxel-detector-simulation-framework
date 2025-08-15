@@ -161,6 +161,9 @@ class ConverterValues:
             yp=np.asarray(second_column, dtype=float),
         )
 
+    def __eq__(self, other) -> bool:
+        return type(self) is type(other) and self._values == other._values
+
     def __call__(self, x: float) -> float:
         return self._func(x)
 
@@ -197,6 +200,13 @@ class ConverterTable:
         cls_name = self.__class__.__name__
         return f"{cls_name}(filename={self._filename!r}, with_header={self._with_header!r})"
 
+    def __eq__(self, other) -> bool:
+        return (
+            type(self) is type(other)
+            and self._filename == other._filename
+            and self._with_header == other._with_header
+        )
+
     def __call__(self, x: float) -> float:
         return self._func(x)
 
@@ -227,6 +237,14 @@ class ConverterFunction:
             raise TypeError
 
         self._func = func
+
+    def __eq__(self, other) -> bool:
+        if callable(self._function):
+            raise NotImplementedError
+
+        return type(self) is type(other) and (
+            isinstance(self._function, str) and self._function == other._function
+        )
 
     def __repr__(self) -> str:
         cls_name = self.__class__.__name__
@@ -311,9 +329,6 @@ class AvalancheSettings:
 
     def __init__(
         self,
-        avalanche_gain: float | None,
-        pixel_reset_voltage: float | None,
-        common_voltage: float | None,
         gain_to_bias: (
             ConverterValues
             | ConverterTable
@@ -326,6 +341,9 @@ class AvalancheSettings:
             | ConverterFunction
             | Callable[[float], float]
         ),
+        avalanche_gain: float | None = None,
+        pixel_reset_voltage: float | None = None,
+        common_voltage: float | None = None,
     ):
         # Ensure that 'gain_to_bias' and 'bias_to_gain' are valid converter functions
         if isinstance(
@@ -367,7 +385,10 @@ class AvalancheSettings:
                     self._common_voltage = pixel_reset_voltage - self._avalanche_bias
                 else:
                     # Too many parameters
-                    raise ValueError
+                    raise ValueError(
+                        "Too many parameters. Only two of these parameters must "
+                        "be provided: 'avalanche_gain', 'pixel_reset_voltage', 'common_voltage'"
+                    )
             else:
                 # Missing 'pixel_reset_voltage'
                 if common_voltage is not None:
@@ -376,20 +397,46 @@ class AvalancheSettings:
 
                 else:
                     # Missing too many parameters
-                    raise ValueError
-
+                    raise ValueError(
+                        "'avalanche_gain' provided. Missing one of these parameters: "
+                        "'pixel_reset_voltage', 'common_voltage'"
+                    )
         else:
             # Missing 'avalanche_gain'
+            if pixel_reset_voltage is not None:
+                if common_voltage is None:
+                    raise ValueError(
+                        "'avalanche_gain' not provided and missing 'pixel_reset_voltage'. Parameter "
+                        "'common_voltage' must be provided"
+                    )
 
-            if pixel_reset_voltage is not None and common_voltage is not None:
                 self._pixel_reset_voltage = pixel_reset_voltage
                 self._common_voltage = common_voltage
-            else:
-                # Missing 'common_voltage'
-                raise ValueError
 
+            else:
+                if common_voltage is None:
+                    # Missing 'common_voltage'
+                    raise ValueError(
+                        "Missing parameters. Two of these parameters must "
+                        "be provided: 'avalanche_gain', 'pixel_reset_voltage', 'common_voltage'"
+                    )
+                else:
+                    raise ValueError(
+                        "'avalanche_gain' not provided and missing 'pixel_reset_voltage'. Parameter "
+                        "'common_voltage' must be provided"
+                    )
             self._avalanche_bias = self._pixel_reset_voltage - self._common_voltage
             self._avalanche_gain = bias_to_gain(self._avalanche_bias)
+
+    def __eq__(self, other) -> bool:
+        return (
+            type(self) is type(other)
+            and self._gain_to_bias == other._gain_to_bias
+            and self._bias_to_gain == other._bias_to_gain
+            and self._avalanche_gain == other._avalanche_gain
+            and self._pixel_reset_voltage == other._pixel_reset_voltage
+            and self.__common_voltage == other._common_voltage
+        )
 
     def __repr__(self) -> str:
         cls_name = self.__class__.__name__
@@ -487,6 +534,58 @@ class AvalancheSettings:
         )
 
 
+@deprecated("This function will be removed")
+def _old_create_avalanche_settings(
+    avalanche_gain: float | None = None,
+    pixel_reset_voltage: float | None = None,
+    common_voltage: float | None = None,
+) -> AvalancheSettings:
+    warnings.warn(
+        "Parameters 'avalanche_gain', 'pixel_reset_voltage' and 'common_voltage' are deprecated",
+        DeprecationWarning,
+        stacklevel=1,
+    )
+
+    if (
+        avalanche_gain is None
+        and pixel_reset_voltage is not None
+        and common_voltage is not None
+    ):
+        avalanche_settings_dct = {
+            "pixel_reset_voltage": pixel_reset_voltage,
+            "common_voltage": common_voltage,
+            "bias_to_gain": {"function": "xyz"},  # for Saphira
+        }
+    elif (
+        avalanche_gain is not None
+        and pixel_reset_voltage is None
+        and common_voltage is not None
+    ):
+        avalanche_settings_dct = {
+            "avalanche_gain": avalanche_gain,
+            "common_voltage": common_voltage,
+            "gain_to_bias": {"function": "xyz"},  # for Saphira
+            "bias_to_gain": {"function": "xyz"},  # for Saphira
+        }
+    elif (
+        avalanche_gain is not None
+        and pixel_reset_voltage is not None
+        and common_voltage is None
+    ):
+        avalanche_settings_dct = {
+            "avalanche_gain": avalanche_gain,
+            "pixel_reset_voltage": pixel_reset_voltage,
+            "gain_to_bias": {"function": "xyz"},  # for Saphira
+            "bias_to_gain": {"function": "xyz"},  # for Saphira
+        }
+
+    else:
+        raise ValueError("Please only specify two inputs")
+
+    # Build object 'AvalancheSettings'
+    return AvalancheSettings.build(avalanche_settings_dct)
+
+
 class APDCharacteristics:
     """Characteristic attributes of the APD detector.
 
@@ -533,50 +632,11 @@ class APDCharacteristics:
         if avalanche_settings is not None:
             self._avalanche_settings: AvalancheSettings = avalanche_settings
         else:
-            warnings.warn(
-                "Parameters 'avalanche_gain', 'pixel_reset_voltage' and 'common_voltage' are deprecated",
-                DeprecationWarning,
-                stacklevel=1,
+            self._avalanche_settings = _old_create_avalanche_settings(
+                avalanche_gain=avalanche_gain,
+                pixel_reset_voltage=pixel_reset_voltage,
+                common_voltage=common_voltage,
             )
-
-            if (
-                avalanche_gain is None
-                and pixel_reset_voltage is not None
-                and common_voltage is not None
-            ):
-                avalanche_settings_dct = {
-                    "pixel_reset_voltage": pixel_reset_voltage,
-                    "common_voltage": common_voltage,
-                    "bias_to_gain": {"function": "xyz"},  # for Saphira
-                }
-            elif (
-                avalanche_gain is not None
-                and pixel_reset_voltage is None
-                and common_voltage is not None
-            ):
-                avalanche_settings_dct = {
-                    "avalanche_gain": avalanche_gain,
-                    "common_voltage": common_voltage,
-                    "gain_to_bias": {"function": "xyz"},  # for Saphira
-                    "bias_to_gain": {"function": "xyz"},  # for Saphira
-                }
-            elif (
-                avalanche_gain is not None
-                and pixel_reset_voltage is not None
-                and common_voltage is None
-            ):
-                avalanche_settings_dct = {
-                    "avalanche_gain": avalanche_gain,
-                    "pixel_reset_voltage": pixel_reset_voltage,
-                    "gain_to_bias": {"function": "xyz"},  # for Saphira
-                    "bias_to_gain": {"function": "xyz"},  # for Saphira
-                }
-
-            else:
-                raise ValueError
-
-            # Build object 'AvalancheSettings'
-            self._avalanche_settings = AvalancheSettings.build(avalanche_settings_dct)
 
         self._bias_to_node: ConverterValues | ConverterTable | ConverterFunction = (
             bias_to_node
