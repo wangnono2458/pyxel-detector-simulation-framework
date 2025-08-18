@@ -19,6 +19,7 @@ from pyxel.detectors import (
     Environment,
     ReadoutProperties,
 )
+from pyxel.detectors.apd import AvalancheSettings, ConverterFunction, ConverterValues
 from pyxel.models.charge_generation import dark_current_saphira
 
 
@@ -53,13 +54,18 @@ def apd_5x5() -> APD:
         ),
         environment=Environment(temperature=50.0),
         characteristics=APDCharacteristics(
+            roic_gain=0.8,
+            bias_to_node=ConverterValues([(2.65, 73.7), (4.0, 60.0)]),
+            avalanche_settings=AvalancheSettings(
+                avalanche_gain=10.0,
+                pixel_reset_voltage=5.0,
+                gain_to_bias=ConverterFunction(lambda gain: 0.15 * gain + 2.5),
+                bias_to_gain=ConverterValues([(2.65, 1.0), (4.0, 10.0)]),
+            ),
             quantum_efficiency=1.0,
             adc_voltage_range=(0.0, 10.0),
             adc_bit_resolution=16,
             full_well_capacity=100000,
-            avalanche_gain=10.0,
-            pixel_reset_voltage=5.0,
-            roic_gain=0.8,
         ),
     )
     detector._readout_properties = ReadoutProperties(times=[1.0])

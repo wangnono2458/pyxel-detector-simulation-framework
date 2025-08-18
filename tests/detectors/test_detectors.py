@@ -24,6 +24,7 @@ from pyxel.detectors import (
     Environment,
     MKIDGeometry,
 )
+from pyxel.detectors.apd import AvalancheSettings, ConverterFunction, ConverterValues
 
 # This is equivalent to 'import asdf'
 asdf = pytest.importorskip(
@@ -120,7 +121,14 @@ def detector(request) -> CCD | CMOS | MKID | APD:
             geometry=APDGeometry(row=4, col=5),
             environment=Environment(),
             characteristics=APDCharacteristics(
-                roic_gain=1.0, avalanche_gain=2.0, pixel_reset_voltage=3.0
+                roic_gain=1.0,
+                bias_to_node=ConverterValues([(2.65, 73.7), (4.0, 60.0)]),
+                avalanche_settings=AvalancheSettings(
+                    avalanche_gain=2.0,
+                    pixel_reset_voltage=3.0,
+                    gain_to_bias=ConverterFunction("lambda gain: 0.15 * gain + 2.5"),
+                    bias_to_gain=ConverterValues([(2.65, 1.0), (4.0, 10.0)]),
+                ),
             ),
         )
     elif request.param == "apd_100x120":
@@ -138,9 +146,14 @@ def detector(request) -> CCD | CMOS | MKID | APD:
                 full_well_capacity=10,
                 adc_bit_resolution=16,
                 adc_voltage_range=(0.0, 5.0),
-                avalanche_gain=1.0,
-                pixel_reset_voltage=12.0,
                 roic_gain=4.1,
+                bias_to_node=ConverterValues([(2.65, 73.7), (4.0, 60.0)]),
+                avalanche_settings=AvalancheSettings(
+                    avalanche_gain=1.0,
+                    pixel_reset_voltage=12.0,
+                    gain_to_bias=ConverterFunction("lambda gain: 0.15 * gain + 2.5"),
+                    bias_to_gain=ConverterValues([(2.65, 1.0), (4.0, 10.0)]),
+                ),
             ),
         )
     else:

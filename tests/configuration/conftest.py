@@ -49,8 +49,19 @@ apd_detector:
 
   characteristics:
     roic_gain: 1.0
-    avalanche_gain: 1.0
-    common_voltage: 0.0
+    bias_to_node:
+      values:
+        - [2.65, 73.7]
+        - [4.0, 60.0]
+    avalanche_settings:
+      avalanche_gain: 1.0
+      common_voltage: 0.0
+      gain_to_bias:
+        function: "lambda gain: 0.15 * gain + 2.5"
+      bias_to_gain:
+        values:
+          - [2.65, 1.0]
+          - [4.0, 10.0]
 
   # No 'environment'
 """

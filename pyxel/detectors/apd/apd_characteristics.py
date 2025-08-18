@@ -159,7 +159,9 @@ class ConverterValues:
         )
 
     def __eq__(self, other) -> bool:
-        return type(self) is type(other) and self._values == other._values
+        return type(self) is type(other) and np.allclose(
+            np.asarray(self._values), np.asarray(other._values)
+        )
 
     def __call__(self, x: float) -> float:
         return self._func(x)
@@ -262,7 +264,7 @@ class ConverterFunction:
         # Late import
         import cloudpickle
 
-        return {"function": cloudpickle.dumps(self._function)}
+        return {"function": str(cloudpickle.dumps(self._function))}
 
     @classmethod
     def from_dict(cls, dct: Mapping) -> Self:
@@ -278,7 +280,12 @@ class ConverterFunction:
             func_callable = cloudpickle.loads(func)
             return cls(function=func_callable)
         elif isinstance(func, str) or callable(func):
-            return cls(function=func)
+            if func.startswith("b'\\"):
+                evaluated_func: bytes = eval(func)
+                func_callable = cloudpickle.loads(evaluated_func)
+                return cls(function=func_callable)
+            else:
+                return cls(function=func)
         else:
             raise TypeError(f"Expecting a callable, str or bytes. Got {func=!r}")
 
@@ -306,7 +313,7 @@ def build_converter(dct: dict) -> ConverterValues | ConverterTable | ConverterFu
         return ConverterFunction.from_dict(dct)
 
     else:
-        raise ValueError
+        raise ValueError(f"Cannot convert {dct=}")
 
 
 class AvalancheSettings:

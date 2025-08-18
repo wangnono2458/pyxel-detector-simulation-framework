@@ -1002,7 +1002,7 @@ def test_to_dict_from_dict(characteristics, exp_dct):
 
     assert dct == exp_dct
     assert list(dct_gain_to_bias) == ["function"]
-    assert isinstance(dct_gain_to_bias["function"], bytes)
+    assert isinstance(dct_gain_to_bias["function"], str)
 
     # Check '.from_dict'
     new_characteristics = APDCharacteristics.from_dict(dct_copied)
