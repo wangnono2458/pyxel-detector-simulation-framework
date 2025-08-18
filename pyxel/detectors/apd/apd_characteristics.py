@@ -258,7 +258,28 @@ class ConverterFunction:
             raise
 
     def to_dict(self) -> dict:
-        return {"function": self._function}
+        # Late import
+        import cloudpickle
+
+        return {"function": cloudpickle.dumps(self._function)}
+
+    @classmethod
+    def from_dict(cls, dct: Mapping) -> Self:
+        # Late import
+        import cloudpickle
+
+        if "function" not in dct:
+            raise KeyError
+
+        func = dct["function"]
+
+        if isinstance(func, bytes):
+            func_callable = cloudpickle.loads(func)
+            return cls(function=func_callable)
+        elif isinstance(func, str) or callable(func):
+            return cls(function=func)
+        else:
+            raise TypeError
 
 
 # TODO: Rename this to 'to_callable' ?
@@ -281,7 +302,7 @@ def build_converter(dct: dict) -> ConverterValues | ConverterTable | ConverterFu
         if "values" in dct or "filename" in dct:
             raise ValueError
 
-        return ConverterFunction(function=dct["function"])
+        return ConverterFunction.from_dict(dct)
 
     else:
         raise ValueError
@@ -381,8 +402,8 @@ class AvalancheSettings:
             if pixel_reset_voltage is not None:
                 if common_voltage is None:
                     # Missing 'common_voltage'
-                    self._pixel_reset_voltage = pixel_reset_voltage
-                    self._common_voltage = pixel_reset_voltage - self._avalanche_bias
+                    self._pixel_reset_voltage: float | None = pixel_reset_voltage
+                    self._common_voltage: float | None = None
                 else:
                     # Too many parameters
                     raise ValueError(
@@ -392,7 +413,7 @@ class AvalancheSettings:
             else:
                 # Missing 'pixel_reset_voltage'
                 if common_voltage is not None:
-                    self._pixel_reset_voltage = common_voltage + self._avalanche_bias
+                    self._pixel_reset_voltage = None
                     self._common_voltage = common_voltage
 
                 else:
@@ -435,7 +456,7 @@ class AvalancheSettings:
             and self._bias_to_gain == other._bias_to_gain
             and self._avalanche_gain == other._avalanche_gain
             and self._pixel_reset_voltage == other._pixel_reset_voltage
-            and self.__common_voltage == other._common_voltage
+            and self._common_voltage == other._common_voltage
         )
 
     def __repr__(self) -> str:
@@ -461,29 +482,38 @@ class AvalancheSettings:
 
         self._avalanche_gain = value
         self._avalanche_bias = self._gain_to_bias(value)
-        self._common_voltage = self._pixel_reset_voltage - self._avalanche_gain
+        self._common_voltage = self.pixel_reset_voltage - self.avalanche_gain
 
     @property
     def pixel_reset_voltage(self) -> float:
         """Pixel reset voltage in V."""
-        return self._pixel_reset_voltage
+        if self._pixel_reset_voltage is not None:
+            return self._pixel_reset_voltage
+
+        return self.common_voltage + self.avalanche_bias
 
     @pixel_reset_voltage.setter
     def pixel_reset_voltage(self, value: float) -> None:
-        self._avalanche_bias = value - self._common_voltage
-        self._avalanche_gain = self._bias_to_gain(self._avalanche_bias)
         self._pixel_reset_voltage = value
+
+        self._avalanche_bias = value - self.common_voltage
+        self._avalanche_gain = self._bias_to_gain(self.avalanche_bias)
 
     @property
     def common_voltage(self) -> float:
         """Common voltage in V."""
-        return self._common_voltage
+        if self._common_voltage is not None:
+            return self._common_voltage
+
+        return self.pixel_reset_voltage - self.avalanche_bias
 
     @common_voltage.setter
     def common_voltage(self, value: float) -> None:
-        self._avalanche_bias = self._pixel_reset_voltage - value
-        self._avalanche_gain = self._bias_to_gain(self._avalanche_bias)
+        # bias = prv - common
         self._common_voltage = value
+
+        self._avalanche_bias = self.pixel_reset_voltage - value
+        self._avalanche_gain = self._bias_to_gain(self.avalanche_bias)
 
     @property
     def avalanche_bias(self) -> float:
@@ -492,15 +522,15 @@ class AvalancheSettings:
 
     def to_dict(self) -> dict:
         return {
-            "avalanche_gain": self.avalanche_gain,
-            "pixel_reset_voltage": self.pixel_reset_voltage,
-            "common_voltage": self.common_voltage,
+            "avalanche_gain": self._avalanche_gain,
+            "pixel_reset_voltage": self._pixel_reset_voltage,
+            "common_voltage": self._common_voltage,
             "gain_to_bias": self._gain_to_bias.to_dict(),
             "bias_to_gain": self._bias_to_gain.to_dict(),
         }
 
     @classmethod
-    def build(cls, dct: dict) -> Self:
+    def from_dict(cls, dct: dict) -> Self:
         """Build an 'AvalancheSettings' instance from a dictionary."""
         avalanche_gain: float | None = dct.get("avalanche_gain")
         pixel_reset_voltage: float | None = dct.get("pixel_reset_voltage")
@@ -583,7 +613,7 @@ def _old_create_avalanche_settings(
         raise ValueError("Please only specify two inputs")
 
     # Build object 'AvalancheSettings'
-    return AvalancheSettings.build(avalanche_settings_dct)
+    return AvalancheSettings.from_dict(avalanche_settings_dct)
 
 
 class APDCharacteristics:
@@ -704,7 +734,7 @@ class APDCharacteristics:
         bias_to_node: ConverterValues | ConverterTable | ConverterFunction = (
             build_converter(dct["bias_to_node"])
         )
-        avalanche_settings = AvalancheSettings.build(dct["avalanche_settings"])
+        avalanche_settings = AvalancheSettings.from_dict(dct["avalanche_settings"])
 
         return cls(
             roic_gain=dct["roic_gain"],
@@ -956,15 +986,28 @@ class APDCharacteristics:
         return dct
 
     @classmethod
-    def from_dict(cls, dct: Mapping):
+    def from_dict(cls, dct: Mapping) -> Self:
         """Create a new instance from a `dict`."""
         # Late import to speedup start-up time
         from toolz import dicttoolz
 
-        new_dct: Mapping = dicttoolz.dissoc(dct, "adc_voltage_range")
         adc_voltage_range = dct["adc_voltage_range"]
 
         if adc_voltage_range is not None:
             adc_voltage_range = tuple(adc_voltage_range)
 
-        return cls(adc_voltage_range=adc_voltage_range, **new_dct)
+        bias_to_node = build_converter(dct["bias_to_node"])
+        avalanche_settings: AvalancheSettings = AvalancheSettings.from_dict(
+            dct["avalanche_settings"]
+        )
+
+        new_dct: Mapping = dicttoolz.dissoc(
+            dct, "adc_voltage_range", "bias_to_node", "avalanche_settings"
+        )
+
+        return cls(
+            adc_voltage_range=adc_voltage_range,
+            bias_to_node=bias_to_node,
+            avalanche_settings=avalanche_settings,
+            **new_dct,
+        )

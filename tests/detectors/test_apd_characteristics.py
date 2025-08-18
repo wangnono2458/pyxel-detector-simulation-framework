@@ -6,6 +6,7 @@
 #  the terms contained in the file ‘LICENCE.txt’.
 
 from contextlib import AbstractContextManager
+from copy import deepcopy
 from dataclasses import dataclass
 
 import astropy.constants as const
@@ -931,66 +932,85 @@ def test_bias_to_node_capacitance_valid(bias, expected):
     assert result == expected
 
 
-# @pytest.mark.parametrize(
-#     "characteristics, exp_dct",
-#     [
-#         (
-#             APDCharacteristics(
-#                 roic_gain=0.5,        bias_to_node=ConverterValues([(2.65, 73.7), (4.0, 60.0)]),
-#                 avalanche_settings=AvalancheSettings(
-#
-#                     avalanche_gain=1.0,
-#                 pixel_reset_voltage=2.0,
-#                     gain_to_bias=ConverterFunction(lambda gain: 0.15 * gain + 2.5),
-#                     bias_to_gain=ConverterValues([(2.65, 1.0), (4.0, 10.0)]),
-#                 ),
-#             ),
-#             {
-#                 "adc_bit_resolution": None,
-#                 "adc_voltage_range": None,
-#                 "avalanche_gain": 1.0,
-#                 "common_voltage": None,
-#                 "full_well_capacity": None,
-#                 "pixel_reset_voltage": 2.0,
-#                 "quantum_efficiency": None,
-#                 "roic_gain": 0.5,
-#                 "gain_to_bias_func": [(1.0, 1.0)],
-#                 "bias_to_gain_func": [(1.0, 1.0)],
-#                 "bias_to_node_func": [(1.0, 73.7)],
-#             },
-#         ),
-#         (
-#             APDCharacteristics(
-#                 roic_gain=0.5,        bias_to_node=ConverterValues([(2.65, 73.7), (4.0, 60.0)]),
-#                 avalanche_settings=AvalancheSettings(
-#
-#                     avalanche_gain=1.0,
-#                 common_voltage=2.0,
-#                     gain_to_bias=ConverterFunction(lambda gain: 0.15 * gain + 2.5),
-#                     bias_to_gain=ConverterValues([(2.65, 1.0), (4.0, 10.0)]),
-#                 ),                quantum_efficiency=0.9,
-#
-#             ),
-#             {
-#                 "adc_bit_resolution": None,
-#                 "adc_voltage_range": None,
-#                 "avalanche_gain": 1.0,
-#                 "common_voltage": 2.0,
-#                 "full_well_capacity": None,
-#                 "pixel_reset_voltage": None,  # was 3.0
-#                 "quantum_efficiency": 0.9,
-#                 "roic_gain": 0.5,
-#                 "gain_to_bias_func": [(1.0, 1.0)],
-#                 "bias_to_gain_func": [(1.0, 1.0)],
-#                 "bias_to_node_func": [(1.0, 73.7)],
-#             },
-#         ),
-#     ],
-# )
-# def test_to_dict_from_dict(characteristics, exp_dct):
-#     dct = characteristics.to_dict()
-#     assert dct == exp_dct
-#     assert APDCharacteristics.from_dict(dct).to_dict() == exp_dct
+@pytest.mark.parametrize(
+    "characteristics, exp_dct",
+    [
+        (
+            APDCharacteristics(
+                roic_gain=0.5,
+                bias_to_node=ConverterValues([(2.65, 73.7), (4.0, 60.0)]),
+                avalanche_settings=AvalancheSettings(
+                    avalanche_gain=1.0,
+                    pixel_reset_voltage=2.0,
+                    gain_to_bias=ConverterFunction(lambda gain: 0.15 * gain + 2.5),
+                    bias_to_gain=ConverterValues([(2.65, 1.0), (4.0, 10.0)]),
+                ),
+            ),
+            {
+                "roic_gain": 0.5,
+                "bias_to_node": {"values": [(2.65, 73.7), (4.0, 60.0)]},
+                "avalanche_settings": {
+                    "avalanche_gain": 1.0,
+                    "common_voltage": None,
+                    "pixel_reset_voltage": 2.0,
+                    # "gain_to_bias": {"function": None},
+                    "bias_to_gain": {"values": [(2.65, 1.0), (4.0, 10.0)]},
+                },
+                "adc_bit_resolution": None,
+                "adc_voltage_range": None,
+                "full_well_capacity": None,
+                "quantum_efficiency": None,
+            },
+        ),
+        (
+            APDCharacteristics(
+                roic_gain=0.5,
+                bias_to_node=ConverterValues([(2.65, 73.7), (4.0, 60.0)]),
+                avalanche_settings=AvalancheSettings(
+                    avalanche_gain=1.0,
+                    common_voltage=2.0,
+                    gain_to_bias=ConverterFunction(lambda gain: 0.15 * gain + 2.5),
+                    bias_to_gain=ConverterValues([(2.65, 1.0), (4.0, 10.0)]),
+                ),
+                quantum_efficiency=0.9,
+            ),
+            {
+                "roic_gain": 0.5,
+                "bias_to_node": {"values": [(2.65, 73.7), (4.0, 60.0)]},
+                "avalanche_settings": {
+                    "avalanche_gain": 1.0,
+                    "common_voltage": 2.0,
+                    "pixel_reset_voltage": None,  # was 3.0
+                    "bias_to_gain": {"values": [(2.65, 1.0), (4.0, 10.0)]},
+                    # "gain_to_bias": {"function": None},
+                },
+                "adc_bit_resolution": None,
+                "adc_voltage_range": None,
+                "full_well_capacity": None,
+                "quantum_efficiency": 0.9,
+            },
+        ),
+    ],
+)
+def test_to_dict_from_dict(characteristics, exp_dct):
+    # Check '.to_dict'
+    dct = characteristics.to_dict()
+    dct_copied = deepcopy(dct)
+
+    # Remove 'gain_to_bias'
+    dct_gain_to_bias = dct["avalanche_settings"].pop("gain_to_bias")
+
+    assert dct == exp_dct
+    assert list(dct_gain_to_bias) == ["function"]
+    assert isinstance(dct_gain_to_bias["function"], bytes)
+
+    # Check '.from_dict'
+    new_characteristics = APDCharacteristics.from_dict(dct_copied)
+    assert isinstance(new_characteristics, APDCharacteristics)
+
+    new_dct = new_characteristics.to_dict()
+    assert new_dct == dct_copied
+    # assert APDCharacteristics.from_dict(dct).to_dict() == exp_dct
 
 
 def test_bias_to_node_func_callable():
