@@ -11,13 +11,12 @@ import logging
 import sys
 from collections.abc import Iterator, Mapping, Sequence
 from copy import deepcopy
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from pyxel.pipelines import ModelFunction
 
 if TYPE_CHECKING:
     from pyxel.detectors import Detector
-    from pyxel.exposure.exposure import TqdmProgressBar
 
 
 # TODO: These methods could also be as a `abc.Sequence` with magical methods:
@@ -78,12 +77,7 @@ class ModelGroup:
     def __dir__(self):
         return dir(type(self)) + [model.name for model in self.models]
 
-    def run(
-        self,
-        detector: "Detector",
-        debug: bool,
-        progress_bar: Optional["TqdmProgressBar"] = None,
-    ):
+    def run(self, detector: "Detector", debug: bool):
         """Execute each enabled model in this group.
 
         Parameters
@@ -197,6 +191,3 @@ class ModelGroup:
                         ] = data_array
 
                 detector.intermediate[last_key] = xr.DataTree(ds.copy(deep=True))
-
-            if progress_bar is not None:
-                progress_bar.update(1)
