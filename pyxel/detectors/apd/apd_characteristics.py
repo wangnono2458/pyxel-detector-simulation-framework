@@ -141,10 +141,7 @@ class ConverterValues:
             raise ValueError("Failed to convert a list of values") from exc
 
         if len(df.columns) != 2:
-            raise ValueError("Values must be have 2-columns")
-
-        if df.empty:
-            raise ValueError("There are no values")
+            raise ValueError("Values must have 2-columns")
 
         # TODO: Check that the first column on 'df' is monotonic
         first_column: pd.Series = df.iloc[:, 0]
@@ -225,7 +222,10 @@ class ConverterFunction:
 
             # TODO: Check this, this is security-sensitive
             # TODO: Check that it's a 'Callable[[float], float]'
-            func = eval(function, {"math": math})
+            try:
+                func = eval(function, {"math": math})
+            except Exception as exc:
+                raise ValueError(f"Cannot use {function=}") from exc
 
         elif callable(function):
             # TODO: Check that it's a 'Callable[[float], float]'
@@ -234,13 +234,13 @@ class ConverterFunction:
             raise TypeError("Invalid function specification")
 
         if not callable(func):
-            raise TypeError
+            raise TypeError(f"{func=} is not a callable")
 
         self._func = func
 
     def __eq__(self, other) -> bool:
         if callable(self._function):
-            raise NotImplementedError
+            raise NotImplementedError("Cannot compare with a callable")
 
         return type(self) is type(other) and (
             isinstance(self._function, str) and self._function == other._function
@@ -254,8 +254,9 @@ class ConverterFunction:
         try:
             return self._func(x)
         except Exception as exc:
-            exc.add_note(f"Failed to execute function {self._function!r}")
-            raise
+            raise ValueError(
+                f"Failed to execute function {self._function!r} with {x=}"
+            ) from exc
 
     def to_dict(self) -> dict:
         # Late import
@@ -269,7 +270,7 @@ class ConverterFunction:
         import cloudpickle
 
         if "function" not in dct:
-            raise KeyError
+            raise KeyError("Missing key 'function'")
 
         func = dct["function"]
 
@@ -279,7 +280,7 @@ class ConverterFunction:
         elif isinstance(func, str) or callable(func):
             return cls(function=func)
         else:
-            raise TypeError
+            raise TypeError(f"Expecting a callable, str or bytes. Got {func=!r}")
 
 
 # TODO: Rename this to 'to_callable' ?

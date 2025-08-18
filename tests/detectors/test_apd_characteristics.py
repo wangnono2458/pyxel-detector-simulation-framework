@@ -1047,6 +1047,94 @@ def test_bias_to_node_func_list():
     assert apd.bias_to_node_capacitance(2.0) == pytest.approx(38.0e-15)
 
 
+@pytest.mark.parametrize(
+    "values, exp_exc, exp_err",
+    [
+        ([(1.0, 2.0), (3.0)], ValueError, r"Failed to convert a list of values"),
+        (
+            [(1.0, 2.0, 3.0), (4.0, 5.0, 6.0)],
+            ValueError,
+            r"Values must have 2\-columns",
+        ),
+        (
+            [(1.0, 10.0), (3.0, 30.0), (2, 20.0)],
+            ValueError,
+            r"Values are not monotonic",
+        ),
+    ],
+)
+def test_bad_converter_values(values, exp_exc, exp_err):
+    """Test 'ConverterValues.__init__'."""
+    with pytest.raises(exp_exc, match=exp_err):
+        _ = ConverterValues(values)
+
+
+def test_converter_values_eq():
+    """Test 'ConverterValues.__eq__'."""
+    obj1 = ConverterValues([(1.0, 2.0), (3.0, 4.0)])
+    obj2 = ConverterValues([(1.0, 2.0), (3.0, 4.0)])
+    obj3 = ConverterValues([(1.1, 2.0), (3.0, 4.0)])
+
+    assert obj1 == obj2
+    assert obj1 != obj3
+
+
+@pytest.mark.parametrize(
+    "func, exp_exc, exp_err",
+    [
+        ("2 * gain", ValueError, r"Cannot use"),
+        ("3.14", TypeError, r"not a callable"),
+        (3.14, TypeError, r"Invalid function specification"),
+    ],
+)
+def test_bad_converted_func(func, exp_exc, exp_err):
+    """Test 'ConverterFunction.__init__' with bad inputs."""
+    with pytest.raises(exp_exc, match=exp_err):
+        _ = ConverterFunction(func)
+
+
+def test_converted_func_eq():
+    """Test 'ConverterFunction.__eq__."""
+    obj1 = ConverterFunction("lambda x: 2*x")
+    obj2 = ConverterFunction("lambda x: 2*x")
+    obj3 = ConverterFunction("lambda x: 2*x+1")
+    obj4 = ConverterFunction(lambda x: 2 * x)
+
+    # Test __eq__
+    assert obj1 == obj2
+    assert obj1 != obj3
+
+    # Test __repr__
+    assert repr(obj1) == "ConverterFunction('lambda x: 2*x')"
+    assert repr(obj4).startswith("ConverterFunction(<function ")
+
+    with pytest.raises(NotImplementedError, match=r"Cannot compare with a callable"):
+        assert obj4 == obj1
+
+
+def test_converter_func_call_bad():
+    """Test 'ConverterFunction.__call__' with bad inputs."""
+    obj1 = ConverterFunction(lambda x: 1 / x)
+
+    assert obj1(2) == 0.5
+
+    with pytest.raises(ValueError, match=r"Failed to execute"):
+        _ = obj1(0.0)
+
+
+@pytest.mark.parametrize(
+    "dct, exp_exc, exp_err",
+    [
+        ({}, KeyError, "Missing key 'function'"),
+        ({"function": 42}, TypeError, r"Expecting a callable, str or bytes"),
+    ],
+)
+def test_converter_func_from_dict_bad(dct, exp_exc, exp_err):
+    """Test 'ConverterFunction.from_dict' with bad inputs."""
+    with pytest.raises(exp_exc, match=exp_err):
+        _ = ConverterFunction.from_dict(dct)
+
+
 # def test_bias_to_node_func_csv():
 #     import csv
 #     import os
