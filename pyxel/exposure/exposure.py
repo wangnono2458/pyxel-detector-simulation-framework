@@ -441,9 +441,7 @@ def run_pipeline(
         detector.empty()
 
         if progress_bar is not None:
-            num_total_steps = (
-                detector.readout_properties.num_steps * processor.num_steps()
-            )
+            num_total_steps = detector.readout_properties.num_steps
 
             progress_bar.set_description_str(desc="Run pipeline: ")
             progress_bar.set_postfix({"size": format_bytes(0)})
@@ -474,7 +472,7 @@ def run_pipeline(
             detector.empty(is_destructive_readout)
 
             # Execute the pipeline for this step.
-            processor.run_pipeline(debug=debug, progress_bar=progress_bar)
+            processor.run_pipeline(debug=debug)
 
             # Extract the results from the 'detector' into a partial 'DataTree'
             partial_datatree_2d: xr.DataTree = _extract_datatree_2d(detector=detector)
@@ -511,6 +509,7 @@ def run_pipeline(
                     num_bytes += detector.data.nbytes
 
                 progress_bar.set_postfix({"size": format_bytes(num_bytes)})
+                progress_bar.update(1)
 
         # Prepare the final dictionary to construct the `DataTree`.
         dct: dict[str, xr.Dataset | xr.DataTree | None] = {}

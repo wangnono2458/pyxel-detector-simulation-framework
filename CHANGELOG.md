@@ -12,6 +12,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 ## UNRELEASED
 
 ### Core
+* Progress bar should displayed only the number of readout time.
+  (See [!1088](https://gitlab.com/esa/pyxel/-/merge_requests/1088)).
 
 ### Documentation
 
