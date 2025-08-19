@@ -129,6 +129,38 @@
             "null"
           ]
         },
+        "avalanche_settings": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/AvalancheSettings1"
+            },
+            {
+              "$ref": "#/definitions/AvalancheSettings2"
+            },
+            {
+              "$ref": "#/definitions/AvalancheSettings3"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "avalanche_settings"
+        },
+        "bias_to_node": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ConverterValues"
+            },
+            {
+              "$ref": "#/definitions/ConverterTable"
+            },
+            {
+              "$ref": "#/definitions/ConverterFunction"
+            }
+          ],
+          "title": "bias_to_node"
+        },
         "common_voltage": {
           "default": null,
           "description": "Common voltage. Unit: V",
@@ -172,7 +204,8 @@
         }
       },
       "required": [
-        "roic_gain"
+        "roic_gain",
+        "bias_to_node"
       ],
       "title": "APDCharacteristics",
       "type": "object"
@@ -410,6 +443,156 @@
           "type": "number"
         }
       },
+      "type": "object"
+    },
+    "AvalancheSettings1": {
+      "additionalProperties": false,
+      "description": "Settings for APD gain and biases",
+      "properties": {
+        "avalanche_gain": {
+          "type": "number"
+        },
+        "bias_to_gain": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ConverterValues"
+            },
+            {
+              "$ref": "#/definitions/ConverterTable"
+            },
+            {
+              "$ref": "#/definitions/ConverterFunction"
+            }
+          ]
+        },
+        "common_voltage": {
+          "const": null,
+          "default": null,
+          "type": "null"
+        },
+        "gain_to_bias": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ConverterValues"
+            },
+            {
+              "$ref": "#/definitions/ConverterTable"
+            },
+            {
+              "$ref": "#/definitions/ConverterFunction"
+            }
+          ]
+        },
+        "pixel_reset_voltage": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "gain_to_bias",
+        "bias_to_gain",
+        "avalanche_gain",
+        "pixel_reset_voltage"
+      ],
+      "type": "object"
+    },
+    "AvalancheSettings2": {
+      "additionalProperties": false,
+      "description": "Settings for APD gain and biases",
+      "properties": {
+        "avalanche_gain": {
+          "type": "number"
+        },
+        "bias_to_gain": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ConverterValues"
+            },
+            {
+              "$ref": "#/definitions/ConverterTable"
+            },
+            {
+              "$ref": "#/definitions/ConverterFunction"
+            }
+          ]
+        },
+        "common_voltage": {
+          "type": "number"
+        },
+        "gain_to_bias": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ConverterValues"
+            },
+            {
+              "$ref": "#/definitions/ConverterTable"
+            },
+            {
+              "$ref": "#/definitions/ConverterFunction"
+            }
+          ]
+        },
+        "pixel_reset_voltage": {
+          "const": null,
+          "default": null,
+          "type": "null"
+        }
+      },
+      "required": [
+        "gain_to_bias",
+        "bias_to_gain",
+        "avalanche_gain",
+        "common_voltage"
+      ],
+      "type": "object"
+    },
+    "AvalancheSettings3": {
+      "additionalProperties": false,
+      "description": "Settings for APD gain and biases",
+      "properties": {
+        "avalanche_gain": {
+          "const": null,
+          "default": null,
+          "type": "null"
+        },
+        "bias_to_gain": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ConverterValues"
+            },
+            {
+              "$ref": "#/definitions/ConverterTable"
+            },
+            {
+              "$ref": "#/definitions/ConverterFunction"
+            }
+          ]
+        },
+        "common_voltage": {
+          "type": "number"
+        },
+        "gain_to_bias": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ConverterValues"
+            },
+            {
+              "$ref": "#/definitions/ConverterTable"
+            },
+            {
+              "$ref": "#/definitions/ConverterFunction"
+            }
+          ]
+        },
+        "pixel_reset_voltage": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "gain_to_bias",
+        "bias_to_gain",
+        "common_voltage",
+        "pixel_reset_voltage"
+      ],
       "type": "object"
     },
     "CCD": {
@@ -1403,6 +1586,71 @@
         "pipeline",
         "observation",
         "mkid_detector"
+      ],
+      "type": "object"
+    },
+    "ConverterFunction": {
+      "additionalProperties": false,
+      "description": "Mathematical function",
+      "properties": {
+        "function": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "function"
+      ],
+      "type": "object"
+    },
+    "ConverterTable": {
+      "additionalProperties": false,
+      "description": "Table from a filename",
+      "properties": {
+        "filename": {
+          "type": "string"
+        },
+        "with_header": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "filename"
+      ],
+      "type": "object"
+    },
+    "ConverterValues": {
+      "additionalProperties": false,
+      "description": "List of (x, y) pairs",
+      "properties": {
+        "values": {
+          "items": {
+            "additionalItems": false,
+            "items": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "values"
       ],
       "type": "object"
     },

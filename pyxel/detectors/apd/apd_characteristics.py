@@ -631,6 +631,8 @@ class APDCharacteristics:
     ----------
     roic_gain
         Gain of the read-out integrated circuit. Unit: V/V
+    bias_to_node : ConverterValues, ConverterTable, ConverterFunction
+    avalanche_settings : AvalancheSettings
     quantum_efficiency : float, optional
         Quantum efficiency.
     full_well_capacity : float, optional
