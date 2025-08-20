@@ -5,7 +5,13 @@
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
 
-"""TBW."""
+"""Detector characteristics model.
+
+This module defines the `Characteristics` class, which represents the
+intrinsic physical and electronic parameters of a detector. These parameters
+include quantum efficiency, charge-to-voltage conversion, pre-amplification,
+full-well capacity, ADC resolution, and voltage range.
+"""
 
 from collections.abc import Iterable, Mapping, Sequence
 from typing import TYPE_CHECKING

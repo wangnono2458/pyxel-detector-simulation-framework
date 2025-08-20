@@ -12,6 +12,7 @@ from dataclasses import dataclass
 import astropy.constants as const
 import pytest
 
+from pyxel.configuration.configuration import to_apd_characteristics
 from pyxel.detectors import APDCharacteristics
 from pyxel.detectors.apd import AvalancheSettings, ConverterFunction, ConverterValues
 
@@ -177,7 +178,7 @@ def test_constructors(
             "full_well_capacity": full_well_capacity,
         }
 
-        obj = APDCharacteristics.build(dct)
+        obj = to_apd_characteristics(dct)
     else:
         raise NotImplementedError
 
@@ -360,17 +361,6 @@ def test_invalid_initialization_full_well_capacity(
                 bias_to_gain=ConverterValues([(2.65, 1.0), (4.0, 10.0)]),
             ),
             full_well_capacity=full_well_capacity,
-        )
-
-
-def test_invalid_too_many_parameters_deprecated():
-    with pytest.raises(ValueError, match="Please only specify two inputs"):
-        _ = APDCharacteristics(
-            roic_gain=0.5,
-            bias_to_node=ConverterValues([(2.65, 73.7), (4.0, 60.0)]),
-            avalanche_gain=1.0,
-            pixel_reset_voltage=3.0,
-            common_voltage=2.0,
         )
 
 
@@ -744,7 +734,7 @@ def test_valid_common_voltage(
 @pytest.mark.parametrize(
     "characteristics",
     [
-        APDCharacteristics.build(
+        to_apd_characteristics(
             {
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(2.65, 73.7)]},
@@ -756,7 +746,7 @@ def test_valid_common_voltage(
                 },
             }
         ),
-        APDCharacteristics.build(
+        to_apd_characteristics(
             {
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(4.0, 60.0)]},
@@ -768,7 +758,7 @@ def test_valid_common_voltage(
                 },
             }
         ),
-        APDCharacteristics.build(
+        to_apd_characteristics(
             {
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(1.0, 100.0)]},
@@ -796,7 +786,7 @@ def test_charge_to_volt_conversion(characteristics):
 @pytest.mark.parametrize(
     "characteristics",
     [
-        APDCharacteristics.build(
+        to_apd_characteristics(
             {
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(2.65, 73.7), (4.0, 60.0)]},
@@ -811,7 +801,7 @@ def test_charge_to_volt_conversion(characteristics):
                 "adc_voltage_range": (0.0, 16.0),
             }
         ),
-        APDCharacteristics.build(
+        to_apd_characteristics(
             {
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(1.0, 73.7)]},
@@ -826,7 +816,7 @@ def test_charge_to_volt_conversion(characteristics):
                 "adc_voltage_range": (0.0, 16.0),
             }
         ),
-        APDCharacteristics.build(
+        to_apd_characteristics(
             {
                 "roic_gain": 0.5,
                 "bias_to_node": {
@@ -862,7 +852,7 @@ def test_system_gain(characteristics):
 @pytest.mark.parametrize(
     "characteristics",
     [
-        APDCharacteristics.build(
+        to_apd_characteristics(
             {
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(2.65, 73.7), (4.0, 60.0)]},
@@ -874,7 +864,7 @@ def test_system_gain(characteristics):
                 },
             }
         ),
-        APDCharacteristics.build(
+        to_apd_characteristics(
             {
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(1.0, 73.7)]},
@@ -887,7 +877,7 @@ def test_system_gain(characteristics):
                 "quantum_efficiency": 0.9,
             }
         ),
-        APDCharacteristics.build(
+        to_apd_characteristics(
             {
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(1.0, 3.0)]},

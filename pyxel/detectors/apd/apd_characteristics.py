@@ -5,30 +5,8 @@
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
 
-"""TBW.
+"""Avalanche Photodiode (APD) models and utilities."""
 
-References
-----------
-[1] Leonardo MW Ltd., Electrical Interface Document for SAPHIRA (ME1000) in a 68-pin LLC
-(3313-520-), issue 1A, 2012.
-
-[2] I. Pastrana et al., HgCdTe SAPHIRA arrays: individual pixel measurement of charge gain and
-node capacitance utilizing a stable IR LED, in High Energy, Optical, and Infrared Detectors for
-Astronomy VIII, 2018, vol. 10709, no. July 2018, 2018, p. 37.
-
-[3] S. B. Goebel et al., Overview of the SAPHIRA detector for adaptive optics applications, in
-Journal of Astronomical Telescopes, Instruments, and Systems, 2018, vol. 4, no. 02, p. 1.
-
-[4] G. Finger et al., Sub-electron read noise and millisecond full-frame readout with the near
-infrared eAPD array SAPHIRA, in Adaptive Optics Systems V, 2016, vol. 9909, no. July 2016, p.
-990912.
-
-[5] I. M. Baker et al., Linear-mode avalanche photodiode arrays in HgCdTe at Leonardo, UK: the
-current status, in Image Sensing Technologies: Materials, Devices, Systems, and Applications VI,
-2019, vol. 10980, no. May, p. 20.
-"""
-
-import warnings
 from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING
 
@@ -164,6 +142,7 @@ class ConverterValues:
         )
 
     def __call__(self, x: float) -> float:
+        # TODO: Add valid min_range and max_range
         return self._func(x)
 
     def to_dict(self) -> dict:
@@ -288,32 +267,6 @@ class ConverterFunction:
                 return cls(function=func)
         else:
             raise TypeError(f"Expecting a callable, str or bytes. Got {func=!r}")
-
-
-# TODO: Rename this to 'to_callable' ?
-def build_converter(dct: dict) -> ConverterValues | ConverterTable | ConverterFunction:
-    if "values" in dct:
-        if "filename" in dct or "function" in dct:
-            raise ValueError
-
-        return ConverterValues(values=dct["values"])
-
-    elif "filename" in dct:
-        if "values" in dct or "function" in dct:
-            raise ValueError
-
-        return ConverterTable(
-            filename=dct["filename"], with_header=dct.get("with_header", False)
-        )
-
-    elif "function" in dct:
-        if "values" in dct or "filename" in dct:
-            raise ValueError
-
-        return ConverterFunction.from_dict(dct)
-
-    else:
-        raise ValueError(f"Cannot convert {dct=}")
 
 
 class AvalancheSettings:
@@ -540,6 +493,9 @@ class AvalancheSettings:
     @classmethod
     def from_dict(cls, dct: dict) -> Self:
         """Build an 'AvalancheSettings' instance from a dictionary."""
+        # Late import
+        from pyxel.configuration.configuration import build_converter
+
         avalanche_gain: float | None = dct.get("avalanche_gain")
         pixel_reset_voltage: float | None = dct.get("pixel_reset_voltage")
         common_voltage: float | None = dct.get("common_voltage")
@@ -572,64 +528,12 @@ class AvalancheSettings:
         )
 
 
-@deprecated("This function will be removed")
-def _old_create_avalanche_settings(
-    avalanche_gain: float | None = None,
-    pixel_reset_voltage: float | None = None,
-    common_voltage: float | None = None,
-) -> AvalancheSettings:
-    warnings.warn(
-        "Parameters 'avalanche_gain', 'pixel_reset_voltage' and 'common_voltage' are deprecated",
-        DeprecationWarning,
-        stacklevel=1,
-    )
-
-    if (
-        avalanche_gain is None
-        and pixel_reset_voltage is not None
-        and common_voltage is not None
-    ):
-        avalanche_settings_dct = {
-            "pixel_reset_voltage": pixel_reset_voltage,
-            "common_voltage": common_voltage,
-            "bias_to_gain": {"function": "xyz"},  # for Saphira
-        }
-    elif (
-        avalanche_gain is not None
-        and pixel_reset_voltage is None
-        and common_voltage is not None
-    ):
-        avalanche_settings_dct = {
-            "avalanche_gain": avalanche_gain,
-            "common_voltage": common_voltage,
-            "gain_to_bias": {"function": "xyz"},  # for Saphira
-            "bias_to_gain": {"function": "xyz"},  # for Saphira
-        }
-    elif (
-        avalanche_gain is not None
-        and pixel_reset_voltage is not None
-        and common_voltage is None
-    ):
-        avalanche_settings_dct = {
-            "avalanche_gain": avalanche_gain,
-            "pixel_reset_voltage": pixel_reset_voltage,
-            "gain_to_bias": {"function": "xyz"},  # for Saphira
-            "bias_to_gain": {"function": "xyz"},  # for Saphira
-        }
-
-    else:
-        raise ValueError("Please only specify two inputs")
-
-    # Build object 'AvalancheSettings'
-    return AvalancheSettings.from_dict(avalanche_settings_dct)
-
-
 class APDCharacteristics:
     """Characteristic attributes of the APD detector.
 
     Parameters
     ----------
-    roic_gain
+    roic_gain : float
         Gain of the read-out integrated circuit. Unit: V/V
     bias_to_node : ConverterValues, ConverterTable, ConverterFunction
     avalanche_settings : AvalancheSettings
@@ -653,7 +557,7 @@ class APDCharacteristics:
         self,
         roic_gain: float,  # unit: V
         bias_to_node: ConverterValues | ConverterTable | ConverterFunction,
-        avalanche_settings: AvalancheSettings | None = None,  # TODO: Remove 'None'
+        avalanche_settings: AvalancheSettings,
         #####################
         # Common parameters #
         #####################
@@ -661,23 +565,8 @@ class APDCharacteristics:
         full_well_capacity: float | None = None,  # unit: electron
         adc_bit_resolution: int | None = None,
         adc_voltage_range: tuple[float, float] | None = None,  # unit: V
-        #########################
-        # DEPRECATED parameters #
-        #########################
-        avalanche_gain: float | None = None,
-        pixel_reset_voltage: float | None = None,
-        common_voltage: float | None = None,
     ):
-        # Build '_avalanche_settings'
-        if avalanche_settings is not None:
-            self._avalanche_settings: AvalancheSettings = avalanche_settings
-        else:
-            self._avalanche_settings = _old_create_avalanche_settings(
-                avalanche_gain=avalanche_gain,
-                pixel_reset_voltage=pixel_reset_voltage,
-                common_voltage=common_voltage,
-            )
-
+        self._avalanche_settings: AvalancheSettings = avalanche_settings
         self._bias_to_node: ConverterValues | ConverterTable | ConverterFunction = (
             bias_to_node
         )
@@ -727,33 +616,6 @@ class APDCharacteristics:
             and self._adc_bit_resolution == other._adc_bit_resolution
             and self._adc_voltage_range == other._adc_voltage_range
             and self._avalanche_settings == other._avalanche_settings
-        )
-
-    @classmethod
-    def build(cls, dct: dict) -> Self:
-        if "roic_gain" not in dct:
-            raise KeyError("Missing parameter 'roic_gain' in APD Characteristics")
-        if "bias_to_node" not in dct:
-            raise KeyError("Missing parameter 'bias_to_node' in APD Characteristics")
-
-        if "avalanche_settings" not in dct:
-            raise KeyError(
-                "Missing parameter 'avalanche_settings' in APD Characteristics"
-            )
-
-        bias_to_node: ConverterValues | ConverterTable | ConverterFunction = (
-            build_converter(dct["bias_to_node"])
-        )
-        avalanche_settings = AvalancheSettings.from_dict(dct["avalanche_settings"])
-
-        return cls(
-            roic_gain=dct["roic_gain"],
-            bias_to_node=bias_to_node,
-            avalanche_settings=avalanche_settings,
-            quantum_efficiency=dct.get("quantum_efficiency"),
-            full_well_capacity=dct.get("full_well_capacity"),
-            adc_bit_resolution=dct.get("adc_bit_resolution"),
-            adc_voltage_range=dct.get("adc_voltage_range"),
         )
 
     # TODO: This method exists in class 'Characteristics' and 'APDCharacteristics'
@@ -1000,6 +862,8 @@ class APDCharacteristics:
         """Create a new instance from a `dict`."""
         # Late import to speedup start-up time
         from toolz import dicttoolz
+
+        from pyxel.configuration.configuration import build_converter
 
         adc_voltage_range = dct["adc_voltage_range"]
 
