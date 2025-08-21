@@ -19,6 +19,7 @@ from pyxel.models.scene_generation import load_star_map
 from pyxel.models.scene_generation.load_star_map import (
     HIPPARCOS_ID,
     TYCHO2_ID,
+    get_vega_spectrum_flux,
     retrieve_from_gaia,
     retrieve_from_vizier_catalog,
 )
@@ -534,3 +535,12 @@ def test_retrieve_vizier_large_radius():
 
     assert isinstance(table, Table)
     assert len(table) > 50  # Adjust based on catalog density
+
+
+def test_get_vega_spectrum_flux():
+    """Test function 'get_vega_spectrum_flux'."""
+    data = get_vega_spectrum_flux()
+
+    assert isinstance(data, xr.DataArray)
+    assert data.ndim == 1
+    assert data.attrs.get("units") == "W / (nm m2)"

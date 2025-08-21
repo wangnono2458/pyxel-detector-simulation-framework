@@ -94,7 +94,7 @@ def get_vega_spectrum_photon(
     )
 
     # Load Vega spectrum
-    vega = SourceSpectrum.from_vega()
+    vega = SourceSpectrum.from_vega(cache=True)
 
     # Convert the Vega spectrum from "PHOTLAM" ("ph / (Angstrom s cm2)") to "ph / (nm s cm2)"
     spectrum_1d: Quantity = vega(wavelengths_1d).to("ph / (nm s cm2)")
