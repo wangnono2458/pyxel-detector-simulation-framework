@@ -28,7 +28,6 @@ current status, in Image Sensing Technologies: Materials, Devices, Systems, and 
 2019, vol. 10980, no. May, p. 20.
 """
 
-
 import numpy as np
 
 from pyxel.detectors import APDCharacteristics
@@ -36,12 +35,25 @@ from pyxel.detectors.apd import AvalancheSettings, ConverterFunction
 
 
 def bias_to_node_capacitance_saphira(bias: float) -> float:
-    """Pixel integrating node capacitance in F.
+    """Compute the pixel integrating node capacitance of a SAPHIRA detector.
 
     The below interpolates empirical published data, however note that
     Node C = Charge Gain / Voltage Gain
     So can be calculated by measuring V gain (varying PRV) and chg gain (PTC); see [2]
+
+    Parameters
+    ----------
+    bias : float
+        Detector bias voltage in V
+
+    Returns
+    -------
+    float
+        Capacitance in F
     """
+    # Late import
+    from astropy.units import Quantity
+
     if bias < 1:
         raise ValueError(
             "Warning! Node capacitance calculation is inaccurate for bias voltages"
@@ -49,19 +61,41 @@ def bias_to_node_capacitance_saphira(bias: float) -> float:
         )
 
     # From [2] (Mk13 ME1000; data supplied by Leonardo):
-    bias_list = [1, 1.5, 2.5, 3.5, 4.5, 6.5, 8.5, 10.5]
-    capacitance = [46.5, 41.3, 37.3, 34.8, 33.2, 31.4, 30.7, 30.4]
+    bias_voltages = Quantity(
+        [1.0, 1.5, 2.5, 3.5, 4.5, 6.5, 8.5, 10.5],
+        unit="V",
+    )
+    node_capacitances = Quantity(
+        [46.5, 41.3, 37.3, 34.8, 33.2, 31.4, 30.7, 30.4],
+        unit="fF",
+    )
 
-    output_capacitance = float(np.interp(x=bias, xp=bias_list, fp=capacitance))
+    # Get an 'output_capacitance' in 'fF'
+    output_capacitance: Quantity = np.interp(
+        x=Quantity(bias, unit="V"),
+        xp=bias_voltages,
+        fp=node_capacitances,
+    )
 
-    return output_capacitance * 1.0e-15
+    # Convert it into 'F'
+    return output_capacitance.to("F").value
 
 
 def gain_to_bias_saphira(gain: float) -> float:
-    """Calculate bias from gain.
+    """Convert avalanche gain to detector bias for a SAPHIRA detector.
 
     The formula ignores the soft knee between the linear and
     unity gain ranges, but should be close enough. [2] (Mk13 ME1000)
+
+    Parameters
+    ----------
+    gain : float
+        Avalanche gain.
+
+    Returns
+    -------
+    float
+        Estimated bias voltage in V.
     """
     # Late import
     import math
@@ -72,10 +106,20 @@ def gain_to_bias_saphira(gain: float) -> float:
 
 
 def bias_to_gain_saphira(bias: float) -> float:
-    """Calculate gain from bias.
+    """Convert detector bias to avalanche gain for a SAPHIRA detector.
 
     The formula ignores the soft knee between the linear and unity gain ranges,
     but should be close enough. [2] (Mk13 ME1000)
+
+    Parameters
+    ----------
+    bias : float
+        Bias voltage in V.
+
+    Returns
+    -------
+    float
+        Avalanche gain.
     """
     gain = 2 ** ((bias - 2.65) / 2.17)
 

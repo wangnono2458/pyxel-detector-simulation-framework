@@ -759,7 +759,9 @@ def to_mkid_characteristics(dct: dict | None) -> Characteristics:
     return Characteristics(**dct)
 
 
-def build_converter(dct: dict) -> ConverterValues | ConverterTable | ConverterFunction:
+def build_converter(
+    dct: dict,
+) -> "ConverterValues | ConverterTable | ConverterFunction":
     # Late import
     from pyxel.detectors.apd import ConverterFunction, ConverterTable, ConverterValues
 

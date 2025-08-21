@@ -838,11 +838,22 @@ class APDCharacteristics:
         return self._numbytes
 
     def bias_to_node_capacitance(self, bias: float) -> float:
-        """Compute node capacitance from bias voltage using user-provided function."""
+        """Compute node capacitance from bias voltage using user-provided function.
+
+        Parameters
+        ----------
+        bias : float
+            Detector bias voltage in V
+
+        Returns
+        -------
+        float
+        Capacitance in F
+        """
         if self._bias_to_node is None:
             raise ValueError("'bias_to_node_func' must be provided.")
 
-        return self._bias_to_node(bias) * 1e-15  # fF → F
+        return self._bias_to_node(bias)
 
     def to_dict(self) -> Mapping:
         """Get the attributes of this instance as a `dict`."""

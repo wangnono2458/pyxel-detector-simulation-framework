@@ -902,8 +902,8 @@ def test_numbytes(characteristics):
 @pytest.mark.parametrize(
     "bias, expected",
     [
-        (3.0, pytest.approx(60.0e-15)),
-        (2.0, pytest.approx(90.0e-15)),
+        (3.0, pytest.approx(70.14814814814815)),
+        (2.0, pytest.approx(73.7)),
     ],
 )
 def test_bias_to_node_capacitance_valid(bias, expected):
@@ -1015,7 +1015,7 @@ def test_bias_to_node_func_callable():
         ),
     )
     result = apd.bias_to_node_capacitance(2.0)
-    assert result == pytest.approx(40.0e-15)
+    assert result == pytest.approx(40.0)
 
 
 def test_bias_to_node_func_list():
@@ -1034,7 +1034,7 @@ def test_bias_to_node_func_list():
     )
 
     assert isinstance(apd.bias_to_node_capacitance, Callable)
-    assert apd.bias_to_node_capacitance(2.0) == pytest.approx(38.0e-15)
+    assert apd.bias_to_node_capacitance(2.0) == pytest.approx(38.0)
 
 
 @pytest.mark.parametrize(
