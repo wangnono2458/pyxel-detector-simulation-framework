@@ -20,6 +20,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 ### Models
 
 ### Others
+* Add more unit tests for function `retrieve_from_gaia`.
+  (See [!1089](https://gitlab.com/esa/pyxel/-/merge_requests/1089)).
 
 
 ## 2.12 / 2025-07-31
