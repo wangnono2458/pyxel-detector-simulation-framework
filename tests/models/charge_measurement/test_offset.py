@@ -20,6 +20,7 @@ from pyxel.detectors import (
     Characteristics,
     Environment,
 )
+from pyxel.detectors.apd import AvalancheSettings, ConverterFunction, ConverterValues
 from pyxel.models.charge_measurement import dc_offset, output_pixel_reset_voltage_apd
 
 
@@ -56,13 +57,18 @@ def apd_5x5() -> APD:
         ),
         environment=Environment(),
         characteristics=APDCharacteristics(
+            roic_gain=0.8,
+            bias_to_node=ConverterValues([(2.65, 73.7), (4.0, 60.0)]),
+            avalanche_settings=AvalancheSettings(
+                avalanche_gain=1.0,
+                pixel_reset_voltage=5.0,
+                gain_to_bias=ConverterFunction(lambda gain: 0.15 * gain + 2.5),
+                bias_to_gain=ConverterValues([(2.65, 1.0), (4.0, 10.0)]),
+            ),
             quantum_efficiency=1.0,
             adc_voltage_range=(0.0, 10.0),
             adc_bit_resolution=16,
             full_well_capacity=100000,
-            avalanche_gain=1.0,
-            pixel_reset_voltage=5.0,
-            roic_gain=0.8,
         ),
     )
     detector.signal.array = np.zeros(detector.geometry.shape, dtype=float)

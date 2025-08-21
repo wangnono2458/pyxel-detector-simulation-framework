@@ -36,6 +36,7 @@ from pyxel.pipelines import DetectionPipeline, FitnessFunction, ModelFunction
 
 if TYPE_CHECKING:
     from pyxel.calibration import Algorithm, Calibration
+    from pyxel.detectors.apd import ConverterFunction, ConverterTable, ConverterValues
 
 
 # ruff: noqa: C901
@@ -758,8 +759,42 @@ def to_mkid_characteristics(dct: dict | None) -> Characteristics:
     return Characteristics(**dct)
 
 
+def build_converter(
+    dct: dict,
+) -> "ConverterValues | ConverterTable | ConverterFunction":
+    # Late import
+    from pyxel.detectors.apd import ConverterFunction, ConverterTable, ConverterValues
+
+    if "values" in dct:
+        if "filename" in dct or "function" in dct:
+            raise ValueError
+
+        return ConverterValues(values=dct["values"])
+
+    elif "filename" in dct:
+        if "values" in dct or "function" in dct:
+            raise ValueError
+
+        return ConverterTable(
+            filename=dct["filename"], with_header=dct.get("with_header", False)
+        )
+
+    elif "function" in dct:
+        if "values" in dct or "filename" in dct:
+            raise ValueError
+
+        return ConverterFunction.from_dict(dct)
+
+    else:
+        raise ValueError(f"Cannot convert {dct=}")
+
+
 def to_apd_characteristics(dct: dict | None) -> APDCharacteristics:
     """Create a APDCharacteristics class from a dictionary."""
+    # Late import
+    from pyxel.detectors.apd import AvalancheSettings
+    from pyxel.detectors.apd.saphira_characteristics import SaphiraCharacteristics
+
     if dct is None:
         new_dct = {}
     else:
@@ -768,8 +803,38 @@ def to_apd_characteristics(dct: dict | None) -> APDCharacteristics:
     if "roic_gain" not in new_dct:
         raise KeyError("Missing parameter 'roic_gain' in APD Characteristics")
 
-    roic_gain = new_dct.pop("roic_gain")
-    return APDCharacteristics(roic_gain=roic_gain, **new_dct)
+    if "avalanche_settings" not in new_dct and "bias_to_node" not in new_dct:
+        return SaphiraCharacteristics(
+            roic_gain=new_dct["roic_gain"],
+            avalanche_gain=new_dct.get("avalanche_gain"),
+            pixel_reset_voltage=new_dct.get("pixel_reset_voltage"),
+            common_voltage=new_dct.get("common_voltage"),
+            quantum_efficiency=new_dct.get("quantum_efficiency"),
+            full_well_capacity=new_dct.get("full_well_capacity"),
+            adc_bit_resolution=new_dct.get("adc_bit_resolution"),
+            adc_voltage_range=new_dct.get("adc_voltage_range"),
+        )
+
+    if "bias_to_node" not in new_dct:
+        raise KeyError("Missing parameter 'bias_to_node' in APD Characteristics")
+
+    if "avalanche_settings" not in new_dct:
+        raise KeyError("Missing parameter 'avalanche_settings' in APD Characteristics")
+
+    bias_to_node: ConverterValues | ConverterTable | ConverterFunction = (
+        build_converter(new_dct["bias_to_node"])
+    )
+    avalanche_settings = AvalancheSettings.from_dict(new_dct["avalanche_settings"])
+
+    return APDCharacteristics(
+        roic_gain=new_dct["roic_gain"],
+        bias_to_node=bias_to_node,
+        avalanche_settings=avalanche_settings,
+        quantum_efficiency=new_dct.get("quantum_efficiency"),
+        full_well_capacity=new_dct.get("full_well_capacity"),
+        adc_bit_resolution=new_dct.get("adc_bit_resolution"),
+        adc_voltage_range=new_dct.get("adc_voltage_range"),
+    )
 
 
 def to_ccd(dct: dict) -> CCD:

@@ -220,6 +220,22 @@ def generate_class(klass: Klass) -> Iterator[str]:
                     "WavelengthHandling",
                 )
                 .replace("pyxel.detectors.channels.Channels", "Channels")
+                .replace(
+                    "pyxel.detectors.apd.apd_characteristics.ConverterValues",
+                    "ConverterValues",
+                )
+                .replace(
+                    "pyxel.detectors.apd.apd_characteristics.ConverterTable",
+                    "ConverterTable",
+                )
+                .replace(
+                    "pyxel.detectors.apd.apd_characteristics.ConverterFunction",
+                    "ConverterFunction",
+                )
+                .replace(
+                    "AvalancheSettings",
+                    "AvalancheSettings1 | AvalancheSettings2 | AvalancheSettings3",
+                )
             )  # TODO: Fix this. See issue #727
 
             yield f"    {name}: {annotation} = field("
@@ -517,6 +533,49 @@ def generate_detectors() -> Iterator[str]:
     yield "    matrix: Sequence[Sequence[str]]"
     yield "    readout_position: Mapping[str , Literal['top-left', 'top-right', 'bottom-left', 'bottom-right'],]"
     yield ""
+    yield "@schema(description='List of (x, y) pairs')"
+    yield "@dataclass(kw_only=True)"
+    yield "class ConverterValues:"
+    yield "    values: list[tuple[float, float]]"
+    yield ""
+    yield "@schema(description='Table from a filename')"
+    yield "@dataclass(kw_only=True)"
+    yield "class ConverterTable:"
+    yield "    filename: str"
+    yield "    with_header: bool = False"
+    yield ""
+    yield "@schema(description='Mathematical function')"
+    yield "@dataclass(kw_only=True)"
+    yield "class ConverterFunction:"
+    yield "    function: str"
+    yield ""
+    yield "@schema(description='Settings for APD gain and biases')"
+    yield "@dataclass(kw_only=True)"
+    yield "class AvalancheSettings1:"
+    yield "    gain_to_bias: ConverterValues | ConverterTable | ConverterFunction"
+    yield "    bias_to_gain: ConverterValues | ConverterTable | ConverterFunction"
+    yield "    avalanche_gain: float"
+    yield "    pixel_reset_voltage: float"
+    yield "    common_voltage: Literal[None] = None"
+    yield ""
+    yield "@schema(description='Settings for APD gain and biases')"
+    yield "@dataclass(kw_only=True)"
+    yield "class AvalancheSettings2:"
+    yield "    gain_to_bias: ConverterValues | ConverterTable | ConverterFunction"
+    yield "    bias_to_gain: ConverterValues | ConverterTable | ConverterFunction"
+    yield "    avalanche_gain: float"
+    yield "    common_voltage: float"
+    yield "    pixel_reset_voltage: Literal[None] = None"
+    yield ""
+    yield "@schema(description='Settings for APD gain and biases')"
+    yield "@dataclass(kw_only=True)"
+    yield "class AvalancheSettings3:"
+    yield "    gain_to_bias: ConverterValues | ConverterTable | ConverterFunction"
+    yield "    bias_to_gain: ConverterValues | ConverterTable | ConverterFunction"
+    yield "    common_voltage: float"
+    yield "    pixel_reset_voltage: float"
+    yield "    avalanche_gain: Literal[None] = None"
+    yield ""
 
     # Generate code based on the dependency graph
     ts = TopologicalSorter(graph)
@@ -735,6 +794,7 @@ def generate_all_models() -> Iterator[str]:
     yield "# Note: This code is auto-generated. #"
     yield "#       Don't modify it !            #"
     yield "######################################"
+    yield "# ruff: noqa: D100, D101, N801, RUF001"
     yield ""
 
     yield "import collections"
@@ -743,8 +803,8 @@ def generate_all_models() -> Iterator[str]:
     yield "import sys"
     yield "from dataclasses import dataclass, field"
     yield "from pathlib import Path"
-    yield "from pprint import pprint"
-    yield "from typing import Any, Iterator, Literal, Mapping, Optional, Sequence, Tuple, Union"
+    yield "from typing import Any, Literal, Optional, Tuple, Union"
+    yield "from collections.abc import Iterator, Mapping, Sequence"
     yield ""
     yield "import click"
     yield "from apischema import schema"
@@ -806,7 +866,7 @@ def generate_all_models() -> Iterator[str]:
     yield "    ..."
     yield ""
     yield "def compare(first, second) -> None:"
-    yield "    if type(first) != type(second):"
+    yield "    if type(first) is not type(second):"
     yield "        raise NotEqualError"
     yield ""
     yield "    if isinstance(first, dict) and isinstance(second, dict):"
@@ -849,7 +909,7 @@ def generate_all_models() -> Iterator[str]:
     yield "    schema(format='uri')(Path)"
     yield ""
     yield "    dct_schema = deserialization_schema("
-    yield f"        Union[{','.join(all_configurations)}], version=JsonSchemaVersion.DRAFT_7, all_refs=True"
+    yield f"        {'| '.join(all_configurations)}, version=JsonSchemaVersion.DRAFT_7, all_refs=True"
     yield "    )"
     yield ""
     yield ""
@@ -868,7 +928,6 @@ def generate_all_models() -> Iterator[str]:
     yield '                f"Error, JSON Schema file: {full_filename} is not the newest version. "'
     yield "                f\"Please run 'tox -e json_schema'\""
     yield "             )"
-    yield "            pprint(result)"
     yield "            sys.exit(1)"
     yield "        else:"
     yield "            sys.exit(0)"
@@ -885,7 +944,7 @@ def generate_all_models() -> Iterator[str]:
 def create_auto_generated(filename: Path) -> None:
     """Create an auto-generated file."""
     with Path(filename).open("w") as fh:
-        for line in tqdm(generate_all_models()):
+        for line in tqdm(generate_all_models()):  # noqa: FURB122
             fh.write(f"{line}\n")
 
 

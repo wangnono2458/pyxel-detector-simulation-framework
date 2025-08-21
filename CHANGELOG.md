@@ -14,6 +14,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 ### Core
 * Progress bar should displayed only the number of readout time.
   (See [!1088](https://gitlab.com/esa/pyxel/-/merge_requests/1088)).
+* Refactor characteristics for detector `APD`.
+  (See [!1087](https://gitlab.com/esa/pyxel/-/merge_requests/1087)).
 
 ### Documentation
 

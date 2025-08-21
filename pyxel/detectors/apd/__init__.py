@@ -10,5 +10,11 @@
 
 # flake8: noqa
 from .apd_geometry import APDGeometry
-from .apd_characteristics import APDCharacteristics
+from .apd_characteristics import (
+    APDCharacteristics,
+    ConverterValues,
+    ConverterTable,
+    ConverterFunction,
+    AvalancheSettings,
+)
 from .apd import APD

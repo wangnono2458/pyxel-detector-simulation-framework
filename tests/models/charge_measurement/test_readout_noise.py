@@ -21,6 +21,7 @@ from pyxel.detectors import (
     CMOSGeometry,
     Environment,
 )
+from pyxel.detectors.apd import AvalancheSettings, ConverterFunction, ConverterValues
 from pyxel.detectors.channels import Matrix, ReadoutPosition
 from pyxel.models.charge_measurement import (
     output_node_noise,
@@ -68,6 +69,11 @@ def cmos_2x3() -> CMOS:
 @pytest.fixture
 def apd_2x3() -> APD:
     """Create a valid CCD detector."""
+    import math
+
+    bias_list = [1, 1.5, 2.5, 3.5, 4.5, 6.5, 8.5, 10.5]
+    capacitance = [46.5, 41.3, 37.3, 34.8, 33.2, 31.4, 30.7, 30.4]
+
     detector = APD(
         geometry=APDGeometry(
             row=2,
@@ -78,13 +84,24 @@ def apd_2x3() -> APD:
         ),
         environment=Environment(),
         characteristics=APDCharacteristics(
+            roic_gain=0.8,
+            bias_to_node=ConverterValues(
+                list(zip(bias_list, capacitance, strict=False))
+            ),
+            avalanche_settings=AvalancheSettings(
+                avalanche_gain=1.0,
+                pixel_reset_voltage=5.0,
+                bias_to_gain=ConverterFunction(
+                    lambda bias: np.clip(2 ** ((bias - 2.65) / 2.17), a_min=1.0)
+                ),
+                gain_to_bias=ConverterFunction(
+                    lambda gain: (2.17 * math.log2(gain)) + 2.65
+                ),
+            ),
             quantum_efficiency=1.0,
             adc_voltage_range=(0.0, 10.0),
             adc_bit_resolution=16,
             full_well_capacity=100000,
-            avalanche_gain=1.0,
-            pixel_reset_voltage=5.0,
-            roic_gain=0.8,
         ),
     )
     detector.signal.array = np.zeros(detector.geometry.shape, dtype=float)
