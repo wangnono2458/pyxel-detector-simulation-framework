@@ -120,15 +120,6 @@
             "null"
           ]
         },
-        "avalanche_gain": {
-          "default": null,
-          "description": "APD gain. Unit: electron/electron",
-          "title": "avalanche_gain",
-          "type": [
-            "number",
-            "null"
-          ]
-        },
         "avalanche_settings": {
           "anyOf": [
             {
@@ -139,12 +130,8 @@
             },
             {
               "$ref": "#/definitions/AvalancheSettings3"
-            },
-            {
-              "type": "null"
             }
           ],
-          "default": null,
           "title": "avalanche_settings"
         },
         "bias_to_node": {
@@ -161,28 +148,10 @@
           ],
           "title": "bias_to_node"
         },
-        "common_voltage": {
-          "default": null,
-          "description": "Common voltage. Unit: V",
-          "title": "common_voltage",
-          "type": [
-            "number",
-            "null"
-          ]
-        },
         "full_well_capacity": {
           "default": null,
           "description": "Full well capacity. Unit: e-",
           "title": "full_well_capacity",
-          "type": [
-            "number",
-            "null"
-          ]
-        },
-        "pixel_reset_voltage": {
-          "default": null,
-          "description": "DC voltage going into the detector, not the voltage of a reset pixel. Unit: V",
-          "title": "pixel_reset_voltage",
           "type": [
             "number",
             "null"
@@ -205,7 +174,8 @@
       },
       "required": [
         "roic_gain",
-        "bias_to_node"
+        "bias_to_node",
+        "avalanche_settings"
       ],
       "title": "APDCharacteristics",
       "type": "object"

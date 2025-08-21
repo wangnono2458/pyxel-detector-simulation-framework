@@ -233,7 +233,7 @@ def generate_class(klass: Klass) -> Iterator[str]:
                     "ConverterFunction",
                 )
                 .replace(
-                    "pyxel.detectors.apd.apd_characteristics.AvalancheSettings",
+                    "AvalancheSettings",
                     "AvalancheSettings1 | AvalancheSettings2 | AvalancheSettings3",
                 )
             )  # TODO: Fix this. See issue #727

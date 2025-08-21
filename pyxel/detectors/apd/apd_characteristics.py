@@ -545,12 +545,6 @@ class APDCharacteristics:
         ADC bit resolution.
     adc_voltage_range : tuple of floats, optional
         ADC voltage range. Unit: V
-    avalanche_gain : float, optional
-        APD gain. Unit: electron/electron
-    pixel_reset_voltage : float
-        DC voltage going into the detector, not the voltage of a reset pixel. Unit: V
-    common_voltage : float
-        Common voltage. Unit: V
     """
 
     def __init__(
