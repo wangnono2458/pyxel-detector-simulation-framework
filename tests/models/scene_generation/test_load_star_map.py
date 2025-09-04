@@ -5,6 +5,7 @@
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
 import sys
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
@@ -242,8 +243,10 @@ def source1_pyxel(
 
 @pytest.mark.skipif(sys.version_info < (3, 11), reason="Requires Python 3.11+")
 @pytest.mark.parametrize("extrapolated_spectra", [True, False])
+@patch(target="astroquery.gaia.Gaia.launch_job_async")
 def test_retrieve_from_gaia(
-    extrapolated_spectra: bool, mocker: pytest_mock.MockerFixture
+    mock_launch_job_async: Mock,
+    extrapolated_spectra: bool,
 ):
     """Test function 'retrieve_from_gaia'."""
 
@@ -287,7 +290,7 @@ def test_retrieve_from_gaia(
 
             return table
 
-    mocker.patch(target="astroquery.gaia.Gaia.launch_job_async", return_value=FakeJob())
+    mock_launch_job_async.return_value = FakeJob()
 
     ds = retrieve_from_gaia(
         right_ascension=56.75,  # This parameter is not important

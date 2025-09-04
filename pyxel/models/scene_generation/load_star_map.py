@@ -488,7 +488,7 @@ def _retrieve_objects_from_gaia(
 
             # load spectra from stars
             spectra_dct_partial: dict[str, list[tree.Table]] = Gaia.load_data(
-                ids=source_ids_with_spectra_chunk,
+                ids=list(source_ids_with_spectra_chunk),
                 retrieval_type=retrieval_type,
                 data_release=data_release,
                 data_structure=data_structure,
