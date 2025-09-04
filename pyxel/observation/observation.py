@@ -409,7 +409,7 @@ def _add_custom_parameters(
     import pandas as pd
     import xarray as xr
 
-    data_tree = data_tree.map_over_datasets(  # type: ignore[assignment]
+    data_tree = data_tree.map_over_datasets(
         lambda dataset: dataset.expand_dims({"id": [index]})
     )
 
@@ -418,7 +418,7 @@ def _add_custom_parameters(
 
         #  assigning the right coordinates based on type
         if types[coordinate_name] == ParameterType.Simple:
-            data_tree = data_tree.map_over_datasets(  # type: ignore[assignment]
+            data_tree = data_tree.map_over_datasets(
                 lambda dataset: dataset.assign_coords(
                     {short_name: ("id", pd.Index([param_value]))}
                 )
@@ -427,7 +427,7 @@ def _add_custom_parameters(
         elif types[coordinate_name] == ParameterType.Multi:
             data = np.array(param_value)
             data_array = xr.DataArray(data).expand_dims({"id": [index]})
-            data_tree = data_tree.map_over_datasets(  # type: ignore[assignment]
+            data_tree = data_tree.map_over_datasets(
                 lambda dataset: dataset.assign_coords({short_name: data_array})
             )
 
@@ -468,7 +468,7 @@ def _add_product_parameters(
 
         #  assigning the right coordinates based on type
         if types[coordinate_name] == ParameterType.Simple:
-            data_tree = data_tree.map_over_datasets(  # type: ignore[assignment]
+            data_tree = data_tree.map_over_datasets(
                 lambda dataset: dataset.expand_dims(dim={short_name: [param_value]})
             )
 
@@ -500,7 +500,7 @@ def _add_product_parameters(
             else:
                 raise NotImplementedError
 
-            data_tree = data_tree.map_over_datasets(  # type: ignore[assignment]
+            data_tree = data_tree.map_over_datasets(
                 lambda dataset: dataset.expand_dims(
                     {f"{short_name}_id": [index]}
                 ).assign_coords({short_name: data_array})
