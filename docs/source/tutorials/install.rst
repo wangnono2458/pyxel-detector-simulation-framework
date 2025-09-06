@@ -5,83 +5,69 @@ Installation
 ============
 
 There are many ways to install Pyxel. On this page we list the most common ones.
-In general **we recommend to use virtual environments** when using Pyxel.
-This ways you have full control over addition packages that you may use in your analysis
-and your work with well defined computing environments.
+In general **we recommend using virtual environments** when working with Pyxel.
+This way you have full control over additional packages you may use in your analysis
+and you work within well-defined computing environments.
 
 If you want to learn about using virtual environments see :ref:`Virtual Environments <virtualenvs>`.
 You can also install :ref:`Pyxel for development <contributing.gitlab>`.
 
-Don't hesitate to create a `GitLab issues <https://gitlab.com/esa/pyxel/-/issues>`_
-to report bugs, ask for new functionalities, ... .
+Don't hesitate to create a `GitLab issue <https://gitlab.com/esa/pyxel/-/issues>`_
+to report bugs, ask for new features, etc.
 
 **Contact**: pyxel@esa.int
-
-
-..
-    Pyxel can be installed with `conda <https://docs.conda.io/>`_,
-    `pip <https://pip.pypa.io/>`_ or from source.
-
-    If you want to have a full installation of Pyxel, then the recommended installation
-    method is to use `conda <https://docs.conda.io/>`__ into a conda environment.
-
-    The following instructions are valid for MacOS, Windows and Linux.
-
-
-    .. important::
-        Because of its optional and required dependencies, Pyxel is not compatible with
-        all versions of Python.
-
-        You can install Pyxel with `pygmo <https://esa.github.io/pygmo2/>`_ only for
-        **Python 3.7** and **Python 3.8** (not Python 3.9+).
-
-        If you don't use `pygmo <https://esa.github.io/pygmo2/>`_ then you can Pyxel with
-        **Python 3.7**, **Python 3.8** and **Python 3.9** (not Python 3.10+).
-
-
-    .. warning::
-        It is **strongly** encouraged to install optional package
-        `pygmo <https://esa.github.io/pygmo2/>`_ with ``conda`` rather than ``pip``.
-        See `here <https://esa.github.io/pygmo2/install.html#pip>`_ for more information.
-
-        Moreover, only the binaries of ``pygmo`` for Linux (not MacOS or Windows)
-        are available on ``pip``.
-        The binaries of ``pygmo`` for MacOS, Windows and Linux are only available
-        on Conda 64bit (**not 32bit**).
 
 
 Using Anaconda / Miniconda
 ==========================
 
-The easiest way to install Pyxel for Linux, MacOS and Windows is
-to install `Anaconda <https://www.anaconda.com/download>`_
+The easiest way to install Pyxel for Linux, macOS and Windows is
+to install the `Anaconda <https://www.anaconda.com/download>`_
 or `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ Python distribution.
-The packages are available from the
+Packages are available from
 `conda-forge <https://anaconda.org/conda-forge/pyxel-sim>`_.
+
+.. tip::
+
+   **Windows: fast local docs preview (skip notebook execution)**
+
+   If you are only editing documentation text and want a quick preview, you can skip
+   executing notebooks during the Sphinx build:
+
+   .. code-block:: console
+
+      sphinx-build -E -b html -D nb_execution_mode=off docs\source docs\html
+      start docs\html\index.html
+
+   Keep warnings-as-errors but still skip notebooks:
+
+   .. code-block:: console
+
+      sphinx-build -E -W -b html -D nb_execution_mode=off docs\source docs\html
 
 .. note::
 
-    It is **strongly** encouraged to install Pyxel with ``conda`` (or ``mamba``) rather than ``pip`` because
-    of the optional dependency `pygmo <https://esa.github.io/pygmo2/>`_.
-    `pygmo <https://esa.github.io/pygmo2/>`_ is exclusively used for the calibration mode.
-    See `here <https://esa.github.io/pygmo2/install.html#pip>`_ for more information.
+   It is **strongly** encouraged to install Pyxel with ``conda`` (or ``mamba``) rather than ``pip`` because
+   of the optional dependency `pygmo <https://esa.github.io/pygmo2/>`_.
+   ``pygmo`` is used for the calibration mode. See
+   `here <https://esa.github.io/pygmo2/install.html#pip>`_ for more information.
 
 .. important::
 
-    You **must** install a 64-bit version of `Anaconda <https://www.anaconda.com/download>`_
-    or `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_
-
+   You **must** install a 64-bit version of `Anaconda <https://www.anaconda.com/download>`_
+   or `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_.
 
 To install the latest stable version of Pyxel, execute this command in a terminal:
 
-.. code-block:: bash
+.. code-block:: console
 
-    conda install -c conda-forge pyxel-sim
+   conda install -c conda-forge pyxel-sim
 
 .. note::
 
-    It is recommended to install Pyxel in its own dedicated Conda environment.
-    For more information, click here :ref:`conda_envs`.
+   It is recommended to install Pyxel in its own dedicated Conda environment.
+   For more information, see :ref:`Virtual Environments <virtualenvs>`.
+
 
 To update an existing installation you can use:
 
