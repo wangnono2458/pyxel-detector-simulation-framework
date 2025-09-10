@@ -12,6 +12,8 @@ import pytest
 import requests
 import xarray as xr
 from astropy import constants
+from astropy.io.votable import from_table
+from astropy.io.votable.tree import Param
 from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.units import Quantity, Unit, spectral_density
@@ -241,14 +243,13 @@ def source1_pyxel(
     return 0
 
 
-@pytest.mark.skip(reason="Fix this test !")
 @pytest.mark.skipif(sys.version_info < (3, 11), reason="Requires Python 3.11+")
 @pytest.mark.parametrize("extrapolated_spectra", [True, False])
 @patch(target="astroquery.gaia.Gaia.launch_job_async")
 @patch(target="astroquery.gaia.Gaia.load_data")
 def test_retrieve_from_gaia(
-    mock_launch_job_async: Mock,
-    mock_load_data: Mock,
+    mock_load_data: Mock,  # Note: order is important !
+    mock_launch_job_async: Mock,  # Note: order is important !
     extrapolated_spectra: bool,
 ):
     """Test function 'retrieve_from_gaia'."""
@@ -294,7 +295,32 @@ def test_retrieve_from_gaia(
             return table
 
     mock_launch_job_async.return_value = FakeJob()
-    mock_load_data.return_value = ...
+
+    table_load_data = Table(
+        {
+            "wavelength": Quantity([336.0, 1020.0], unit="nm"),
+            "flux": Quantity(
+                [2.2282904e-16, 1.6213707e-15], unit="W / (nm m2)", dtype=np.float32
+            ),
+            "flux_error": Quantity(
+                [7.737149e-17, 4.5590877e-17], unit="W / (nm m2)", dtype=np.float32
+            ),
+        }
+    )
+    votable_load_data = from_table(table_load_data)
+    table_element_load_data = votable_load_data.get_first_table()
+
+    param_load_data = Param(
+        votable=votable_load_data,
+        ID="source_id",
+        value="66504343062472704",
+        datatype="long",
+    )
+    table_element_load_data.params.append(param_load_data)
+
+    mock_load_data.return_value = {
+        "XP_SAMPLED-Gaia DR3 66715410636984192.xml": [table_element_load_data]
+    }
 
     ds = retrieve_from_gaia(
         right_ascension=56.75,  # This parameter is not important
@@ -317,7 +343,6 @@ def test_retrieve_from_gaia(
     assert dict(ds.dims) == {"source_id": 2, "wavelength": 343}
 
 
-@pytest.mark.skip(reason="Fix this test !")
 @patch(target="astroquery.gaia.Gaia.launch_job_async")
 @patch(target="astroquery.gaia.Gaia.load_data")
 def test_retrieve_from_gaia_load_data_error(
@@ -370,7 +395,8 @@ def test_retrieve_from_gaia_load_data_error(
     mock_load_data.side_effect = requests.HTTPError()
 
     with pytest.raises(
-        ConnectionError, match=r"Error when trying to load data from the Gaia database"
+        ConnectionError,
+        match=r"Error when trying to retrieve sources from the Gaia database",
     ):
         _ = retrieve_from_gaia(
             right_ascension=56.75,  # This parameter is not important
