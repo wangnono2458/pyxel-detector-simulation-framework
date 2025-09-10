@@ -27,7 +27,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 * Fix issues found by mypy with XArray 2025.9.0.
   (See [!1090](https://gitlab.com/esa/pyxel/-/merge_requests/1090)).
 * Improved unit test `test_retrieve_from_gaia`.
-  (See [!1091](https://gitlab.com/esa/pyxel/-/merge_requests/1091)).
+  (See [!1091](https://gitlab.com/esa/pyxel/-/merge_requests/1091)
+  and [!1095](https://gitlab.com/esa/pyxel/-/merge_requests/1095)).
 
 
 ## 2.12 / 2025-07-31
