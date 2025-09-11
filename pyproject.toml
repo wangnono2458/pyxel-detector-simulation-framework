@@ -366,6 +366,7 @@ exclude = [
     "FURB157",  # Verbose expression in 'Decimal' constructor
     "N803",     # Argument name should be lowercase
     "PT006",    # Wrong name(s) type in '@pytest.mark.parametrize'
+    "RUF043",   # Pattern passed to 'match' is neither escaped nor raw
     "SIM",      # flake8-simplify
 ]
 "pyxel/models/phasing/mkid_models/*" = [
@@ -376,6 +377,7 @@ exclude = [
     "N",        # pep8-naming
     "W",        # pycodestyle
     "PTH",      # Flake8 use Pathlib
+    "RUF",      # ruff
     "UP",       # pyupgrade
 ]
 "pyxel/models/charge_measurement/nghxrg/*.ipynb" = [
