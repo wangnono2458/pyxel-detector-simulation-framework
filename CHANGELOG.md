@@ -29,7 +29,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 * Improved unit test `test_retrieve_from_gaia`.
   (See [!1091](https://gitlab.com/esa/pyxel/-/merge_requests/1091)
   and [!1095](https://gitlab.com/esa/pyxel/-/merge_requests/1095)).
-
+* Fix issues with ruff 0.13+.
+  (See [!1096](https://gitlab.com/esa/pyxel/-/merge_requests/1096)).
 
 ## 2.12 / 2025-07-31
 
