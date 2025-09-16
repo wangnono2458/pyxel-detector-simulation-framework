@@ -10,7 +10,7 @@
 import logging
 import operator
 import warnings
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from copy import deepcopy
 from numbers import Number
 from typing import TYPE_CHECKING, Any, NewType, Optional
@@ -143,10 +143,10 @@ def _get_obj_att(obj: Any, key: str, obj_type: type | None = None) -> tuple[Any,
                 if isinstance(obj, ModelGroup):
                     raise KeyError(
                         f"Cannot access Observation parameter {key!r} because the specified name {part!r} "
-                        f"does not exist in group {obj._name!r}\n"
-                        f"Please check the YAML configuration under model group {obj._name!r} to ensure the correct name is defined.\n"
+                        f"does not exist in group {obj.name!r}\n"
+                        f"Please check the YAML configuration under model group {obj.name!r} to ensure the correct name is defined.\n"
                         f"Expected structure in the YAML file\n"
-                        f"{obj._name}:\n"
+                        f"{obj.name}:\n"
                         f"  - name: {part}\n"
                         f"    func: ...\n"
                     )
@@ -215,6 +215,35 @@ class Processor:
             pipeline=deepcopy(self.pipeline, memo=memodict),
             observation_mode=deepcopy(self.observation, memo=memodict),  # See #836
         )
+
+    def iter_parameters(self) -> Iterator[str]:
+        """Iterate over all parameter keys.
+
+        Examples
+        --------
+        >>> list(processor.iter_parameters())
+        ['pipeline.photon_collection.shot_noise.enabled',
+         'pipeline.charge_generation.dark_current.figure_of_merit',
+         'pipeline.charge_generation.dark_current.fixed_pattern_noise_factor',
+         'pipeline.charge_generation.dark_current.enabled',
+         ...
+         ]
+        """
+        # TODO: detector's arguments
+
+        # Get Pipeline's argument(s)
+        for group_name in self.pipeline.model_group_names:
+            model_grp: ModelGroup | None = getattr(self.pipeline, group_name)
+            if not model_grp:
+                continue
+
+            for model in model_grp.models:
+                pipeline_model_name = f"pipeline.{model_grp.name}.{model.name}"
+
+                for argument in model.arguments:
+                    yield f"{pipeline_model_name}.{argument}"
+
+                yield f"{pipeline_model_name}.enabled"
 
     # TODO: Could it be renamed '__contains__' ?
     # TODO: reimplement this method.
