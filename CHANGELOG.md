@@ -16,6 +16,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
   (See [!1088](https://gitlab.com/esa/pyxel/-/merge_requests/1088)).
 * Refactor characteristics for detector `APD`.
   (See [!1087](https://gitlab.com/esa/pyxel/-/merge_requests/1087)).
+* Improve error message when using a wrong 'parameter' in Observation mode.
+  (See [!1097](https://gitlab.com/esa/pyxel/-/merge_requests/1097)).
 
 ### Documentation
 
