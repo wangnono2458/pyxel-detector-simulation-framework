@@ -204,4 +204,4 @@ def display_model_group_html(mg: "ModelGroup") -> "HTML":
 
     template = Template(template_str)
 
-    return HTML(template.render(data=d, models=m, model_group_name=mg._name))
+    return HTML(template.render(data=d, models=m, model_group_name=mg.name))

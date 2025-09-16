@@ -143,10 +143,10 @@ def _get_obj_att(obj: Any, key: str, obj_type: type | None = None) -> tuple[Any,
                 if isinstance(obj, ModelGroup):
                     raise KeyError(
                         f"Cannot access Observation parameter {key!r} because the specified name {part!r} "
-                        f"does not exist in group {obj._name!r}\n"
-                        f"Please check the YAML configuration under model group {obj._name!r} to ensure the correct name is defined.\n"
+                        f"does not exist in group {obj.name!r}\n"
+                        f"Please check the YAML configuration under model group {obj.name!r} to ensure the correct name is defined.\n"
                         f"Expected structure in the YAML file\n"
-                        f"{obj._name}:\n"
+                        f"{obj.name}:\n"
                         f"  - name: {part}\n"
                         f"    func: ...\n"
                     )

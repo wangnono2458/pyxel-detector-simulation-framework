@@ -34,7 +34,7 @@ class ModelGroup:
 
     def __init__(self, models: Sequence[ModelFunction], name: str):
         self._log = logging.getLogger(__name__)
-        self._name = name
+        self.name: str = name
         self.models: Sequence[ModelFunction] = models
 
     def __repr__(self):
@@ -42,11 +42,11 @@ class ModelGroup:
 
         all_models: list[str] = [model.name for model in self.models if model.name]
 
-        return f"{cls_name}<name={self._name!r}, models={all_models!r}>"
+        return f"{cls_name}<name={self.name!r}, models={all_models!r}>"
 
     def __deepcopy__(self, memo: dict) -> "ModelGroup":
         copied_models = deepcopy(self.models)
-        return ModelGroup(models=copied_models, name=self._name)
+        return ModelGroup(models=copied_models, name=self.name)
 
     def __iter__(self) -> Iterator[ModelFunction]:
         for model in self.models:
@@ -61,11 +61,11 @@ class ModelGroup:
         return num_elements
 
     def __getstate__(self) -> Mapping:
-        return {"models": tuple(self.models), "name": self._name}
+        return {"models": tuple(self.models), "name": self.name}
 
     def __setstate__(self, state: Mapping) -> None:
         self.models = list(state["models"])
-        self._name = state["name"]
+        self.name = state["name"]
 
     def __getattr__(self, item: str) -> ModelFunction:
         for model in self.models:
@@ -93,7 +93,7 @@ class ModelGroup:
             except Exception as exc:
                 if sys.version_info >= (3, 11):
                     note = (
-                        f"This error is raised in group '{self._name}' at "
+                        f"This error is raised in group '{self.name}' at "
                         f"model '{model.name}' ({model._func_name})."
                     )
                     exc.add_note(note)
@@ -139,7 +139,7 @@ class ModelGroup:
                     detector.intermediate[pipeline_key] = datatree_single_time
 
                 # TODO: Refactor
-                model_group_key: str = self._name
+                model_group_key: str = self.name
                 if model_group_key not in detector.intermediate[pipeline_key]:
                     datatree_group: xr.DataTree = xr.DataTree()
 
@@ -147,7 +147,7 @@ class ModelGroup:
                     # Convert a model group's name to a better string representation
                     # Example: 'photon_collection' becomes 'Photon Collection'
                     group_name: str = " ".join(
-                        map(str.capitalize, self._name.split("_"))
+                        map(str.capitalize, self.name.split("_"))
                     )
                     datatree_group.attrs = {"long_name": f"Model group: {group_name}"}
                     detector.intermediate[f"{pipeline_key}/{model_group_key}"] = (

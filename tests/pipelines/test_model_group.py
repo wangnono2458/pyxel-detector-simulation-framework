@@ -79,7 +79,7 @@ def test_model_group_set_get_state(model_group_foo: ModelGroup):
 
     copied_model_group = copy(model_group)
     assert model_group is not copied_model_group
-    assert copied_model_group._name == "foo"
+    assert copied_model_group.name == "foo"
 
 
 def test_model_group_deepcopy(model_group_foo: ModelGroup):
@@ -89,7 +89,7 @@ def test_model_group_deepcopy(model_group_foo: ModelGroup):
 
     deepcopied_model_group = deepcopy(model_group)
     assert model_group is not deepcopied_model_group
-    assert deepcopied_model_group._name == "foo"
+    assert deepcopied_model_group.name == "foo"
 
 
 def test_model_group_getattr(model_group_foo: ModelGroup):
