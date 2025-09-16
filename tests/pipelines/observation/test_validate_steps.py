@@ -20,8 +20,7 @@ from pyxel.pipelines import Processor
         pytest.param(
             Path("observation_missing_param.yaml"),
             KeyError,
-            "Missing parameter:"
-            " 'pipeline.charge_generation.dark_current.arguments.temperature'",
+            r"Missing parameter: \'pipeline\.charge_generation\.dark_current\.arguments\.temperature\' in steps(.*)",
             id="observation_missing_param",
         ),
         pytest.param(
