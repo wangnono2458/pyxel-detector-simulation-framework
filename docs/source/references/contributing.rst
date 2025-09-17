@@ -260,11 +260,11 @@ To start developing with `uv <https://docs.astral.sh/uv/>`_, use the following c
 
 .. note::
 
-    * To install Pyxel for Python 3.12, please run the command:
+    * To install Pyxel for Python 3.13, please run the command:
 
       .. code-block:: fish
 
-          uv sync --python 3.12
+          uv sync --python 3.13
 
     * And to install Pyxel without including its development packages (e.g. ``pytest``, ``mypy``...), use:
 

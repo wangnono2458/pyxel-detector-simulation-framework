@@ -106,14 +106,14 @@ Check the current version of the latest Pyxel release by entering:
 
 .. code-block:: bash
 
-    $ uvx --python 3.12 pyxel-sim --version
-    pyxel-sim, version 2.12
-    Python (CPython) 3.12.11
+    $ uvx --python 3.13 pyxel-sim --version
+    pyxel-sim, version 2.13
+    Python (CPython) 3.13.7
 
 
 .. note::
     
-    This installation process is proved to work with Python 3.12, from this the need to specify the Python version.
+    This installation process is proved to work with Python 3.13, from this the need to specify the Python version.
 
 3. Download the Tutorial Notebooks
 ``````````````````````````````````
@@ -123,7 +123,7 @@ the following commands:
 
 .. code-block:: bash
 
-    $ uvx --python 3.12 pyxel-sim download-examples
+    $ uvx --python 3.13 pyxel-sim download-examples
     Downloading examples: 388MB [00:08, 47.9MB/s]
     Done in folder /../pyxel-examples.
 
@@ -136,14 +136,14 @@ Then you can start a JupyterLab server with the latest version of Pyxel:
 .. code-block:: bash
 
     $ cd pyxel-examples
-    $ uvx --python 3.12 --with pyxel-sim[model] jupyter lab
+    $ uvx --python 3.13 --with pyxel-sim[model] jupyter lab
 
 Alternatively, start JupyterLab server with a specific version of Pyxel and Python:
 
 .. code-block:: bash
 
     $ cd pyxel-examples
-    $ uvx --python 3.12 --with "pyxel-sim[model]==2.12" jupyter lab
+    $ uvx --python 3.13 --with "pyxel-sim[model]==2.13" jupyter lab
 
 
 or with the current Pyxel development code in GitLab
@@ -151,7 +151,7 @@ or with the current Pyxel development code in GitLab
 .. code-block:: bash
 
     $ cd pyxel-examples
-    $ uvx --python 3.12 --with git+https://gitlab.com/esa/pyxel.git[model] jupyter lab
+    $ uvx --python 3.13 --with git+https://gitlab.com/esa/pyxel.git[model] jupyter lab
 
 
 5. (Extra) Run the basic GUI to generate a YAML file
