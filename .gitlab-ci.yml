@@ -62,58 +62,58 @@ python311:
   script:
     - tox -e py311-extra_all
 
-# Run pytest for Python 3.11 without anaconda
+# Run pytest for Python 3.12 without anaconda
 python312:
   image: python:3.12
   stage: test
   script:
     - tox -e py312-extra_model
 
+# Run pytest for Python 3.13 without anaconda
+python313:
+  image: python:3.13
+  stage: test
+  script:
+    - tox -e py313-extra_model
+
 # Run mypy
 mypy:
-  image: python:3.12
+  image: python:3.13
   stage: static analysis
   needs: []
   script:
     - tox -e mypy
 
-flake8:
-  image: python:3.12
-  stage: static analysis
-  needs: []
-  script:
-    - tox -e flake8
-
 ruff:
-  image: python:3.12
+  image: python:3.13
   stage: static analysis
   needs: []
   script:
     - tox -e ruff
 
 pydocstyle:
-  image: python:3.12
+  image: python:3.13
   stage: static analysis
   needs: []
   script:
     - tox -e pydocstyle
 
 doc8:
-  image: python:3.12
+  image: python:3.13
   stage: static analysis
   needs: []
   script:
     - tox -e doc8
 
 codespell:
-  image: python:3.12
+  image: python:3.13
   stage: static analysis
   needs: []
   script:
     - tox -e codespell
 
 check_json_schema:
-  image: python:3.12
+  image: python:3.13
   stage: static analysis
   needs: []
   script:

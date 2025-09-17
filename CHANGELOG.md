@@ -35,6 +35,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
   (See [!1096](https://gitlab.com/esa/pyxel/-/merge_requests/1096)).
 * New method `Processor.iter_parameters`.
   (See [!1098](https://gitlab.com/esa/pyxel/-/merge_requests/1098)).
+* Add support for Python 3.13.
+  (See [!1099](https://gitlab.com/esa/pyxel/-/merge_requests/1099)).
 
 
 ## 2.12 / 2025-07-31
