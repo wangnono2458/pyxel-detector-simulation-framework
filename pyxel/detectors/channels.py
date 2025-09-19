@@ -113,7 +113,7 @@ class Matrix:
     @property
     def shape(self) -> tuple[int, int]:
         """Shape of the matrix."""
-        return self._data.shape  # type: ignore[return-value]
+        return self._data.shape
 
     @property
     def ndim(self) -> int:

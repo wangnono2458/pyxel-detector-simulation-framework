@@ -239,7 +239,7 @@ class Charge:
         """
         charge_number_1d = array.flatten()
         where_non_zero = np.where(charge_number_1d > 0.0)
-        charge_number_1d = charge_number_1d[where_non_zero]  # type: ignore[assignment]
+        charge_number_1d = charge_number_1d[where_non_zero]
         size: int = charge_number_1d.size
 
         vertical_pixel_center_pos_1d = get_vertical_pixel_center_pos(
