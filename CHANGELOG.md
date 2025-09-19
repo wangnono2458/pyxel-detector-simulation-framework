@@ -18,6 +18,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
   (See [!1087](https://gitlab.com/esa/pyxel/-/merge_requests/1087)).
 * Improve error message when using a wrong 'parameter' in Observation mode.
   (See [!1097](https://gitlab.com/esa/pyxel/-/merge_requests/1097)).
+* Move model 'output_node_noise_cmos' to 'output_node_noise_cmos.py'.
+  (See [!1103](https://gitlab.com/esa/pyxel/-/merge_requests/1103)).
 
 ### Documentation
 
