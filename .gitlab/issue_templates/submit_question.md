@@ -18,5 +18,4 @@ https://matthewrocklin.com/blog/work/2018/02/28/minimal-bug-reports) detailing h
 
 ```python
 # Your code here, if applicable
-
 ```

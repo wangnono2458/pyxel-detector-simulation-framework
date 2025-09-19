@@ -78,6 +78,7 @@ Bug reports must:
 
       ```python
       import pyxel
+
       cfg = pyxel.load("config.yml")
       ```
 

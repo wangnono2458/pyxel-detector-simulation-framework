@@ -13,9 +13,9 @@ In this example, the result of all models executed in the pipelines are displaye
 ...     mode=config.exposure,
 ...     detector=config.detector,
 ...     pipeline=config.pipeline,
-...     with_intermediate_steps=True,    # <== Enable this 
+...     with_intermediate_steps=True,  # <== Enable this
 ... )
->>> data_tree["/data/intermediate"]      # <== Display all intermediate results
+>>> data_tree["/data/intermediate"]  # <== Display all intermediate results
     DataTree('intermediate', parent="data")
     │   Attributes:
     │       long_name:  Store all intermediate results modified along a pipeline

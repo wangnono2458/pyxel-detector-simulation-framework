@@ -292,8 +292,8 @@ be used directly with a [`Configuration`](https://esa.gitlab.io/pyxel/doc/stable
 
 Example:
 ```python
->>> cfg = pyxel.load('configuration.yaml')
->>> cfg.detector.environment.temperature = 100.  # Modify configuration if needed
+>>> cfg = pyxel.load("configuration.yaml")
+>>> cfg.detector.environment.temperature = 100.0  # Modify configuration if needed
 
 >>> result = pyxel.run_mode(cfg)  # ✅ NEW: Configuration object support
 >>> result
@@ -310,10 +310,10 @@ instead of the full [`xarray.Datatree`](https://docs.xarray.dev/en/latest/user-g
 Example:
 
 ```python
->> > cfg = pyxel.load('configuration.yaml')
->> > result = pyxel.run_mode_dataset(cfg)  # ✅ NEW function
->> > result
-< xarray.Dataset > ...
+>>> cfg = pyxel.load("configuration.yaml")
+>>> result = pyxel.run_mode_dataset(cfg)  # ✅ NEW function
+>>> result
+<xarray.Dataset> ...
 ```
 
 ### 🆕 New metadata files
@@ -553,7 +553,7 @@ The `pyxel.run` command now returns a list of generated output filenames.
 Example:
 ```python
 >>> import pyxel
->>> filenames = pyxel.run('observation.yaml')
+>>> filenames = pyxel.run("observation.yaml")
 >>> filenames
    id data_format bucket_name                     filename
 0   0        fits       image  detector_image_array_1.fits
@@ -679,14 +679,14 @@ observation:
 and how to use it:
 ```python
 >>> import pyxel
->>> config = pyxel.load('observation.yaml')
+>>> config = pyxel.load("observation.yaml")
 >>> data_tree = pyxel.run_mode(
 ...     mode=config.running_mode,
 ...     detector=config.detector,
 ...     pipeline=config.pipeline,
 ... )
 
->>> data_tree['/bucket']
+>>> data_tree["/bucket"]
 <xarray.DataArray 'bucket'>
 Group: /bucket
     ...
@@ -695,8 +695,7 @@ Group: /bucket
         ...
         image          (temperature, ..., time, y, x)  dask.array<chunksize=(1, ..., 100, 256, 256)>
 
->>> data_tree['/bucket'].compute()
-...
+>>> data_tree["/bucket"].compute()
 ```
 
 
@@ -805,14 +804,14 @@ reducing data redundancy. For more detail, see [Xarray issue #9077](https://gith
 Example:
 ```python
 >>> import pyxel
->>> cfg = pyxel.load('configuration.yaml')
+>>> cfg = pyxel.load("configuration.yaml")
 
 >>> result = pyxel.run_mode(
 ...     mode=cfg.running_mode,
 ...     detector=cfg.detector,
 ...     pipeline=cfg.pipeline,
-...     with_inherited_coords=True,    # <== Use parameter 'with_inherited_coords'
-... )        
+...     with_inherited_coords=True,  # <== Use parameter 'with_inherited_coords'
+... )
 >>> result
 <xarray.DataTree>
 Group: /
