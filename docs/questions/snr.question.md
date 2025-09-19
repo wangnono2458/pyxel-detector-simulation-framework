@@ -16,7 +16,7 @@ The snr is an array with each exposure time in exposure mode
 ```python
 result = pyxel.run_mode(
     mode=exposure,
-    detector=detector, 
+    detector=detector,
     pipeline=pipeline,
 )
 ```

@@ -11,7 +11,7 @@
 exclude: pyxel/models/phasing/mkid_models
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.0
+    rev: v3.20.0
     hooks:
       - id: pyupgrade
         args:
@@ -19,17 +19,17 @@ repos:
 
   # isort should run before black as black sometimes tweaks the isort output
   - repo: https://github.com/timothycrosley/isort
-    rev: 5.13.2
+    rev: 6.0.1
     hooks:
       - id: isort
 
   # https://github.com/python/black#version-control-integration
   - repo: https://github.com/python/black
-    rev: 24.10.0
+    rev: 25.9.0
     hooks:
       - id: black
 
   - repo: https://github.com/keewis/blackdoc
-    rev: v0.3.9
+    rev: v0.4.1
     hooks:
       - id: blackdoc

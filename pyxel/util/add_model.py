@@ -127,6 +127,7 @@ Copy and paste the following snippet in your current notebook:
 ```python
 from pyxel.detectors import Detector
 
+
 def my_model(detector: Detector, arg1: float, arg2: str):
 
     # Access the detector's data buckets
