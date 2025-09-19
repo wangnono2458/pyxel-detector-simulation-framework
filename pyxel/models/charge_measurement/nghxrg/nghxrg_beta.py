@@ -635,7 +635,7 @@ class HXRGNoise:
                     )
                 else:  # No Ref. pixel,  so add only regular pixel
                     noise_2d = np.random.standard_normal((self.naxis2, self.naxis1))
-                    here_2d = rd_noise * noise_2d  # type: ignore[assignment]
+                    here_2d = rd_noise * noise_2d
 
                 # Add the noise in to the result
                 result[z, :, :] += here_2d
