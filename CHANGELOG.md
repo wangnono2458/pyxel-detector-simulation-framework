@@ -37,6 +37,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
   (See [!1098](https://gitlab.com/esa/pyxel/-/merge_requests/1098)).
 * Add support for Python 3.13.
   (See [!1099](https://gitlab.com/esa/pyxel/-/merge_requests/1099)).
+* Fix issues with numpy 2.3.
+  (See [!1100](https://gitlab.com/esa/pyxel/-/merge_requests/1100)).
 
 
 ## 2.12 / 2025-07-31
