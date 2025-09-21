@@ -9,7 +9,80 @@ Minor releases include updated stdlib stubs from typeshed.
 
 Pyxel doesn't use SemVer anymore, since most minor releases have at least minor backward incompatible changes.
 
-## UNRELEASED
+## 2.13 / 2025-09-21
+
+This release includes a various bug fixes and feature enhancements
+
+### ✨Generalized APD detector
+
+Previously, the APD detector was implemented as a fixed **Saphira** detector. 
+It is now possible to define more flexible conversion functions enabling a
+**generalized APD detector**.
+
+**Old Saphira definition:**
+```yaml
+apd_detector:
+  characteristics:
+    quantum_efficiency: 0.75          # -
+    adc_voltage_range: [0., 2.5]      # V
+    adc_bit_resolution: 16            # bit
+    avalanche_gain: 100
+    pixel_reset_voltage: 6.           # V
+    roic_gain: 0.7962962962962962     # V/V
+    full_well_capacity: 100000        # electron
+```
+
+**New Saphira definition (generalized form)**:
+```yaml
+apd_detector:
+  characteristics:
+    full_well_capacity: 100000          # electron
+    
+    quantum_efficiency: 0.75            # -
+    adc_voltage_range: [0., 2.5]        # V
+    adc_bit_resolution: 16              # bit
+    
+    roic_gain: 0.7962962962962962       # V/V
+    
+    # convert avalanche bias to node capacitance (used for 'system_gain')
+    bias_to_node:
+      values:    
+        - [1.0, 46.5]
+        - [1.5, 41.3]
+        - [2.5, 37.3]
+        - [3.5, 34.8]
+        - [4.5, 33.2]
+        - [6.5, 31.4]
+        - [8.5, 30.7]
+        - [10.5, 30.4]
+        
+    avalanche_settings:
+      avalanche_gain: 100
+      pixel_reset_voltage: 6.           # V
+
+      # convert avalanche gain to avalanche bias (= PRV - COMMON)
+      gain_to_bias:
+        function: "lambda gain: 2.17 * math.log2(gain) + 2.65"
+     
+      # convert avalanche bias (= PRV - COMMON) to avalanche gain
+      bias_to_gain:
+        function: "lambda bias: numpy.clip(2 ** ((bias - 2.65) / 2.17), a_min=1.0)"
+```
+
+### Improved error message
+
+Better error message when using a non-existing parameter in 
+[Observation mode](https://esa.gitlab.io/pyxel/doc/stable/background/running_modes/observation_mode.html)
+thanks to the contribution of Doby Baxter.
+
+```python
+>>> import pyxel
+>>> pyxel.run_mode_dataset(...)
+KeyError: "Missing parameter: 'pipeline.charge_generation.dark_current.arguments.temperature' in steps."
+Missing parameter: 'pipeline.charge_generation.dark_current.arguments.temperature'
+                                                            ^^^^^^^^^
+                                                            Non-existing parameter
+```
 
 ### Core
 * Progress bar should displayed only the number of readout time.
@@ -21,18 +94,13 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 * Move model 'output_node_noise_cmos' to 'output_node_noise_cmos.py'.
   (See [!1103](https://gitlab.com/esa/pyxel/-/merge_requests/1103)).
 
-### Documentation
-
-### Models
-
 ### Others
 * Add more unit tests for function `retrieve_from_gaia`.
-  (See [!1089](https://gitlab.com/esa/pyxel/-/merge_requests/1089)).
+  (See [!1089](https://gitlab.com/esa/pyxel/-/merge_requests/1089),
+  [!1091](https://gitlab.com/esa/pyxel/-/merge_requests/1091)
+  and [!1095](https://gitlab.com/esa/pyxel/-/merge_requests/1095)).
 * Fix issues found by mypy with XArray 2025.9.0.
   (See [!1090](https://gitlab.com/esa/pyxel/-/merge_requests/1090)).
-* Improved unit test `test_retrieve_from_gaia`.
-  (See [!1091](https://gitlab.com/esa/pyxel/-/merge_requests/1091)
-  and [!1095](https://gitlab.com/esa/pyxel/-/merge_requests/1095)).
 * Fix issues with ruff 0.13+.
   (See [!1096](https://gitlab.com/esa/pyxel/-/merge_requests/1096)).
 * New method `Processor.iter_parameters`.
