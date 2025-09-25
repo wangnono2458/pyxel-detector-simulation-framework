@@ -5871,13 +5871,13 @@
     },
     "ModelPhotonCollectionLoadImage": {
       "additionalProperties": false,
-      "description": "Load :term:`FITS` file as a numpy array and add to the detector as input image.",
+      "description": "Load an image file (e.g. FITS) as a numpy array and add it to the detector as input Photon array.",
       "properties": {
         "arguments": {
           "additionalProperties": false,
           "properties": {
             "align": {
-              "description": "Keyword to align the image to detector. Can be any from: (\"center\", \"top_left\", \"top_right\", \"bottom_left\", \"bottom_right\")",
+              "description": "Keyword controlling how the image is aligned relative to the detector array.",
               "enum": [
                 "center",
                 "top_left",
@@ -5893,7 +5893,7 @@
             },
             "bit_resolution": {
               "default": null,
-              "description": "Bit resolution of the loaded image.",
+              "description": "Bit depth of the input image, if `convert_to_photons` is ``True``.",
               "title": "bit_resolution",
               "type": [
                 "integer",
@@ -5902,9 +5902,19 @@
             },
             "convert_to_photons": {
               "default": false,
-              "description": "If ``True``, the model converts the values of loaded image array from ADU to photon numbers for each pixel using the Photon Transfer Function: :math:`\\mathit{PTF} = \\mathit{quantum\\_efficiency} \\cdot \\mathit{charge\\_to\\_voltage\\_conversion} \\cdot \\mathit{pre\\_amplification} \\cdot \\mathit{adc\\_factor}`.",
+              "description": "If ``True``, converts image values from ADU to photon counts per pixel using the Photon Transfer Function: :math:`\\mathit{PTF} = \\mathit{quantum\\_efficiency} \\cdot \\mathit{charge\\_to\\_voltage\\_conversion} \\cdot \\mathit{pre\\_amplification} \\cdot \\mathit{adc\\_factor}`.",
               "title": "convert_to_photons",
               "type": "boolean"
+            },
+            "data_path": {
+              "default": null,
+              "description": "Identifier of the dataset within the file. Depending on the file format, this can be:     * an HDU index or name (for FITS),     * a group or variable path (for netCDF, HDF5, Zarr),     * a reference path (for ASDF).  If ``None``, the default dataset is loaded. Ignored for flat (non-hierarchical) formats.",
+              "title": "data_path",
+              "type": [
+                "integer",
+                "string",
+                "null"
+              ]
             },
             "header_section_index": {
               "default": null,
@@ -5917,19 +5927,19 @@
               ]
             },
             "image_file": {
-              "description": "Path to image file.",
+              "description": "Path to image file to load.",
               "title": "image_file",
               "type": "string"
             },
             "include_header": {
               "default": false,
-              "description": "If ``True``, extract header metadata from the image file. This parameter is provisional and may be removed.",
+              "description": "If ``True``, extract and store header metadata from the image file in the detector object. This parameter is provisional and may be removed.",
               "title": "include_header",
               "type": "boolean"
             },
             "multiplier": {
               "default": 1.0,
-              "description": "Multiply photon array level with a custom number.",
+              "description": "Multiplicative scaling factor applied to the photon array.",
               "title": "multiplier",
               "type": "number"
             },
@@ -5939,7 +5949,7 @@
                 0,
                 0
               ],
-              "description": "Indices of starting row and column, used when fitting image to detector.",
+              "description": "Starting (row, column) indices for placing the image on the detector.",
               "items": [
                 {
                   "type": "integer"

@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 def load_image(
     detector: Detector,
     image_file: str,
+    data_path: int | str | None = None,
     include_header: bool = False,
     header_section_index: int | str | None = None,
     position: tuple[int, int] = (0, 0),
@@ -31,35 +32,47 @@ def load_image(
     time_scale: float = 1.0,
     bit_resolution: int | None = None,
 ) -> None:
-    r"""Load :term:`FITS` file as a numpy array and add to the detector as input image.
+    r"""Load an image file (e.g. FITS) as a numpy array and add it to the detector as input Photon array.
+
+    This function reads a 2D image from a variety of file formats (e.g. FITS, netCDF, HDF5, Zarr or ASDF).
+    The ``data_path`` parameter is used as an identifier to select the internal data structure within the file-such
+    as the HDU (FITS), group (netCDF, HDF5, Zarr) or reference (ASDF).
+
+    The image is cropped, aligned, and optionally converted from ADU to photons using detector-specific characteristics.
 
     Parameters
     ----------
     detector : Detector
     image_file : str
-        Path to image file.
+        Path to image file to load.
+    data_path : int or str or None, optional
+        Identifier of the dataset within the file. Depending on the file format, this can be:
+            * an HDU index or name (for FITS),
+            * a group or variable path (for netCDF, HDF5, Zarr),
+            * a reference path (for ASDF).
+
+        If ``None``, the default dataset is loaded.
+        Ignored for flat (non-hierarchical) formats.
     include_header : bool, optional.
-        If ``True``, extract header metadata from the image file.
+        If ``True``, extract and store header metadata from the image file in the detector object.
         This parameter is provisional and may be removed.
     header_section_index : int or str or None, optional
         Section index or name of the header data to load if `include_header` is enabled.
         This parameter is provisional and may be removed.
-    position : tuple
-        Indices of starting row and column, used when fitting image to detector.
-    align : Literal
-        Keyword to align the image to detector. Can be any from:
-        ("center", "top_left", "top_right", "bottom_left", "bottom_right")
-    convert_to_photons : bool
-        If ``True``, the model converts the values of loaded image array from ADU to
-        photon numbers for each pixel using the Photon Transfer Function:
+    position : tuple of int, optional
+        Starting (row, column) indices for placing the image on the detector.
+    align : "center", "top_left", "top_right", "bottom_left", "bottom_right"
+        Keyword controlling how the image is aligned relative to the detector array.
+    convert_to_photons : bool, optional
+        If ``True``, converts image values from ADU to photon counts per pixel using the Photon Transfer Function:
         :math:`\mathit{PTF} = \mathit{quantum\_efficiency} \cdot \mathit{charge\_to\_voltage\_conversion}
         \cdot \mathit{pre\_amplification} \cdot \mathit{adc\_factor}`.
-    multiplier : float
-        Multiply photon array level with a custom number.
-    time_scale : float
+    multiplier : float, optional
+        Multiplicative scaling factor applied to the photon array.
+    time_scale : float, optional
         Time scale of the photon flux, default is 1 second. 0.001 would be ms.
-    bit_resolution : int
-        Bit resolution of the loaded image.
+    bit_resolution : int, ootional
+        Bit depth of the input image, if `convert_to_photons` is ``True``.
 
     Notes
     -----
@@ -75,6 +88,7 @@ def load_image(
 
     image = load_cropped_and_aligned_image(
         filename=image_file,
+        data_path=data_path,
         shape=shape,
         align=align,
         position_x=position_x,
@@ -99,7 +113,7 @@ def load_image(
 
     detector.photon += photon_array
 
-    # Try to extract the Header from 'image_file'
+    # Try to extract the Header from 'image_file' as a FITS header even if 'image_file' is not a FITS file
     if include_header:
         header: "fits.Header" | None = load_header(
             image_file, section=header_section_index
