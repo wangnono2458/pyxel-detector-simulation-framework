@@ -133,7 +133,6 @@ def my_model(detector: Detector, arg1: float, arg2: str):
     # Access the detector's data buckets
     # photon = detector.photon.array
     # pixel = detector.pixel.array
-    # pixel_read = detector.pixel_read.array
     # signal = detector.signal.array
     # image = detector.image.array
 

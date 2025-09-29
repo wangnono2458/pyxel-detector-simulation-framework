@@ -118,4 +118,4 @@ def simple_ipc(
         anisotropic_coupling=anisotropic_coupling,
     )
 
-    detector.pixel.array = array
+    detector.pixel.non_volatile.array = array

@@ -156,7 +156,7 @@ def simple_persistence(
         delta_t=detector.time_step,
     )
 
-    detector.pixel.array = new_pixel_array
+    detector.pixel.non_volatile.array = new_pixel_array
     detector.persistence.trapped_charge_array = new_all_trapped_charge
 
 
@@ -349,7 +349,7 @@ def persistence(
         delta_t=detector.time_step,
     )
 
-    detector.pixel.array = new_pixel_array
+    detector.pixel.non_volatile.array = new_pixel_array
     detector.persistence.trapped_charge_array = new_all_trapped_charge
 
 

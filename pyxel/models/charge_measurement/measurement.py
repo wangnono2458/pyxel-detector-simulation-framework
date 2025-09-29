@@ -55,4 +55,4 @@ def simple_measurement(detector: Detector, gain: float | None = None) -> None:
     else:
         gain_to_apply = Quantity(gain, unit="V/electron")
 
-    detector.signal = apply_gain(pixel_2d=Quantity(detector.pixel_read), gain=gain_to_apply)
+    detector.signal = apply_gain(pixel_2d=Quantity(detector.pixel), gain=gain_to_apply)

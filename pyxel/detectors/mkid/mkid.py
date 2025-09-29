@@ -120,7 +120,7 @@ class MKID(Detector):
             },
             "data": {
                 "photon": self.photon.to_dict(),
-                "pixel": _get_array_if_initialized(self._pixel),
+                "pixel": self._pixel.to_dict() if self._pixel else None,
                 "signal": _get_array_if_initialized(self._signal),
                 "image": _get_array_if_initialized(self._image),
                 "phase": _get_array_if_initialized(self._phase),
@@ -161,7 +161,7 @@ class MKID(Detector):
         import numpy as np
         import xarray as xr
 
-        from pyxel.data_structure import Photon, Scene
+        from pyxel.data_structure import Photon, Pixel, Scene
         from pyxel.detectors import Characteristics, Environment, MKIDGeometry
 
         if dct["type"] != "MKID":
@@ -186,7 +186,9 @@ class MKID(Detector):
         detector.photon = Photon.from_dict(
             geometry=geometry, data=data.get("photon", dict())
         )
-        detector.pixel.update(data.get("pixel"))
+        detector.pixel = Pixel.from_dict(
+            geometry=geometry, data=data.get("pixel", dict())
+        )
         detector.signal.update(data.get("signal"))
         detector.image.update(data.get("image"))
 

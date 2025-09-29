@@ -50,4 +50,4 @@ def simple_full_well(detector: Detector, fwc: int | None = None) -> None:
         array=detector.pixel.array, fwc=fwc_input
     )
 
-    detector.pixel.array = charge_array
+    detector.pixel.non_volatile.array = charge_array

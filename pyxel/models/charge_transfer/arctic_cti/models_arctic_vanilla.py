@@ -166,7 +166,7 @@ def arctic_add(
         parallel_express=express,
     )
 
-    detector.pixel.array = image_cti_added_2d
+    detector.pixel.non_volatile.array = image_cti_added_2d
 
 
 def compute_arctic_remove(
@@ -286,4 +286,4 @@ def arctic_remove(
         num_iterations=num_iterations,
     )
 
-    detector.pixel.array = image_2d_cti_removed
+    detector.pixel.non_volatile.array = image_2d_cti_removed

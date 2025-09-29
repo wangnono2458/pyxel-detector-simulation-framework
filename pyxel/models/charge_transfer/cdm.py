@@ -135,7 +135,7 @@ def cdm(
     )
 
     if mode == CDMdirection.Parallel:
-        detector.pixel.array = run_cdm_parallel(
+        detector.pixel.non_volatile.array = run_cdm_parallel(
             array=detector.pixel.array,
             vg=max_electron_volume,
             t=transfer_period,
@@ -150,7 +150,7 @@ def cdm(
         )
 
     elif mode == CDMdirection.Serial:
-        detector.pixel.array = run_cdm_serial(
+        detector.pixel.non_volatile.array = run_cdm_serial(
             array=detector.pixel.array,
             vg=max_electron_volume,
             t=transfer_period,

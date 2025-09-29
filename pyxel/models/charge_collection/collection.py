@@ -18,4 +18,4 @@ def simple_collection(detector: Detector) -> None:
     detector : Detector
         Pyxel Detector object.
     """
-    detector.pixel.array += detector.charge.array
+    detector.pixel.non_volatile.array += detector.charge.array

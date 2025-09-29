@@ -58,7 +58,7 @@ def multiplication_register_cic(
     # TODO: Set number of threads used by numba
     #       See: https://numba.readthedocs.io/en/stable/user/threading-layer.html#api-reference
 
-    detector.pixel.array = multiplication_register_poisson(
+    detector.pixel.non_volatile.array = multiplication_register_poisson(
         image_cube=detector.pixel.array,
         total_gain=total_gain,
         gain_elements=gain_elements,

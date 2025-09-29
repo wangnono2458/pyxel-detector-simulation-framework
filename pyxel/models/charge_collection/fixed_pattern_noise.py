@@ -157,4 +157,4 @@ def fixed_pattern_noise(
             raise ValueError(
                 "Either filename or fixed_pattern_noise_factor has to be defined."
             )
-    detector.pixel.array *= prnu_2d
+    detector.pixel.non_volatile.array *= prnu_2d

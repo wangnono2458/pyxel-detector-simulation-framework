@@ -13,4 +13,3 @@ from .fixed_pattern_noise import fixed_pattern_noise
 from .full_well import simple_full_well
 from .inter_pixel_capacitance import simple_ipc
 from .persistence import simple_persistence, persistence
-from .copy_to_pixel_read import copy_to_pixel_read

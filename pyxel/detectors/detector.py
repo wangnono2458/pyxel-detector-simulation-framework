@@ -21,7 +21,6 @@ from pyxel.data_structure import (
     Persistence,
     Photon,
     Pixel,
-    PixelRead,
     Scene,
     Signal,
     SimplePersistence,
@@ -67,9 +66,6 @@ class Detector:
         Information about charge distribution (in electrons).
     pixel : Pixel
         Information about charge packets within a pixel (in electrons).
-    pixel_read : PixelRead
-        Information about charge packets within a pixel, plus read noises (in electrons).
-        same as `pixel` but with read noise (in electrons).
     signal : Signal
         Information about the detector signal (in Volts).
     image : Image
@@ -89,7 +85,6 @@ class Detector:
         self._photon: Photon | None = None
         self._charge: Charge | None = None
         self._pixel: Pixel | None = None
-        self._pixel_read: PixelRead | None = None
         self._signal: Signal | None = None
         self._image: Image | None = None
         self._data: xr.DataTree | None = None
@@ -119,7 +114,6 @@ class Detector:
             and self._photon == other._photon
             and self._charge == other._charge
             and self._pixel == other._pixel
-            and self._pixel_read == other._pixel_read
             and self._signal == other._signal
             and self._image == other._image
             and (
@@ -225,27 +219,10 @@ class Detector:
     @pixel.setter
     def pixel(self, obj: ArrayLike | Pixel) -> None:
         """Set the pixel information for the detector."""
-        if isinstance(obj, Pixel):
-            self._pixel = obj
-        else:
-            self.pixel.array = obj
+        if not isinstance(obj, Pixel):
+            raise RuntimeError
 
-    @property
-    def pixel_read(self) -> PixelRead:
-        """Get the pixel_read information of charge packets within pixel, plus read noises (in electrons)."""
-
-        if not self._pixel_read:
-            raise RuntimeError("'pixel_read' not initialized.")
-
-        return self._pixel_read
-
-    @pixel_read.setter
-    def pixel_read(self, obj: ArrayLike | PixelRead) -> None:
-        """Set the pixel_read information for the detector."""
-        if isinstance(obj, PixelRead):
-            self._pixel_read = obj
-        else:
-            self.pixel_read.array = obj
+        self._pixel = obj
 
     @property
     def signal(self) -> Signal:
@@ -307,11 +284,10 @@ class Detector:
           * y        (y) int64 0 1 2 3 4 5 6 7 8 9 10 ... 90 91 92 93 94 95 96 97 98 99
           * x        (x) int64 0 1 2 3 4 5 6 7 8 9 10 ... 90 91 92 93 94 95 96 97 98 99
         Data variables:
-            photon     (y, x) float64 0.0 0.0 0.0 0.0 0.0 0.0 ... 0.0 0.0 0.0 0.0 0.0 0.0
-            pixel      (y, x) float64 0.0 0.0 0.0 0.0 0.0 0.0 ... 0.0 0.0 0.0 0.0 0.0 0.0
-            pixel_read (y, x) float64 0.0 0.0 0.0 0.0 0.0 0.0 ... 0.0 0.0 0.0 0.0 0.0 0.0
-            signal     (y, x) float64 0.0 0.0 0.0 0.0 0.0 0.0 ... 0.0 0.0 0.0 0.0 0.0 0.0
-            image      (y, x) uint64 0 0 0 0 0 0 0 0 0 0 0 0 0 ... 0 0 0 0 0 0 0 0 0 0 0 0
+            photon   (y, x) float64 0.0 0.0 0.0 0.0 0.0 0.0 ... 0.0 0.0 0.0 0.0 0.0 0.0
+            pixel    (y, x) float64 0.0 0.0 0.0 0.0 0.0 0.0 ... 0.0 0.0 0.0 0.0 0.0 0.0
+            signal   (y, x) float64 0.0 0.0 0.0 0.0 0.0 0.0 ... 0.0 0.0 0.0 0.0 0.0 0.0
+            image    (y, x) uint64 0 0 0 0 0 0 0 0 0 0 0 0 0 ... 0 0 0 0 0 0 0 0 0 0 0 0
         Attributes:
             detector:       CCD
             pyxel version:  1.5
@@ -321,8 +297,8 @@ class Detector:
         # ds["scene"] = self.scene.to_xarray()
 
         ds = xr.Dataset()
-        for name in ("photon", "charge", "pixel", "pixel_read", "signal", "image"):
-            container: Photon | Charge | Pixel | PixelRead | Signal | Image = getattr(self, name)
+        for name in ("photon", "charge", "pixel", "signal", "image"):
+            container: Photon | Charge | Pixel | Signal | Image = getattr(self, name)
             data_array: xr.DataArray = container.to_xarray()
 
             # TODO: Special case, this will be fixed in issue #692
@@ -379,8 +355,7 @@ class Detector:
         self._charge = Charge(geo=self.geometry)
 
         self._pixel = Pixel(geo=self.geometry)
-        
-        self._pixel_read = PixelRead(geo=self.geometry)
+
         self._signal = Signal(geo=self.geometry)
         self._image = Image(geo=self.geometry)
 
@@ -394,10 +369,10 @@ class Detector:
         self.photon.empty()
         self.charge.empty()
 
+        self.pixel.empty_volatile()
         if reset:
-            self.pixel.empty()
+            self.pixel.empty_non_volatile()
 
-        self.pixel_read.empty()
         self.signal.empty()
         self.image.empty()
 
@@ -603,7 +578,6 @@ class Detector:
             "_photon",
             "_charge",
             "_pixel",
-            "_pixel_read",
             "_signal",
             "_image",
             "material",
@@ -741,7 +715,6 @@ class Detector:
                 │   └── name  Image
                 ├── photon  (100, 120), float64
                 ├── pixel  (100, 120), float64
-                ├── pixel_read  (100, 120), float64
                 └── signal  (100, 120), float64
 
         Parameters
@@ -808,7 +781,6 @@ class Detector:
                ├─photon (ndarray): shape=(4, 5), dtype=float64
                ├─scene (NoneType): None
                ├─pixel (ndarray): shape=(4, 5), dtype=float64
-               ├─pixel_read (ndarray): shape=(4, 5), dtype=float64
                ├─signal (ndarray): shape=(4, 5), dtype=float64
                ├─image (ndarray): shape=(4, 5), dtype=uint64
                └─charge (dict) ...
