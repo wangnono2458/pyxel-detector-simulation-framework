@@ -67,6 +67,7 @@ class CMOS(Detector):
             "data": {
                 "photon": self.photon.to_dict(),
                 "pixel": _get_array_if_initialized(self._pixel),
+                "pixel_read": _get_array_if_initialized(self._pixel_read),
                 "signal": _get_array_if_initialized(self._signal),
                 "image": _get_array_if_initialized(self._image),
                 "data": (
@@ -132,6 +133,7 @@ class CMOS(Detector):
             geometry=geometry, data=data.get("photon", dict())
         )
         detector.pixel.update(data.get("pixel"))
+        detector.pixel_read.update(data.get("pixel_read"))
         detector.signal.update(data.get("signal"))
         detector.image.update(data.get("image"))
 

@@ -5,12 +5,17 @@
 #  this file, may be copied, modified, propagated, or distributed except according to
 #  the terms contained in the file ‘LICENCE.txt’.
 
-"""TBW."""
 
-# flake8: noqa
-from .collection import simple_collection
-from .fixed_pattern_noise import fixed_pattern_noise
-from .full_well import simple_full_well
-from .inter_pixel_capacitance import simple_ipc
-from .persistence import simple_persistence, persistence
-from .copy_to_pixel_read import copy_to_pixel_read
+"""PixelRead collection model."""
+
+from pyxel.detectors import Detector
+import numpy as np
+
+
+def copy_to_pixel_read(
+    detector: Detector,
+) -> None:
+    """Copy `pixel` array to `pixel_read` array.
+    """
+
+    detector.pixel_read.array = np.copy(detector.pixel)

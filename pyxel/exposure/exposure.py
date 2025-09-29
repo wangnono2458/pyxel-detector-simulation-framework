@@ -20,7 +20,7 @@ from typing_extensions import deprecated
 
 import pyxel
 from pyxel import __version__
-from pyxel.data_structure import Charge, Image, Photon, Pixel, Scene, Signal
+from pyxel.data_structure import Charge, Image, Photon, Pixel, PixelRead, Scene, Signal
 from pyxel.outputs.utils import save_to_files
 from pyxel.pipelines import Processor, ResultId, get_result_id, result_keys
 from pyxel.util import set_random_seed
@@ -338,11 +338,12 @@ def _extract_datatree_2d(detector: "Detector") -> "xr.DataTree":
           * x        (x) int64 0 1 2 3 4 5 6 7 8 9 10 ... 90 91 92 93 94 95 96 97 98 99
           * wavelength  (wavelength) float64 500.0 502.0 504.0 ... 896.0 898.0 900.0
         Data variables:
-            photon   (time, y, x) float64 1.515e+04 1.592e+04 ... 1.621e+04 1.621e+04
-            charge   (time, y, x) float64 1.515e+04 1.592e+04 ... 1.621e+04 1.621e+04
-            pixel    (time, y, x) float64 1.515e+04 1.592e+04 ... 1.621e+04 1.621e+04
-            signal   (time, y, x) float64 0.04545 0.04776 0.04634 ... 0.04862 0.04862
-            image    (time, y, x) uint32 298 314 304 304 304 314 ... 339 339 328 319 319
+            photon     (time, y, x) float64 1.515e+04 1.592e+04 ... 1.621e+04 1.621e+04
+            charge     (time, y, x) float64 1.515e+04 1.592e+04 ... 1.621e+04 1.621e+04
+            pixel      (time, y, x) float64 1.515e+04 1.592e+04 ... 1.621e+04 1.621e+04
+            pixel_read (time, y, x) float64 1.515e+04 1.592e+04 ... 1.621e+04 1.621e+04
+            signal     (time, y, x) float64 0.04545 0.04776 0.04634 ... 0.04862 0.04862
+            image      (time, y, x) uint32 298 314 304 304 304 314 ... 339 339 328 319 319
     """
     # Late import to speedup start-up time
     import xarray as xr
@@ -354,6 +355,7 @@ def _extract_datatree_2d(detector: "Detector") -> "xr.DataTree":
         "photon",
         "charge",
         "pixel",
+        "pixel_read",
         "signal",
         "image",
         "data",
@@ -363,10 +365,10 @@ def _extract_datatree_2d(detector: "Detector") -> "xr.DataTree":
         if key.startswith("data") or key.startswith("scene"):
             continue
 
-        obj: Photon | Pixel | Image | Signal | Charge = getattr(detector, key)
+        obj: Photon | Pixel | PixelRead | Image | Signal | Charge = getattr(detector, key)
 
         # TODO: Is this necessary ?
-        if not isinstance(obj, Photon | Pixel | Image | Signal | Charge):
+        if not isinstance(obj, Photon | Pixel | PixelRead | Image | Signal | Charge):
             raise TypeError(
                 f"Wrong type from attribute 'detector.{key}'. Type: {type(obj)!r}"
             )

@@ -13,7 +13,7 @@ from pyxel.detectors import Detector
 
 
 def apply_gain(pixel_2d: Quantity, gain: Quantity) -> Quantity:
-    """Apply an electronic gain (in V/e-) to convert Pixel charges (in e-) into Signal (in V).
+    """Apply an electronic gain (in V/e-) to convert PixelRead charges (in e-) into Signal (in V).
 
     Parameters
     ----------
@@ -32,7 +32,7 @@ def apply_gain(pixel_2d: Quantity, gain: Quantity) -> Quantity:
 
 
 def simple_measurement(detector: Detector, gain: float | None = None) -> None:
-    """Convert detector Pixel charge values (in electron) into Signal values (in Volt) using a specified gain.
+    """Convert detector PixelRead charge values (in electron) into Signal values (in Volt) using a specified gain.
 
     Notes
     -----
@@ -41,7 +41,7 @@ def simple_measurement(detector: Detector, gain: float | None = None) -> None:
     Parameters
     ----------
     detector : Detector
-        Pyxel Detector object.
+        PyxelRead Detector object.
     gain : float, optional
         Gain factor to apply. If not provided, the default is ``detector.characteristics.charge_to_volt_conversion``. Unit: V/e-
     """
@@ -55,4 +55,4 @@ def simple_measurement(detector: Detector, gain: float | None = None) -> None:
     else:
         gain_to_apply = Quantity(gain, unit="V/electron")
 
-    detector.signal = apply_gain(pixel_2d=Quantity(detector.pixel), gain=gain_to_apply)
+    detector.signal = apply_gain(pixel_2d=Quantity(detector.pixel_read), gain=gain_to_apply)
