@@ -111,7 +111,11 @@ def signal_to_noise_ratio(
         else:
             # Concatenate data
             previous_datatree = detector.data[key_partial]
-            data_set = xr.merge([previous_datatree.to_dataset(), snr])
+            data_set = xr.merge(
+                [previous_datatree.to_dataset(), snr],
+                join="outer",
+                compat="no_conflicts",
+            )
 
         if detector.pipeline_count == (detector.num_steps - 1):
             detector.data[key] = data_set
