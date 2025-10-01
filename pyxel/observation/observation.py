@@ -334,7 +334,8 @@ class Observation:
 
             # Merge the sequentially processed DataTrees into the final result
             final_datatree = xr.map_over_datasets(
-                lambda *data: xr.merge(data), *datatree_list
+                lambda *data: xr.merge(data, join="outer", compat="no_conflicts"),
+                *datatree_list,
             )
 
         # Assign the running mode to the final DataTree attributes

@@ -406,6 +406,8 @@ class Scene:
 
             last_ref += num_ref
 
-        scene: xr.Dataset = xr.concat(lst, dim="ref")
+        scene: xr.Dataset = xr.concat(
+            lst, dim="ref", join="outer", compat="no_conflicts"
+        )
 
         return scene
