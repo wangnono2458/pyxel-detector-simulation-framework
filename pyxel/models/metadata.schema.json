@@ -148,11 +148,12 @@
           "enum": [
             "draft",
             "validated",
+            "to_review",
             null
           ],
           "type": [
-            "string",
-            "null"
+            "null",
+            "string"
           ]
         },
         "warnings": {
