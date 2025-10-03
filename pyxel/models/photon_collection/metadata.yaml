@@ -260,7 +260,7 @@ models:
   - name: load_wavelength_psf
     full_name: Load multi-wavelength PSF
     detector: all
-    status: null
+    status: to_review
     description: >
       With this model you can load a Point Spread Function (:term:`PSF`) from a file containing wavelength information.
       Currently, only ``.fits`` files are a valid input.

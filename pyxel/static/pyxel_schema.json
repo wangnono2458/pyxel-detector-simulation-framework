@@ -5996,7 +5996,7 @@
     },
     "ModelPhotonCollectionLoadPsf": {
       "additionalProperties": false,
-      "description": "Load a point spread function from file and convolve the photon array with the PSF.",
+      "description": "Load a point spread function (PSF) from a file and convolve the photon array with the PSF.",
       "properties": {
         "arguments": {
           "additionalProperties": false,
@@ -6011,12 +6011,12 @@
                   "type": "string"
                 }
               ],
-              "description": "Input filename of the point spread function.",
+              "description": "Input filename of the point spread function (PSF).",
               "title": "filename"
             },
             "normalize_kernel": {
               "default": true,
-              "description": "Normalize kernel.",
+              "description": "If True (default), the PSF kernel is normalized so that its sum is 1. If False, the kernel values are used as-is.",
               "title": "normalize_kernel",
               "type": "boolean"
             }
