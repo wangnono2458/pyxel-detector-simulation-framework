@@ -112,7 +112,11 @@ def statistics(
         else:
             # Concatenate data
             previous_datatree: xr.DataTree = detector.data[key_partial]  # type: ignore[assignment]
-            data_tree = xr.merge([previous_datatree.to_dataset(), statistics], join="outer", compat="no_conflicts")  # type: ignore[assignment]
+            data_tree = xr.merge(
+                [previous_datatree.to_dataset(), statistics],
+                join="outer",
+                compat="no_conflicts",
+            )  # type: ignore[assignment]
 
         if detector.pipeline_count == (detector.num_steps - 1):
             detector.data[key] = data_tree
