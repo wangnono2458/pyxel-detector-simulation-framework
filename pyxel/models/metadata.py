@@ -36,7 +36,7 @@ class MetadataModel:
     name: str
     full_name: str
     detector: DetectorType | list[DetectorType] = "all"
-    status: Literal["draft", "validated", None] = None
+    status: Literal["draft", "validated", "to_review", None] = None
     authors: list[str] | None = None
     description: str | None = None
     notes: str | list[str] | None = None
