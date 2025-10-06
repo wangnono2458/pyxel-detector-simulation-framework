@@ -190,7 +190,7 @@ def load_wavelength_psf(
     Parameters
     ----------
     detector : Detector
-            Pyxel Detector object.
+        Pyxel Detector object.
     filename : Path or str
         Input filename of the point spread function.
     wavelength_col : str
@@ -202,7 +202,7 @@ def load_wavelength_psf(
     wavelength_table_name : str
         Column name in the file that contains the wavelength information.
     normalize_kernel : bool
-            Normalize kernel.
+        Normalize kernel.
     """
     # load fits image
     kernel_3d: xr.DataArray = load_image_v2(

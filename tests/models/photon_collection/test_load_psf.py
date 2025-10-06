@@ -7,6 +7,7 @@
 
 """Tests for load psf model."""
 
+from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -39,23 +40,29 @@ def ccd_10x10_no_photons() -> CCD:
     )
 
     detector._readout_properties = ReadoutProperties(times=[1.0])
+    assert detector.photon.ndim == 0
+
     return detector
 
 
 @pytest.fixture
 def ccd_10x10_2d(ccd_10x10_no_photons: CCD) -> CCD:
     """Create a valid CCD detector."""
-    detector = ccd_10x10_no_photons
+    detector = deepcopy(ccd_10x10_no_photons)
+    assert detector.photon.ndim == 0
     detector.photon.array = np.full(fill_value=10.0, shape=detector.geometry.shape)
 
     detector._readout_properties = ReadoutProperties(times=[1.0])
+    assert detector.photon.ndim == 2
+
     return detector
 
 
 @pytest.fixture
 def ccd_10x10_3d(ccd_10x10_no_photons: CCD) -> CCD:
     """Create a valid CCD detector."""
-    detector = ccd_10x10_no_photons
+    detector = deepcopy(ccd_10x10_no_photons)
+    assert detector.photon.ndim == 0
 
     num_wavelengths = 10
     num_rows, num_cols = detector.geometry.shape
@@ -73,14 +80,18 @@ def ccd_10x10_3d(ccd_10x10_no_photons: CCD) -> CCD:
     )
 
     detector._readout_properties = ReadoutProperties(times=[1.0])
+    assert detector.photon.ndim == 3
+
     return detector
 
 
 @pytest.fixture(params=["CCD_2D", "CCD_3D"])
 def ccd_detector(request, ccd_10x10_2d: CCD, ccd_10x10_3d: CCD) -> CCD:
     if request.param == "CCD_2D":
+        assert ccd_10x10_2d.photon.ndim == 2
         return ccd_10x10_2d
     elif request.param == "CCD_3D":
+        assert ccd_10x10_3d.photon.ndim == 3
         return ccd_10x10_3d
     else:
         raise NotImplementedError
