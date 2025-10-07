@@ -220,7 +220,7 @@ class Detector:
     def pixel(self, obj: ArrayLike | Pixel) -> None:
         """Set the pixel information for the detector."""
         if not isinstance(obj, Pixel):
-            raise RuntimeError
+            raise TypeError
 
         self._pixel = obj
 

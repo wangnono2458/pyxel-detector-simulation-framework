@@ -11,16 +11,14 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy.typing import ArrayLike
-from typing_extensions import Any, Self, override
+from typing_extensions import Any, Self
 
-from pyxel.data_structure import ArrayBase, PixelNonVolatile, PixelVolatile
+from pyxel.data_structure import PixelNonVolatile, PixelVolatile
 from pyxel.data_structure.array import _is_array_initialized
 from pyxel.util import convert_unit, get_size
 
 if TYPE_CHECKING:
     import xarray as xr
-    from astropy.units import Quantity
 
     from pyxel.detectors import Geometry
 

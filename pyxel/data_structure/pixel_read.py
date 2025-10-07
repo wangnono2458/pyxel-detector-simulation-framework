@@ -10,7 +10,6 @@
 from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy.typing import ArrayLike
 from typing_extensions import override
 
 from pyxel.data_structure import ArrayBase
