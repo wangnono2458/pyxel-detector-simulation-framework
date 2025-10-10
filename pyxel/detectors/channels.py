@@ -113,7 +113,8 @@ class Matrix:
     @property
     def shape(self) -> tuple[int, int]:
         """Shape of the matrix."""
-        return self._data.shape
+        num_rows, num_cols = self._data.shape
+        return num_rows, num_cols
 
     @property
     def ndim(self) -> int:

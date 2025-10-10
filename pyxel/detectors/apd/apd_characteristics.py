@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from typing_extensions import Self, deprecated
 
-from pyxel.inputs import load_image_v2
+from pyxel.inputs import load_image
 from pyxel.util import get_size, get_uninitialized_error
 
 if TYPE_CHECKING:
@@ -532,27 +532,44 @@ class AvalancheSettings:
 class ChargeToVoltSettings:
     def __init__(self, capacitance: float | str | None, factor: float | str | None):
         assert (capacitance is not None) ^ (factor is not None)
+
+        capacitance_value: float | np.ndarray | None
         if isinstance(capacitance, str):
-            self._capacitance = load_image_v2(capacitance)
+            capacitance_value = load_image(capacitance)
         else:
-            self._capacitance = capacitance
+            capacitance_value = capacitance
+
+        factor_value: float | np.ndarray | None
         if isinstance(factor, str):
-            self.factor = load_image_v2(factor)
+            factor_value = load_image(factor)
         else:
-            self.factor = factor
+            factor_value = factor
+
+        self._capacitance: float | np.ndarray | None = capacitance_value
+        self._factor: float | np.ndarray | None = factor_value
+
+    def __eq__(self, other) -> bool:
+        raise NotImplementedError
 
     @property
     def capacitance(self) -> float | np.ndarray:
-        if self._capacitance is not None:
-            return self._capacitance
-        else:
+        if self._capacitance is None:
             raise ValueError
 
+        return self._capacitance
+
     def factor(self) -> float | np.ndarray:
-        if self.factor is not None:
+        if self._factor is not None:
             return self._factor
         elif self._capacitance is not None:
             raise NotImplementedError
+
+    def to_dict(self) -> Mapping:
+        raise NotImplementedError
+
+    @classmethod
+    def from_dict(cls, dct: Mapping) -> Self:
+        raise NotImplementedError
 
 
 class APDCharacteristics:
@@ -606,7 +623,7 @@ class APDCharacteristics:
 
         self._quantum_efficiency: float | None = quantum_efficiency
         self._full_well_capacity: float | None = full_well_capacity
-        self._charge_to_volt = charge_to_volt
+        self._charge_to_volt: ChargeToVoltSettings | None = charge_to_volt
         self._adc_voltage_range: tuple[float, float] | None = adc_voltage_range
         self._adc_bit_resolution: int | None = adc_bit_resolution
         self._node_capacitance: float = self.bias_to_node_capacitance(
@@ -640,6 +657,7 @@ class APDCharacteristics:
             and self._adc_bit_resolution == other._adc_bit_resolution
             and self._adc_voltage_range == other._adc_voltage_range
             and self._avalanche_settings == other._avalanche_settings
+            and self._charge_to_volt == other._charge_to_volt
         )
 
     # TODO: This method exists in class 'Characteristics' and 'APDCharacteristics'
@@ -889,7 +907,11 @@ class APDCharacteristics:
             "full_well_capacity": self._full_well_capacity,
             "adc_bit_resolution": self._adc_bit_resolution,
             "adc_voltage_range": self._adc_voltage_range,
+            "charge_to_volt_settings": (
+                self._charge_to_volt.to_dict() if self._charge_to_volt else None
+            ),
         }
+
         return dct
 
     @classmethod
@@ -910,13 +932,24 @@ class APDCharacteristics:
             dct["avalanche_settings"]
         )
 
+        charge_to_volt_settings: ChargeToVoltSettings | None = (
+            APDCharacteristics.from_dict(dct["charge_to_volt_settings"])
+            if "charge_to_volt_settings" in dct
+            else None
+        )
+
         new_dct: Mapping = dicttoolz.dissoc(
-            dct, "adc_voltage_range", "bias_to_node", "avalanche_settings"
+            dct,
+            "adc_voltage_range",
+            "bias_to_node",
+            "avalanche_settings",
+            "charge_to_volt_settings",
         )
 
         return cls(
             adc_voltage_range=adc_voltage_range,
             bias_to_node=bias_to_node,
             avalanche_settings=avalanche_settings,
+            charge_to_volt=charge_to_volt_settings,
             **new_dct,
         )
