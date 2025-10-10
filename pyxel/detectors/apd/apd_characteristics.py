@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from typing_extensions import Self, deprecated
 
+from pyxel.inputs import load_image_v2
 from pyxel.util import get_size, get_uninitialized_error
 
 if TYPE_CHECKING:
@@ -528,6 +529,32 @@ class AvalancheSettings:
         )
 
 
+class ChargeToVoltSettings:
+    def __init__(self, capacitance: float | str | None, factor: float | str | None):
+        assert (capacitance is not None) ^ (factor is not None)
+        if isinstance(capacitance, str):
+            self._capacitance = load_image_v2(capacitance)
+        else:
+            self._capacitance = capacitance
+        if isinstance(factor, str):
+            self.factor = load_image_v2(factor)
+        else:
+            self.factor = factor
+
+    @property
+    def capacitance(self) -> float | np.ndarray:
+        if self._capacitance is not None:
+            return self._capacitance
+        else:
+            raise ValueError
+
+    def factor(self) -> float | np.ndarray:
+        if self.factor is not None:
+            return self._factor
+        elif self._capacitance is not None:
+            raise NotImplementedError
+
+
 class APDCharacteristics:
     """Characteristic attributes of the APD detector.
 
@@ -541,6 +568,7 @@ class APDCharacteristics:
         Quantum efficiency.
     full_well_capacity : float, optional
         Full well capacity. Unit: e-
+    charge
     adc_bit_resolution : int, optional
         ADC bit resolution.
     adc_voltage_range : tuple of floats, optional
@@ -556,6 +584,7 @@ class APDCharacteristics:
         # Common parameters #
         #####################
         quantum_efficiency: float | None = None,  # unit: NA
+        charge_to_volt: ChargeToVoltSettings | None = None,
         full_well_capacity: float | None = None,  # unit: electron
         adc_bit_resolution: int | None = None,
         adc_voltage_range: tuple[float, float] | None = None,  # unit: V
@@ -577,6 +606,7 @@ class APDCharacteristics:
 
         self._quantum_efficiency: float | None = quantum_efficiency
         self._full_well_capacity: float | None = full_well_capacity
+        self._charge_to_volt = charge_to_volt
         self._adc_voltage_range: tuple[float, float] | None = adc_voltage_range
         self._adc_bit_resolution: int | None = adc_bit_resolution
         self._node_capacitance: float = self.bias_to_node_capacitance(
