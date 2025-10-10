@@ -26,9 +26,9 @@ dependencies:
   - pip
 # Scientific computing
   - numba>=0.56.4
-  - numpy>=1.24
-  - pandas>=1.5
-  - scipy>=1.10
+  - numpy>=2
+  - pandas>=2.1,<3
+  - scipy>=1.12
   - xarray>=2024.10.0
   - photutils
   - poppy>=1.1.0
@@ -38,7 +38,6 @@ dependencies:
   - matplotlib-base>=3.6
   - seaborn
   - hvplot
-  - bokeh>=3.3.0
 # Parallel computing
   - dask>=2.9
   - dask-labextension
@@ -67,7 +66,7 @@ dependencies:
   - pygmo>=2.16.1
   - pympler
   - pillow
-  - scikit-image>=0.20.0
+  - scikit-image>=0.23.0
   - rich
 # Code formatting
   - black>=20
