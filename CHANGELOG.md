@@ -27,7 +27,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 * In 'metadata.schema.json' add possibility to use 'status: to_review'.
   (See [!1107](https://gitlab.com/esa/pyxel/-/merge_requests/1107)).
 * Update 'pyproject.toml' for Python 3.14.
-  (See [!1110](https://gitlab.com/esa/pyxel/-/merge_requests/1110)).
+  (See [!1110](https://gitlab.com/esa/pyxel/-/merge_requests/1110)
+  and [!1111](https://gitlab.com/esa/pyxel/-/merge_requests/1111)).
 
 
 ## 2.13 / 2025-09-21
