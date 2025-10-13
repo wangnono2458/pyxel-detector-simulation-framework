@@ -67,16 +67,8 @@ def calculate_avalanche_gain(
     avalanche_gain_2d : np.ndarray
         Avalanche gain array.
     """
-    # bias_to_node to charge_to_volt_conversion
-    # charge_to_volt_conversion to bias
-    # bias to avalanche_gain
+    apd_bias_2d = init_apd_bias - charge_array_2d * charge_to_volt_conversion
 
-    # TODO: Create a generic method in 'AvalancheSettings.apd_bias'
-    apd_bias_2d = (
-        init_apd_bias - charge_array_2d * charge_to_volt_conversion
-    )  # => apd_bias
-
-    # bias_to_gain
     avalanche_gain_2d = bias_to_gain(apd_bias_2d)
 
     return avalanche_gain_2d
@@ -100,9 +92,9 @@ def avalanche(
     """
     mean_avalanche_gain_2d = calculate_avalanche_gain(
         charge_array_2d=np.array(detector.pixel),
-        init_apd_bias=detector.characteristics.avalanche_settings.avalanche_gain,
+        init_apd_bias=detector.characteristics.avalanche_settings.avalanche_bias,
         charge_to_volt_conversion=detector.characteristics.charge_to_volt_conversion,
-        bias_to_gain=detector.characteristics.avalanche_settings._bias_to_gain,
+        bias_to_gain=detector.characteristics.avalanche_settings.bias_to_gain,
     )
 
     array_copy = detector.charge.array.copy()
