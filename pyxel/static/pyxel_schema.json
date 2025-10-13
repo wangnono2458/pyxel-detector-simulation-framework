@@ -148,6 +148,19 @@
           ],
           "title": "bias_to_node"
         },
+        "charge_to_volt": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ChargeToVoltSettings"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TBW.",
+          "title": "charge_to_volt"
+        },
         "full_well_capacity": {
           "default": null,
           "description": "Full well capacity. Unit: e-",
@@ -1017,6 +1030,22 @@
       ],
       "type": "object"
     },
+    "Capacitance": {
+      "additionalProperties": false,
+      "description": "Settings for Capacitance",
+      "properties": {
+        "capacitance": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "required": [
+        "capacitance"
+      ],
+      "type": "object"
+    },
     "Channels": {
       "additionalProperties": false,
       "properties": {
@@ -1137,6 +1166,26 @@
         }
       },
       "title": "Characteristics",
+      "type": "object"
+    },
+    "ChargeToVoltSettings": {
+      "additionalProperties": false,
+      "description": "Settings for ChargeToVolt",
+      "properties": {
+        "param": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Capacitance"
+            },
+            {
+              "$ref": "#/definitions/Factor"
+            }
+          ]
+        }
+      },
+      "required": [
+        "param"
+      ],
       "type": "object"
     },
     "Configuration_Calibration_APD": {
@@ -2174,6 +2223,22 @@
       },
       "required": [
         "output_folder"
+      ],
+      "type": "object"
+    },
+    "Factor": {
+      "additionalProperties": false,
+      "description": "Settings for Factor",
+      "properties": {
+        "factor": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "required": [
+        "factor"
       ],
       "type": "object"
     },
