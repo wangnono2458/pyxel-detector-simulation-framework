@@ -1734,6 +1734,9 @@
                 "$ref": "#/definitions/ModelChargeGenerationApplyQeCurve"
               },
               {
+                "$ref": "#/definitions/ModelChargeGenerationAvalanche"
+              },
+              {
                 "$ref": "#/definitions/ModelChargeGenerationChargeBlocks"
               },
               {
@@ -2916,6 +2919,55 @@
         "arguments"
       ],
       "title": "Model 'apply_qe_curve'",
+      "type": "object"
+    },
+    "ModelChargeGenerationAvalanche": {
+      "additionalProperties": false,
+      "description": "Apply Avalanche gain to the charge array of the detector. The avalanche model need to be defined in calculate_avalanche_gain before.",
+      "properties": {
+        "arguments": {
+          "additionalProperties": false,
+          "default": {
+            "excess_noise_factor": 1.0,
+            "seed": null
+          },
+          "properties": {
+            "excess_noise_factor": {
+              "default": 1.0,
+              "description": "Excess noise factor, default is 1.0.",
+              "title": "excess_noise_factor",
+              "type": "number"
+            },
+            "seed": {
+              "default": null,
+              "description": "Random seed.",
+              "title": "seed",
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "title": "Parameters",
+          "type": "object"
+        },
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "func": {
+          "const": "pyxel.models.charge_generation.avalanche",
+          "default": "pyxel.models.charge_generation.avalanche",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Model 'avalanche'",
       "type": "object"
     },
     "ModelChargeGenerationChargeBlocks": {

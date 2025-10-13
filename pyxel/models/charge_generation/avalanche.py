@@ -37,22 +37,25 @@ APD Avalanche gain utility functions.
 """
 
 
+from collections.abc import Callable
+
 import numpy as np
 
-from pyxel.detectors import Detector
+from pyxel.detectors import APD
 from pyxel.util import set_random_seed
 
 
 def calculate_avalanche_gain(
-    charge_array: np.ndarray,
-    init_apd_bias: float,
+    charge_array_2d: np.ndarray,
+    init_apd_bias: float,  # PRV - common ==> avalanche_bias
     charge_to_volt_conversion: float,
+    bias_to_gain: Callable,
 ) -> np.ndarray:
     """Calculate avalanche gain from charge array and initial avalanche bias following the ESA IBEX Avalanche model.
 
     Parameters
     ----------
-    charge_array : np.ndarray
+    charge_array_2d : np.ndarray
         Charge array in electrons.
     init_apd_bias : float
         Initial avalanche bias in volts.
@@ -64,21 +67,23 @@ def calculate_avalanche_gain(
     avalanche_gain_2d : np.ndarray
         Avalanche gain array.
     """
-    # Based on the avalanche model 1+ 6e-4*(V**3.9)
+    # bias_to_node to charge_to_volt_conversion
+    # charge_to_volt_conversion to bias
+    # bias to avalanche_gain
 
-    if init_apd_bias is None:
-        raise ValueError("no initial avalanche gain value.")
+    # TODO: Create a generic method in 'AvalancheSettings.apd_bias'
+    apd_bias_2d = (
+        init_apd_bias - charge_array_2d * charge_to_volt_conversion
+    )  # => apd_bias
 
-    apd_bias_2d = init_apd_bias - charge_array * charge_to_volt_conversion
-
-    avalanche_gain_2d = 1.0 + 6e-4 * (np.pow(apd_bias_2d, 3.9))
+    # bias_to_gain
+    avalanche_gain_2d = bias_to_gain(apd_bias_2d)
 
     return avalanche_gain_2d
 
 
 def avalanche(
-    detector: Detector,
-    init_apd_bias: float,
+    detector: APD,
     excess_noise_factor: float = 1.0,
     seed: int | None = None,
 ) -> None:
@@ -88,35 +93,29 @@ def avalanche(
     ----------
     detector : Detector
         Pyxel Detector object.
-    init_apd_bias : float
-        Initial avalanche bias in volts.
     excess_noise_factor : float
         Excess noise factor, default is 1.0.
     seed : int, optional
         Random seed.
     """
-
-    total_charge = detector.pixel.array.copy()
-    array_copy = detector.charge.array.copy()
-    detector.charge.empty()
-
-    if init_apd_bias is None:
-        raise ValueError("no initial avalanche bias value.")
-
-    mean_avalanche_gain = calculate_avalanche_gain(
-        charge_array=total_charge,
-        init_apd_bias=init_apd_bias,
-        charge_to_volt_conversion=detector.characteristics._charge_to_volt_conversion,
+    mean_avalanche_gain_2d = calculate_avalanche_gain(
+        charge_array_2d=np.array(detector.pixel),
+        init_apd_bias=detector.characteristics.avalanche_settings.avalanche_gain,
+        charge_to_volt_conversion=detector.characteristics.charge_to_volt_conversion,
+        bias_to_gain=detector.characteristics.avalanche_settings._bias_to_gain,
     )
 
+    array_copy = detector.charge.array.copy()
+
     if excess_noise_factor == 1.0:
-        out = mean_avalanche_gain * array_copy
+        out = mean_avalanche_gain_2d * array_copy
     else:
         r = 1.0 / (excess_noise_factor - 1.0)
         gamma_shape = r * array_copy
-        gamma_scale = mean_avalanche_gain / r
+        gamma_scale = mean_avalanche_gain_2d / r
 
         with set_random_seed(seed):
             out = np.random.gamma(shape=gamma_shape, scale=gamma_scale)
 
+    detector.charge.empty()
     detector.charge.add_charge_array(array=out)
