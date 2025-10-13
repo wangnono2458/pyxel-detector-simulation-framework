@@ -881,6 +881,7 @@ class APDCharacteristics:
             "bias_to_node": self._bias_to_node.to_dict(),  # TODO: FIx this
             "avalanche_settings": self._avalanche_settings.to_dict(),
             "quantum_efficiency": self._quantum_efficiency,
+            "pre_amplification": self._pre_amplification,
             "full_well_capacity": self._full_well_capacity,
             "adc_bit_resolution": self._adc_bit_resolution,
             "adc_voltage_range": self._adc_voltage_range,
