@@ -529,47 +529,100 @@ class AvalancheSettings:
         )
 
 
-class ChargeToVoltSettings:
-    def __init__(self, capacitance: float | str | None, factor: float | str | None):
-        assert (capacitance is not None) ^ (factor is not None)
-
-        capacitance_value: float | np.ndarray | None
+class Capacitance:
+    def __init__(self, capacitance: float | str):
+        capacitance_value: float | np.ndarray
         if isinstance(capacitance, str):
             capacitance_value = load_image(capacitance)
         else:
             capacitance_value = capacitance
 
-        factor_value: float | np.ndarray | None
+        self._capacitance: float | str = capacitance
+        self._value: float | np.ndarray = capacitance_value
+
+    def __eq__(self, other) -> bool:
+        return type(self) is type(other) and np.allclose(self._value, other._value)
+
+    # In fF
+    @property
+    def capacitance(self) -> float | np.ndarray:
+        return self._value
+
+
+class Factor:
+    def __init__(self, factor: float | str):
+        factor_value: float | np.ndarray
         if isinstance(factor, str):
             factor_value = load_image(factor)
         else:
             factor_value = factor
 
-        self._capacitance: float | np.ndarray | None = capacitance_value
-        self._factor: float | np.ndarray | None = factor_value
+        self._factor: float | str = factor
+        self._value: float | np.ndarray = factor_value
 
     def __eq__(self, other) -> bool:
-        raise NotImplementedError
+        return type(self) is type(other) and np.allclose(self._value, other._value)
 
+    # In 'V/electron'
+    @property
+    def factor(self) -> float | np.ndarray:
+        return self._value
+
+
+class ChargeToVoltSettings:
+    def __init__(self, param: Capacitance | Factor, /):
+        self._param: Capacitance | Factor = param
+
+    def __eq__(self, other) -> bool:
+        return type(self) is type(other) and self._param == other._param
+
+    # in fF
     @property
     def capacitance(self) -> float | np.ndarray:
-        if self._capacitance is None:
-            raise ValueError
+        if isinstance(self._param, Factor):
+            raise TypeError
 
-        return self._capacitance
+        return self._param.capacitance
 
+    # in V/electron
     def factor(self) -> float | np.ndarray:
-        if self._factor is not None:
-            return self._factor
-        elif self._capacitance is not None:
-            raise NotImplementedError
+        if isinstance(self._param, Factor):
+            return self._param.factor
+        else:
+            # Late import
+            import astropy.constants as consts
+            from astropy.units import Quantity
+
+            # Get capacitance in fF
+            capacitance = Quantity(self._param.capacitance, "fF")
+
+            # Electric charge of one electron in C / electron
+            one_electron = Quantity(consts.e) / Quantity(1, "electron")
+
+            # Convert 'capacitance' into a 'charge_to_volt'
+            charge_to_volt: Quantity = (one_electron / capacitance).to("V / electron")
+
+            value: np.ndarray = np.array(charge_to_volt)
+
+            if value.ndim == 0:
+                return float(value)
+            else:
+                return value
 
     def to_dict(self) -> Mapping:
-        raise NotImplementedError
+        if isinstance(self._param, Capacitance):
+            return {"capacitance": self._param._capacitance}
+        else:
+            return {"factor": self._param._factor}
 
     @classmethod
     def from_dict(cls, dct: Mapping) -> Self:
-        raise NotImplementedError
+        if "capacitance" in dct:
+            return cls(Capacitance(dct["capacitance"]))
+        elif "factor" in dct:
+            return cls(Factor(dct["factor"]))
+        else:
+            raise KeyError
 
 
 class APDCharacteristics:
@@ -583,9 +636,10 @@ class APDCharacteristics:
     avalanche_settings : AvalancheSettings
     quantum_efficiency : float, optional
         Quantum efficiency.
+    charge_to_volt : ChargeToVoltSettings, optional
+        TBW.
     full_well_capacity : float, optional
         Full well capacity. Unit: e-
-    charge
     adc_bit_resolution : int, optional
         ADC bit resolution.
     adc_voltage_range : tuple of floats, optional
@@ -933,7 +987,7 @@ class APDCharacteristics:
         )
 
         charge_to_volt_settings: ChargeToVoltSettings | None = (
-            APDCharacteristics.from_dict(dct["charge_to_volt_settings"])
+            ChargeToVoltSettings.from_dict(dct["charge_to_volt_settings"])
             if "charge_to_volt_settings" in dct
             else None
         )
