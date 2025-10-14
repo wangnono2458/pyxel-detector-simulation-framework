@@ -37,6 +37,10 @@ class Capacitance:
         self._capacitance: float | str = capacitance
         self._value: float | np.ndarray = capacitance_value
 
+    def __repr__(self) -> str:
+        cls_name = self.__class__.__name__
+        return f"{cls_name}(capacitance={self._capacitance!r})"
+
     def __eq__(self, other) -> bool:
         return type(self) is type(other) and np.allclose(self._value, other._value)
 
@@ -68,6 +72,10 @@ class Factor:
         self._factor: float | str = factor
         self._value: float | np.ndarray = factor_value
 
+    def __repr__(self) -> str:
+        cls_name = self.__class__.__name__
+        return f"{cls_name}(factor={self._factor!r})"
+
     def __eq__(self, other) -> bool:
         return type(self) is type(other) and np.allclose(self._value, other._value)
 
@@ -88,6 +96,10 @@ class ChargeToVoltSettings:
 
     def __init__(self, param: Capacitance | Factor, /):
         self._param: Capacitance | Factor = param
+
+    def __repr__(self) -> str:
+        cls_name = self.__class__.__name__
+        return f"{cls_name}({self._param!r})"
 
     def __eq__(self, other) -> bool:
         return type(self) is type(other) and self._param == other._param
