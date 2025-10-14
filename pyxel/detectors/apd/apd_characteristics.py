@@ -8,16 +8,15 @@
 """Avalanche Photodiode (APD) models and utilities."""
 
 from collections.abc import Callable, Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 from typing_extensions import Self, deprecated
 
-from pyxel.inputs import load_image
 from pyxel.util import get_size, get_uninitialized_error
 
 if TYPE_CHECKING:
-    from pyxel.detectors import APDGeometry
+    from pyxel.detectors import APDGeometry, ChargeToVoltSettings
 
 
 def detector_gain(capacitance: float, roic_gain: float) -> float:
@@ -529,132 +528,6 @@ class AvalancheSettings:
         )
 
 
-class Capacitance:
-    """Representation of node capacitance(s).
-
-    The capacitance can be provided either as a scalar value (in fF) or as a path to
-    a 2D image file.
-
-    Parameters
-    ----------
-    capacitance : float or str
-        Capacitance in fF or a path to an image file containing capacitance data.
-    """
-
-    def __init__(self, capacitance: float | str):
-        capacitance_value: float | np.ndarray
-        if isinstance(capacitance, str):
-            capacitance_value = load_image(capacitance)
-        else:
-            capacitance_value = capacitance
-
-        self._capacitance: float | str = capacitance
-        self._value: float | np.ndarray = capacitance_value
-
-    def __eq__(self, other) -> bool:
-        return type(self) is type(other) and np.allclose(self._value, other._value)
-
-    @property
-    def capacitance(self) -> float | np.ndarray:
-        """Return capacitance in fF."""
-        return self._value
-
-
-class Factor:
-    """Representation of a charge-to-voltage conversion factor(s).
-
-    This factor can be provided either as a scalar value (in V / electron) or as a path to
-    a 2D image file.
-
-    Parameters
-    ----------
-    factor : float or str
-        Conversion factor in V/electron or a path to an image file containing factor values.
-    """
-
-    def __init__(self, factor: float | str):
-        factor_value: float | np.ndarray
-        if isinstance(factor, str):
-            factor_value = load_image(factor)
-        else:
-            factor_value = factor
-
-        self._factor: float | str = factor
-        self._value: float | np.ndarray = factor_value
-
-    def __eq__(self, other) -> bool:
-        return type(self) is type(other) and np.allclose(self._value, other._value)
-
-    @property
-    def factor(self) -> float | np.ndarray:
-        """Return charge-to-voltage conversion factor in V/electron."""
-        return self._value
-
-
-class ChargeToVoltSettings:
-    """Settings for charge-to-voltage conversion.
-
-    This class can represent either:
-        - a **capacitance-based conversion** where the voltage per electron is derived
-          from the capacitance.
-        - a **direct charge-to-volt factor** provided as a pre-computed V/electron value
-    """
-
-    def __init__(self, param: Capacitance | Factor, /):
-        self._param: Capacitance | Factor = param
-
-    def __eq__(self, other) -> bool:
-        return type(self) is type(other) and self._param == other._param
-
-    @property
-    def capacitance(self) -> float | np.ndarray:
-        """Return capacitance in fF."""
-        if isinstance(self._param, Factor):
-            raise TypeError
-
-        return self._param.capacitance
-
-    def factor(self) -> float | np.ndarray:
-        """Return charge-to-voltage conversion factor in V/electron."""
-        if isinstance(self._param, Factor):
-            return self._param.factor
-        else:
-            # Late import
-            import astropy.constants as consts
-            from astropy.units import Quantity
-
-            # Get capacitance in fF
-            capacitance = Quantity(self._param.capacitance, "fF")
-
-            # Electric charge of one electron in C / electron
-            one_electron = Quantity(consts.e) / Quantity(1, "electron")
-
-            # Convert 'capacitance' into a 'charge_to_volt'
-            charge_to_volt: Quantity = (one_electron / capacitance).to("V / electron")
-
-            value: np.ndarray = np.array(charge_to_volt)
-
-            if value.ndim == 0:
-                return float(value)
-            else:
-                return value
-
-    def to_dict(self) -> Mapping:
-        if isinstance(self._param, Capacitance):
-            return {"capacitance": self._param._capacitance}
-        else:
-            return {"factor": self._param._factor}
-
-    @classmethod
-    def from_dict(cls, dct: Mapping) -> Self:
-        if "capacitance" in dct:
-            return cls(Capacitance(dct["capacitance"]))
-        elif "factor" in dct:
-            return cls(Factor(dct["factor"]))
-        else:
-            raise KeyError
-
-
 class APDCharacteristics:
     """Characteristic attributes of the APD detector.
 
@@ -685,7 +558,7 @@ class APDCharacteristics:
         # Common parameters #
         #####################
         quantum_efficiency: float | None = None,  # unit: NA
-        charge_to_volt: ChargeToVoltSettings | None = None,
+        charge_to_volt: Optional["ChargeToVoltSettings"] = None,
         full_well_capacity: float | None = None,  # unit: electron
         adc_bit_resolution: int | None = None,
         adc_voltage_range: tuple[float, float] | None = None,  # unit: V
@@ -707,7 +580,7 @@ class APDCharacteristics:
 
         self._quantum_efficiency: float | None = quantum_efficiency
         self._full_well_capacity: float | None = full_well_capacity
-        self._charge_to_volt: ChargeToVoltSettings | None = charge_to_volt
+        self._charge_to_volt: "ChargeToVoltSettings" | None = charge_to_volt
         self._adc_voltage_range: tuple[float, float] | None = adc_voltage_range
         self._adc_bit_resolution: int | None = adc_bit_resolution
         self._node_capacitance: float = self.bias_to_node_capacitance(
@@ -1005,6 +878,7 @@ class APDCharacteristics:
         from toolz import dicttoolz
 
         from pyxel.configuration.configuration import build_converter
+        from pyxel.detectors import ChargeToVoltSettings
 
         adc_voltage_range = dct["adc_voltage_range"]
 
