@@ -76,16 +76,13 @@ def ktc_noise(
                 " used. Please specify node_capacitance in the model argument!"
             ) from ex
 
-    if not detector.is_first_readout and detector.non_destructive_readout:
-        # Do nothing when this is not the first readout and non-destructive mode
-        return
+    if detector.is_first_readout or not detector.non_destructive_readout:
+        # This it the first readout or the destructive mode
+        with set_random_seed(seed):
+            noise_2d = compute_ktc_noise(
+                temperature=detector.environment.temperature,
+                capacitance=capacitance,
+                shape=detector.geometry.shape,
+            )
 
-    # This it the first readout or the destructive mode
-    with set_random_seed(seed):
-        noise_2d = compute_ktc_noise(
-            temperature=detector.environment.temperature,
-            capacitance=capacitance,
-            shape=detector.geometry.shape,
-        )
-
-    detector.signal += noise_2d
+        detector.signal += noise_2d
