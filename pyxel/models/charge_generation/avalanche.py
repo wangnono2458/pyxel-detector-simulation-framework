@@ -51,44 +51,57 @@ def calculate_avalanche_gain(
     charge_to_volt_conversion: float,
     bias_to_gain: Callable,
 ) -> np.ndarray:
-    """Calculate avalanche gain from charge array and initial avalanche bias following the ESA IBEX Avalanche model.
+    r"""Calculate avalanche gain map from charge array and initial avalanche for an APD detector.
+
+    The avalanche gain is derived for the bias voltage across the APD junction.
+    The bias decreases as charge accumulated following:
+
+    :math:`V_{apd} = V_{init} - Q . \frac{dV}{dQ}`
+
+    The resulting voltage is then converted to a gain
 
     Parameters
     ----------
     charge_array_2d : np.ndarray
-        Charge array in electrons.
+        2D charge array of accumulated charges (in electron) for each pixel.
     init_apd_bias : float
-        Initial avalanche bias in volts.
+        Initial avalanche bias voltage applied in the APD (in V).
     charge_to_volt_conversion : float
-        Charge to volt conversion factor.
+        Charge-to-volt conversion factor (in V/electron)
+    bias_to_gain : callable
+        Function that converts the APD bias (in V) to a gain value
 
     Returns
     -------
-    avalanche_gain_2d : np.ndarray
-        Avalanche gain array.
+    np.ndarray
+        2D Avalanche gain array.
     """
     apd_bias_2d = init_apd_bias - charge_array_2d * charge_to_volt_conversion
-
     avalanche_gain_2d = bias_to_gain(apd_bias_2d)
 
     return avalanche_gain_2d
 
 
-def avalanche(
+def avalanche_gain(
     detector: APD,
     excess_noise_factor: float = 1.0,
     seed: int | None = None,
 ) -> None:
-    """Apply Avalanche gain to the charge array of the detector. The avalanche model need to be defined in calculate_avalanche_gain before.
+    """Apply Avalanche multiplication gain to the charge array of the detector.
+
+    This model simulates the avalanche amplification process occurring in Avalanche Photodiodes (APDs).
+    An excess noise factor can be included for statistical variations in the avalanche process.
 
     Parameters
     ----------
     detector : Detector
         Pyxel Detector object.
-    excess_noise_factor : float
-        Excess noise factor, default is 1.0.
+    excess_noise_factor : float, optional. Default is 1.0
+        Multiplication excess noise factor.
+        When equal to 1.0, the avalanche gain is deterministic.
+        When > 1.0, gain fluctuations are modeled using a Gamma distribution.
     seed : int, optional
-        Random seed.
+        Random seed used when simulating stochastic gain variations.
     """
     mean_avalanche_gain_2d = calculate_avalanche_gain(
         charge_array_2d=np.array(detector.pixel),
