@@ -423,6 +423,7 @@ def run_pipeline(
     # Late import to speedup start-up time
     import xarray as xr
     from dask.utils import format_bytes
+    from packaging.version import Version
 
     # if isinstance(detector, CCD):
     #    dynamic.non_destructive_readout = False
@@ -494,9 +495,13 @@ def run_pipeline(
                 progress_bar.set_postfix({"size": format_bytes(num_bytes)})
                 progress_bar.update(1)
 
-        buckets_data_tree: xr.Dataset = xr.map_over_datasets(
-            lambda *data: xr.concat(data, dim="time"), *lst
-        )
+        if Version(xr.__version__) > Version("2025.10.1"):
+            buckets_data_tree: xr.DataTree = xr.concat(lst, dim="time")  # type: ignore[type-var]
+        else:
+            buckets_data_tree = xr.map_over_datasets(
+                lambda *data: xr.concat(data, dim="time"),
+                *lst,
+            )
 
         # Prepare the final dictionary to construct the `DataTree`.
         dct: dict[str, xr.Dataset | xr.DataTree | None] = {}
