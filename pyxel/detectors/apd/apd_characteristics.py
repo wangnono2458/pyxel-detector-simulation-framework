@@ -530,6 +530,17 @@ class AvalancheSettings:
 
 
 class Capacitance:
+    """Representation of node capacitance(s).
+
+    The capacitance can be provided either as a scalar value (in fF) or as a path to
+    a 2D image file.
+
+    Parameters
+    ----------
+    capacitance : float or str
+        Capacitance in fF or a path to an image file containing capacitance data.
+    """
+
     def __init__(self, capacitance: float | str):
         capacitance_value: float | np.ndarray
         if isinstance(capacitance, str):
@@ -543,13 +554,24 @@ class Capacitance:
     def __eq__(self, other) -> bool:
         return type(self) is type(other) and np.allclose(self._value, other._value)
 
-    # In fF
     @property
     def capacitance(self) -> float | np.ndarray:
+        """Return capacitance in fF."""
         return self._value
 
 
 class Factor:
+    """Representation of a charge-to-voltage conversion factor(s).
+
+    This factor can be provided either as a scalar value (in V / electron) or as a path to
+    a 2D image file.
+
+    Parameters
+    ----------
+    factor : float or str
+        Conversion factor in V/electron or a path to an image file containing factor values.
+    """
+
     def __init__(self, factor: float | str):
         factor_value: float | np.ndarray
         if isinstance(factor, str):
@@ -563,29 +585,37 @@ class Factor:
     def __eq__(self, other) -> bool:
         return type(self) is type(other) and np.allclose(self._value, other._value)
 
-    # In 'V/electron'
     @property
     def factor(self) -> float | np.ndarray:
+        """Return charge-to-voltage conversion factor in V/electron."""
         return self._value
 
 
 class ChargeToVoltSettings:
+    """Settings for charge-to-voltage conversion.
+
+    This class can represent either:
+        - a **capacitance-based conversion** where the voltage per electron is derived
+          from the capacitance.
+        - a **direct charge-to-volt factor** provided as a pre-computed V/electron value
+    """
+
     def __init__(self, param: Capacitance | Factor, /):
         self._param: Capacitance | Factor = param
 
     def __eq__(self, other) -> bool:
         return type(self) is type(other) and self._param == other._param
 
-    # in fF
     @property
     def capacitance(self) -> float | np.ndarray:
+        """Return capacitance in fF."""
         if isinstance(self._param, Factor):
             raise TypeError
 
         return self._param.capacitance
 
-    # in V/electron
     def factor(self) -> float | np.ndarray:
+        """Return charge-to-voltage conversion factor in V/electron."""
         if isinstance(self._param, Factor):
             return self._param.factor
         else:
