@@ -792,6 +792,7 @@ def build_converter(
 def to_apd_characteristics(dct: dict | None) -> APDCharacteristics:
     """Create a APDCharacteristics class from a dictionary."""
     # Late import
+    from pyxel.detectors import ChargeToVoltSettings
     from pyxel.detectors.apd import AvalancheSettings
     from pyxel.detectors.apd.saphira_characteristics import SaphiraCharacteristics
 
@@ -826,10 +827,15 @@ def to_apd_characteristics(dct: dict | None) -> APDCharacteristics:
     )
     avalanche_settings = AvalancheSettings.from_dict(new_dct["avalanche_settings"])
 
+    charge_to_volt: ChargeToVoltSettings | None = None
+    if "charge_to_volt" in new_dct:
+        charge_to_volt = ChargeToVoltSettings.from_dict(dct["charge_to_volt"])
+
     return APDCharacteristics(
         roic_gain=new_dct["roic_gain"],
         bias_to_node=bias_to_node,
         avalanche_settings=avalanche_settings,
+        charge_to_volt=charge_to_volt,
         quantum_efficiency=new_dct.get("quantum_efficiency"),
         full_well_capacity=new_dct.get("full_well_capacity"),
         adc_bit_resolution=new_dct.get("adc_bit_resolution"),
