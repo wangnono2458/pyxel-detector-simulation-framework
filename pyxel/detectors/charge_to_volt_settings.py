@@ -112,6 +112,11 @@ class ChargeToVoltSettings:
 
         return self._param.capacitance
 
+    def has_charge_to_volt(self) -> bool:
+        """Check if the Charge-to-Volt factor is directly defined and not derived from the capacitance."""
+        return isinstance(self._param, Factor)
+
+    @property
     def factor(self) -> float | np.ndarray:
         """Return charge-to-voltage conversion factor in V/electron."""
         if isinstance(self._param, Factor):

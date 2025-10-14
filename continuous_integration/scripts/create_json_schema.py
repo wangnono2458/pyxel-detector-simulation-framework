@@ -237,7 +237,7 @@ def generate_class(klass: Klass) -> Iterator[str]:
                     "AvalancheSettings1 | AvalancheSettings2 | AvalancheSettings3",
                 )
                 .replace(
-                    "pyxel.detectors.apd.apd_characteristics.ChargeToVoltSettings",
+                    "pyxel.detectors.charge_to_volt_settings.ChargeToVoltSettings",
                     "ChargeToVoltSettings",
                 )
             )  # TODO: Fix this. See issue #727

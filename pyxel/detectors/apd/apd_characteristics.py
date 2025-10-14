@@ -8,15 +8,16 @@
 """Avalanche Photodiode (APD) models and utilities."""
 
 from collections.abc import Callable, Mapping
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 from typing_extensions import Self, deprecated
 
+from pyxel.detectors import ChargeToVoltSettings
 from pyxel.util import get_size, get_uninitialized_error
 
 if TYPE_CHECKING:
-    from pyxel.detectors import APDGeometry, ChargeToVoltSettings
+    from pyxel.detectors import APDGeometry
 
 
 def detector_gain(capacitance: float, roic_gain: float) -> float:
@@ -558,7 +559,7 @@ class APDCharacteristics:
         # Common parameters #
         #####################
         quantum_efficiency: float | None = None,  # unit: NA
-        charge_to_volt: Optional["ChargeToVoltSettings"] = None,
+        charge_to_volt: ChargeToVoltSettings | None = None,
         full_well_capacity: float | None = None,  # unit: electron
         adc_bit_resolution: int | None = None,
         adc_voltage_range: tuple[float, float] | None = None,  # unit: V
@@ -580,7 +581,7 @@ class APDCharacteristics:
 
         self._quantum_efficiency: float | None = quantum_efficiency
         self._full_well_capacity: float | None = full_well_capacity
-        self._charge_to_volt: "ChargeToVoltSettings" | None = charge_to_volt
+        self._charge_to_volt: ChargeToVoltSettings | None = charge_to_volt
         self._adc_voltage_range: tuple[float, float] | None = adc_voltage_range
         self._adc_bit_resolution: int | None = adc_bit_resolution
         self._node_capacitance: float = self.bias_to_node_capacitance(
@@ -751,10 +752,12 @@ class APDCharacteristics:
     @property
     def charge_to_volt_conversion(self) -> float:
         """Compute charge-to-voltage conversion factor."""
-        capacitance = self.bias_to_node_capacitance(
-            self.avalanche_settings.avalanche_bias
+        if self._charge_to_volt and self._charge_to_volt.has_charge_to_volt():
+            return self._charge_to_volt.factor
+
+        return detector_gain(
+            capacitance=self.node_capacitance, roic_gain=self.roic_gain
         )
-        return detector_gain(capacitance=capacitance, roic_gain=self.roic_gain)
 
     @property
     def adc_bit_resolution(self) -> int:
@@ -878,7 +881,6 @@ class APDCharacteristics:
         from toolz import dicttoolz
 
         from pyxel.configuration.configuration import build_converter
-        from pyxel.detectors import ChargeToVoltSettings
 
         adc_voltage_range = dct["adc_voltage_range"]
 

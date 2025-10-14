@@ -12,9 +12,9 @@
 from .channels import Channels, Matrix, ReadoutPosition
 from .readout_properties import ReadoutProperties
 from .environment import Environment, WavelengthHandling
+from .charge_to_volt_settings import ChargeToVoltSettings
 from .detector import Detector
 from .geometry import Geometry
-from .charge_to_volt_settings import ChargeToVoltSettings
 from .characteristics import Characteristics
 from .ccd import CCDGeometry, CCD
 from .mkid import MKID, MKIDGeometry
