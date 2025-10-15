@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 from pyxel import __version__, backends
 from pyxel.data_structure import (
@@ -160,9 +161,12 @@ class Detector:
         return self._photon
 
     @photon.setter
-    def photon(self, obj: Photon) -> None:
+    def photon(self, obj: ArrayLike | Photon) -> None:
         """Set the photon information for the detector."""
-        self.photon._array = obj._array
+        if isinstance(obj, Photon):
+            self._photon = obj
+        else:
+            self.photon.array = obj
 
     @property
     def scene(self) -> Scene:
@@ -195,6 +199,14 @@ class Detector:
 
         return self._charge
 
+    @charge.setter
+    def charge(self, obj: ArrayLike | Charge) -> None:
+        """Set the charge information for the detector."""
+        if isinstance(obj, Charge):
+            self._charge = obj
+        else:
+            self.charge.add_charge_array(obj)
+
     @property
     def pixel(self) -> Pixel:
         """Get the pixel information of charge packets within pixel (in electron)."""
@@ -205,9 +217,12 @@ class Detector:
         return self._pixel
 
     @pixel.setter
-    def pixel(self, obj: Pixel) -> None:
+    def pixel(self, obj: ArrayLike | Pixel) -> None:
         """Set the pixel information for the detector."""
-        self.pixel.array = obj.array
+        if isinstance(obj, Pixel):
+            self._pixel = obj
+        else:
+            self.pixel.array = obj
 
     @property
     def signal(self) -> Signal:
@@ -218,9 +233,12 @@ class Detector:
         return self._signal
 
     @signal.setter
-    def signal(self, obj: Pixel) -> None:
+    def signal(self, obj: ArrayLike | Signal) -> None:
         """Set the signal information for the detector."""
-        self.signal.array = obj.array
+        if isinstance(obj, Signal):
+            self._signal = obj
+        else:
+            self.signal.array = obj
 
     @property
     def image(self) -> Image:
@@ -231,9 +249,12 @@ class Detector:
         return self._image
 
     @image.setter
-    def image(self, obj: Pixel) -> None:
+    def image(self, obj: ArrayLike | Image) -> None:
         """Set the image information for the detector."""
-        self.image.array = obj.array
+        if isinstance(obj, Image):
+            self._image = obj
+        else:
+            self.image.array = obj
 
     @property
     def data(self) -> "xr.DataTree":

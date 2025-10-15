@@ -18,6 +18,7 @@ from pyxel.util import convert_unit, get_size
 
 if TYPE_CHECKING:
     import xarray as xr
+    from astropy.units import Quantity
     from matplotlib.pyplot import AxesImage
 
     from pyxel.detectors import Geometry
@@ -154,15 +155,29 @@ class Photon:
 
         return np.asarray(self.array, dtype=dtype)
 
-    def __iadd__(self, other: Union[np.ndarray, "xr.DataArray"]) -> Self:
+    def __iadd__(self, other: Union[np.ndarray, "Quantity", "xr.DataArray"]) -> Self:
         # Late import to speedup start-up time
         import xarray as xr
+        from astropy.units import Quantity, UnitConversionError
 
-        if isinstance(other, np.ndarray) and isinstance(self._array, xr.DataArray):
+        if isinstance(other, (np.ndarray, Quantity)) and isinstance(
+            self._array, xr.DataArray
+        ):
             raise TypeError("data must be a 3D DataArray")
 
         if isinstance(other, xr.DataArray) and isinstance(self._array, np.ndarray):
             raise TypeError("data must be a 2D Numpy array")
+
+        if isinstance(other, Quantity):
+            try:
+                converted_other: Quantity = other.to("ph")
+            except UnitConversionError as exc:
+                raise TypeError(
+                    f"Unit provided '{other.unit}' for bucket {self.__class__.__name__!r} "
+                    f"is not compatible with expected unit '{self.unit}'"
+                ) from exc
+            else:
+                other = converted_other.value
 
         if self._array is not None:
             self._array += other
@@ -170,15 +185,29 @@ class Photon:
             self._array = other
         return self
 
-    def __add__(self, other: Union[np.ndarray, "xr.DataArray"]) -> Self:
+    def __add__(self, other: Union[np.ndarray, "Quantity", "xr.DataArray"]) -> Self:
         # Late import to speedup start-up time
         import xarray as xr
+        from astropy.units import Quantity, UnitConversionError
 
-        if isinstance(other, np.ndarray) and isinstance(self._array, xr.DataArray):
+        if isinstance(other, (np.ndarray, Quantity)) and isinstance(
+            self._array, xr.DataArray
+        ):
             raise TypeError("Must be a 3D DataArray")
 
         if isinstance(other, xr.DataArray) and isinstance(self._array, np.ndarray):
             raise TypeError("Must be a 2D numpy array")
+
+        if isinstance(other, Quantity):
+            try:
+                converted_other: Quantity = other.to("ph")
+            except UnitConversionError as exc:
+                raise TypeError(
+                    f"Unit provided '{other.unit}' for bucket {self.__class__.__name__!r} "
+                    f"is not compatible with expected unit '{self.unit}'"
+                ) from exc
+            else:
+                other = converted_other.value
 
         if self._array is not None:
             self._array += other
@@ -279,6 +308,11 @@ pipeline:
         return self._array.dtype
 
     @property
+    def unit(self) -> str:
+        """Return the unit for this bucket."""
+        return "ph"
+
+    @property
     def array(self) -> np.ndarray:
         """Two-dimensional numpy array storing monochromatic photon.
 
@@ -314,10 +348,13 @@ pipeline:
         return self._array
 
     @array.setter
-    def array(self, value: np.ndarray) -> None:
+    def array(self, value: Union[np.ndarray, "Quantity"]) -> None:
+        # Late import
+        from astropy.units import Quantity, UnitConversionError
+
         cls_name: str = self.__class__.__name__
 
-        if not isinstance(value, np.ndarray):
+        if not isinstance(value, (np.ndarray, Quantity)):
             raise TypeError(f"{cls_name} array must be a 2D Numpy array")
 
         if value.dtype not in self.TYPE_LIST:
@@ -348,7 +385,18 @@ pipeline:
                 stacklevel=4,
             )
 
-        self._array = value.copy()
+        if isinstance(value, Quantity):
+            try:
+                converted_value: Quantity = value.to(self.unit)
+            except UnitConversionError as exc:
+                raise TypeError(
+                    f"Unit provided '{value.unit}' for bucket {self.__class__.__name__!r} "
+                    f"is not compatible with expected unit '{self.unit}'"
+                ) from exc
+            else:
+                value = np.asarray(converted_value.value, dtype=value.dtype)
+
+        self._array = np.array(value)
 
     @property
     def array_2d(self) -> np.ndarray:
