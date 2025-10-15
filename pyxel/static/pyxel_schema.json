@@ -1090,6 +1090,24 @@
           ]
         },
         "charge_to_volt_conversion": {
+          "default": null,
+          "description": "Sensitivity of charge readout. Unit: V/e-",
+          "title": "charge_to_volt_conversion",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "full_well_capacity": {
+          "default": null,
+          "description": "Full well capacity. Unit: e-",
+          "title": "full_well_capacity",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "pre_amplification": {
           "anyOf": [
             {
               "type": "number"
@@ -1105,26 +1123,8 @@
             }
           ],
           "default": null,
-          "description": "Sensitivity of charge readout. Unit: V/e-",
-          "title": "charge_to_volt_conversion"
-        },
-        "full_well_capacity": {
-          "default": null,
-          "description": "Full well capacity. Unit: e-",
-          "title": "full_well_capacity",
-          "type": [
-            "number",
-            "null"
-          ]
-        },
-        "pre_amplification": {
-          "default": null,
           "description": "Gain of pre-amplifier. Unit: V/V",
-          "title": "pre_amplification",
-          "type": [
-            "number",
-            "null"
-          ]
+          "title": "pre_amplification"
         },
         "quantum_efficiency": {
           "default": null,
