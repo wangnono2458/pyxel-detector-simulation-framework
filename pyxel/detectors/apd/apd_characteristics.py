@@ -40,6 +40,7 @@ def detector_gain(capacitance: float, roic_gain: float) -> float:
     # Late import to speedup start-up time
     import astropy.constants as const
 
+    # TODO: remove roic_gain
     return roic_gain * (const.e.value / capacitance)
 
 
