@@ -34,7 +34,7 @@ class Photon:
 
     Examples
     --------
-    Create an empty Photon container
+    Create an empty Photon container:
 
     >>> import numpy as np
     >>> from pyxel.detectors import CCD, CCDGeometry, Characteristics, Environment
@@ -45,25 +45,46 @@ class Photon:
     ... )
     >>> detector.photon
     Photon<UNINITIALIZED, shape=(5, 5)>
-    >>> detector.ndim
+    >>> detector.photon.ndim
     0
-    >>> detector.shape
+    >>> detector.photon.shape
     ()
 
-    Use monochromatic photons
+    Use monochromatic photons:
 
     >>> detector.photon.empty()
     >>> detector.photon.array = np.zeros(shape=(5, 5), dtype=float)
     >>> detector.photon
     Photon<shape=(5, 5), dtype=float64>
 
+    Perform arithmetic operations:
+
     >>> detector.photon.array = detector.photon.array + np.ones(shape=(5, 5))
     >>> detector.photon += np.ones(shape=(5, 5))
+
+    Using Astropy Quantity and a units:
+
+    >>> from astropy.units import Quantity
+    >>> detector.photon = Quantity(np.ones(shape=(5, 5)), unit="photon")
+    >>> detector.photon += Quantity(np.ones(shape=(5, 5)), unit="photon")
+    >>> detector.photon = detector.photon + Quantity(
+    ...     np.ones(shape=(5, 5)), unit="photon"
+    ... )
+
+    Convert to numpy, Quantity or xarray:
 
     >>> detector.photon.array
     array([[2., ...., 2.],
            ...,
            [2., ..., 2.]])
+    >>> np.array(detector.photon)
+    array([[2., ...., 2.],
+           ...,
+           [2., ..., 2.]])
+    >>> Quantity(detector.photon)
+    <Quantity [[2., ...., 2.],
+              ...,
+              [2., ..., 2.]] ph>
     >>> detector.photon.to_xarray()
     <xarray.DataArray 'photon' (y: 5, x: 5)>
     array([[2., ...., 2.],
@@ -76,7 +97,7 @@ class Photon:
         units:      Ph
         long_name:  Photon
 
-    Use multi-wavelength photons
+    Use multi-wavelength photons:
 
     >>> detector.photon.empty()
     >>> new_photon_3d = xr.DataArray(

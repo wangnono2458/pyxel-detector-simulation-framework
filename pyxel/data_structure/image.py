@@ -22,6 +22,65 @@ class Image(ArrayBase):
     """Image class defining and storing information of detector image (unit: adu).
 
     Accepted array types: ``np.uint16``, ``np.uint32``, ``np.uint64``
+
+    Examples
+    --------
+    Create an empty Image container:
+
+    >>> import numpy as np
+    >>> from pyxel.detectors import CCD, CCDGeometry, Characteristics, Environment
+    >>> detector = CCD(
+    ...     geometry=CCDGeometry(row=5, col=5),
+    ...     characteristics=Characteristics(),
+    ...     environment=Environment(),
+    ... )
+    >>> detector.image
+    image<UNINITIALIZED, shape=(5, 5)>
+    >>> detector.image.ndim
+    0
+    >>> detector.image.shape
+    ()
+
+    Perform arithmetic operations:
+
+    >>> detector.image.array = detector.image.array + np.ones(
+    ...     shape=(5, 5), dtype=np.uint16
+    ... )
+    >>> detector.image += np.ones(shape=(5, 5), dtype=np.uint16)
+
+    Using Astropy Quantity and a units:
+
+    >>> from astropy.units import Quantity
+    >>> data_with_unit = Quantity(np.ones(shape=(5, 5)), unit="adu").astype(np.uint16)
+    >>> detector.image = data_with_unit
+    >>> detector.image += data_with_unit
+    >>> detector.image = detector.image + data_with_unit
+
+    Convert to numpy, Quantity or xarray:
+
+    >>> detector.image.array
+    array([[2, ...., 2],
+           ...,
+           [2, ..., 2]])
+    >>> np.array(detector.image)
+    array([[2, ...., 2],
+           ...,
+           [2, ..., 2]])
+    >>> Quantity(detector.image)
+    <Quantity [[2, ...., 2],
+              ...,
+              [2, ..., 2]] volt>
+    >>> detector.image.to_xarray()
+    <xarray.DataArray 'image' (y: 5, x: 5)>
+    array([[2, ...., 2],
+           ...,
+           [2, ..., 2]])
+    Coordinates:
+      * y        (y) int64 0 1 2 3 4
+      * x        (x) int64 0 1 2 3 4
+    Attributes:
+        units:      adu
+        long_name:  image
     """
 
     TYPE_LIST = (
