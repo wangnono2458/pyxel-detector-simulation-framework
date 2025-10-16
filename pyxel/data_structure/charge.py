@@ -8,9 +8,10 @@
 """Pyxel Charge class to generate electrons or holes inside detector."""
 
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Union
 
 import numpy as np
+from typing_extensions import Self
 
 from pyxel.detectors.geometry import (
     get_horizontal_pixel_center_pos,
@@ -21,6 +22,7 @@ from pyxel.util import convert_unit
 if TYPE_CHECKING:
     import pandas as pd
     import xarray as xr
+    from astropy.units import Quantity
 
     from pyxel.detectors import Geometry
 
@@ -75,6 +77,34 @@ class Charge:
                 other._frame.sort_index(axis="columns")
             )
         )
+
+    def __iadd__(self, other: Union[np.ndarray, "Quantity"]) -> Self:
+        self.add_charge_array(other)
+        return self
+
+    def __add__(self, other: Union[np.ndarray, "Quantity"]) -> Self:
+        # Late import to speedup start-up time
+        from astropy.units import Quantity, UnitConversionError
+
+        if isinstance(other, Quantity):
+            try:
+                converted_other: Quantity = other.to(self.unit)
+            except UnitConversionError as exc:
+                raise TypeError(
+                    f"Unit provided '{other.unit}' for bucket {self.__class__.__name__!r} "
+                    f"is not compatible with expected unit '{self.unit}'"
+                ) from exc
+            else:
+                other = converted_other.value
+
+        self.add_charge_array(other)
+
+        return self
+
+    @property
+    def unit(self) -> str:
+        """Return the unit for this bucket."""
+        return "electron"
 
     @staticmethod
     def create_charges(
@@ -347,7 +377,7 @@ class Charge:
         # Add charge(s)
         self.add_charge_dataframe(new_charges=new_charges)
 
-    def add_charge_array(self, array: np.ndarray) -> None:
+    def add_charge_array(self, array: Union[np.ndarray, "Quantity"]) -> None:
         """Add charge to the charge array. Add to charge dataframe if not empty instead.
 
         Parameters
@@ -356,6 +386,20 @@ class Charge:
         """
         self.validate_type(array)
         self.validate_shape(array)
+
+        # Late import
+        from astropy.units import Quantity, UnitConversionError
+
+        if isinstance(array, Quantity):
+            try:
+                converted_array: Quantity = array.to("electron")
+            except UnitConversionError as exc:
+                raise TypeError(
+                    f"Unit provided '{array.unit}' for bucket {self.__class__.__name__!r} "
+                    f"is not compatible with expected unit '{self.unit}'"
+                ) from exc
+            else:
+                array = converted_array.value
 
         if self._frame.empty:
             self._array += array

@@ -24,6 +24,64 @@ class Pixel(ArrayBase):
 
     Accepted array types: ``np.int32``, ``np.int64``, ``np.uint32``, ``np.uint64``,
     ``np.float16``, ``np.float32``, ``np.float64``.
+
+    Examples
+    --------
+    Create an empty Pixel container:
+
+    >>> import numpy as np
+    >>> from pyxel.detectors import CCD, CCDGeometry, Characteristics, Environment
+    >>> detector = CCD(
+    ...     geometry=CCDGeometry(row=5, col=5),
+    ...     characteristics=Characteristics(),
+    ...     environment=Environment(),
+    ... )
+    >>> detector.pixel
+    Pixel<UNINITIALIZED, shape=(5, 5)>
+    >>> detector.pixel.ndim
+    0
+    >>> detector.pixel.shape
+    ()
+
+    Perform arithmetic operations:
+
+    >>> detector.pixel.array = detector.pixel.array + np.ones(shape=(5, 5))
+    >>> detector.pixel += np.ones(shape=(5, 5))
+
+    Using Astropy Quantity and a units:
+
+    >>> from astropy.units import Quantity
+    >>> detector.pixel = Quantity(np.ones(shape=(5, 5)), unit="electron")
+    >>> detector.pixel += Quantity(np.ones(shape=(5, 5)), unit="electron")
+    >>> detector.pixel = detector.pixel + Quantity(
+    ...     np.ones(shape=(5, 5)), unit="electron"
+    ... )
+
+    Convert to numpy, Quantity or xarray:
+
+    >>> detector.pixel.array
+    array([[2., ...., 2.],
+           ...,
+           [2., ..., 2.]])
+    >>> np.array(detector.pixel)
+    array([[2., ...., 2.],
+           ...,
+           [2., ..., 2.]])
+    >>> Quantity(detector.pixel)
+    <Quantity [[2., ...., 2.],
+              ...,
+              [2., ..., 2.]] electron>
+    >>> detector.pixel.to_xarray()
+    <xarray.DataArray 'pixel' (y: 5, x: 5)>
+    array([[2., ...., 2.],
+           ...,
+           [2., ..., 2.]])
+    Coordinates:
+      * y        (y) int64 0 1 2 3 4
+      * x        (x) int64 0 1 2 3 4
+    Attributes:
+        units:      electron
+        long_name:  Pixel
     """
 
     TYPE_LIST = (

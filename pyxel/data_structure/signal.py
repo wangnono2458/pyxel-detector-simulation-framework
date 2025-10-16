@@ -22,6 +22,62 @@ class Signal(ArrayBase):
     """Signal class defining and storing information of detector signal (unit: Volt).
 
     Accepted array types: ``np.float16``, ``np.float32``, ``np.float64``.
+
+    Examples
+    --------
+    Create an empty Signal container:
+
+    >>> import numpy as np
+    >>> from pyxel.detectors import CCD, CCDGeometry, Characteristics, Environment
+    >>> detector = CCD(
+    ...     geometry=CCDGeometry(row=5, col=5),
+    ...     characteristics=Characteristics(),
+    ...     environment=Environment(),
+    ... )
+    >>> detector.signal
+    Signal<UNINITIALIZED, shape=(5, 5)>
+    >>> detector.signal.ndim
+    0
+    >>> detector.signal.shape
+    ()
+
+    Perform arithmetic operations:
+
+    >>> detector.signal.array = detector.signal.array + np.ones(shape=(5, 5))
+    >>> detector.signal += np.ones(shape=(5, 5))
+
+    Using Astropy Quantity and a units:
+
+    >>> from astropy.units import Quantity
+    >>> detector.signal = Quantity(np.ones(shape=(5, 5)), unit="volt")
+    >>> detector.signal += Quantity(np.ones(shape=(5, 5)), unit="V")
+    >>> detector.signal = detector.signal + Quantity(np.ones(shape=(5, 5)), unit="mV")
+
+    Convert to numpy, Quantity or xarray:
+
+    >>> detector.signal.array
+    array([[2., ...., 2.],
+           ...,
+           [2., ..., 2.]])
+    >>> np.array(detector.signal)
+    array([[2., ...., 2.],
+           ...,
+           [2., ..., 2.]])
+    >>> Quantity(detector.signal)
+    <Quantity [[2., ...., 2.],
+              ...,
+              [2., ..., 2.]] volt>
+    >>> detector.signal.to_xarray()
+    <xarray.DataArray 'signal' (y: 5, x: 5)>
+    array([[2., ...., 2.],
+           ...,
+           [2., ..., 2.]])
+    Coordinates:
+      * y        (y) int64 0 1 2 3 4
+      * x        (x) int64 0 1 2 3 4
+    Attributes:
+        units:      volt
+        long_name:  signal
     """
 
     TYPE_LIST = (np.dtype(np.float16), np.dtype(np.float32), np.dtype(np.float64))

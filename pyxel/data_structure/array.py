@@ -7,15 +7,17 @@
 
 """Pyxel Array class."""
 
-from typing import TYPE_CHECKING, TypeGuard
+from typing import TYPE_CHECKING, TypeGuard, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
+from typing_extensions import Self
 
 from pyxel.util import convert_unit, get_size
 
 if TYPE_CHECKING:
     import xarray as xr
+    from astropy.units import Quantity
 
 
 def _is_array_initialized(data: np.ndarray | None) -> TypeGuard[np.ndarray]:
@@ -46,7 +48,7 @@ def _is_array_initialized(data: np.ndarray | None) -> TypeGuard[np.ndarray]:
 #       ... self._array = np.array(value)
 #       ... self._array.setflags(write=False)
 class ArrayBase:
-    """Base Array class."""
+    """Base Array class for 2D numpy array containers with shape, dtype and unit checks."""
 
     TYPE_LIST: tuple[np.dtype, ...] = ()
     NAME: str = ""
@@ -65,8 +67,8 @@ class ArrayBase:
 
         if self._array is not None:
             return f"{cls_name}<shape={self.shape}, dtype={self.dtype}>"
-        else:
-            return f"{cls_name}<UNINITIALIZED, shape={self.shape}>"
+
+        return f"{cls_name}<UNINITIALIZED, shape={self.shape}>"
 
     def __eq__(self, other) -> bool:
         is_true = type(self) is type(other) and self.shape == other.shape
@@ -74,22 +76,52 @@ class ArrayBase:
             is_true = np.array_equal(self.array, other.array)
         return is_true
 
-    def __iadd__(self, other: np.ndarray):
+    def __iadd__(self, other: Union[np.ndarray, "Quantity"]) -> Self:
+        # Late import
+        from astropy.units import Quantity, UnitConversionError
+
+        if isinstance(other, Quantity):
+            try:
+                converted_other: Quantity = other.to(self.unit)
+            except UnitConversionError as exc:
+                raise TypeError(
+                    f"Unit provided '{other.unit}' for bucket {self.__class__.__name__!r} "
+                    f"is not compatible with expected unit '{self.unit}'"
+                ) from exc
+            else:
+                other = np.asarray(converted_other.value, dtype=other.dtype)
+
         if self._array is not None:
             self.array += other
         else:
-            self.array = other
+            self.array = np.array(other)
+
         return self
 
-    def __add__(self, other: np.ndarray):
+    def __add__(self, other: Union[np.ndarray, "Quantity"]):
+        # Late import
+        from astropy.units import Quantity, UnitConversionError
+
+        if isinstance(other, Quantity):
+            try:
+                converted_other: Quantity = other.to(self.unit)
+            except UnitConversionError as exc:
+                raise TypeError(
+                    f"Unit provided '{other.unit}' for bucket {self.__class__.__name__!r} "
+                    f"is not compatible with expected unit '{self.unit}'"
+                ) from exc
+            else:
+                other = np.asarray(converted_other.value, dtype=other.dtype)
+
         if self._array is not None:
             self.array += other
         else:
-            self.array = other
+            self.array = np.array(other)
+
         return self
 
     def _validate(self, value: np.ndarray) -> None:
-        """Ensure that the new np array is the correct shape and type.
+        """Ensure that a Numpy array has the correct shape and type.
 
         Parameters
         ----------
@@ -115,11 +147,15 @@ class ArrayBase:
             )
 
         if value.shape != self._shape:
-            raise ValueError(f"Expected {cls_name} array is {self._shape}.")
+            raise ValueError(
+                f"{cls_name} array must have shape {self._shape}. Got {value.shape}"
+            )
 
     def __array__(self, dtype: np.dtype | None = None):
         if not isinstance(self._array, np.ndarray):
-            raise TypeError("Array not initialized.")
+            cls_name: str = self.__class__.__name__
+            raise TypeError(f"{cls_name} not initialized.")
+
         return np.asarray(self._array, dtype=dtype)
 
     @property
@@ -137,6 +173,11 @@ class ArrayBase:
     def dtype(self) -> np.dtype:
         """Return array data type."""
         return self.array.dtype
+
+    @property
+    def unit(self) -> str:
+        """Return the unit for this bucket."""
+        return self.UNIT
 
     def empty(self):
         """Empty the array by setting the array to None."""
@@ -164,14 +205,27 @@ class ArrayBase:
         return self._array
 
     @array.setter
-    def array(self, value: np.ndarray) -> None:
+    def array(self, value: Union[np.ndarray, "Quantity"]) -> None:
         """Overwrite the two-dimensional numpy array storing the data.
 
         Only accepts an array with the right type and shape.
         """
-        self._validate(value)
+        # Late import
+        from astropy.units import Quantity, UnitConversionError
 
-        self._array = value
+        if isinstance(value, Quantity):
+            try:
+                converted_other: Quantity = value.to(self.unit)
+            except UnitConversionError as exc:
+                raise TypeError(
+                    f"Unit provided '{value.unit}' for bucket {self.__class__.__name__!r} "
+                    f"is not compatible with expected unit '{self.unit}'"
+                ) from exc
+            else:
+                value = np.asarray(converted_other.value, dtype=value.dtype)
+
+        self._validate(value)
+        self._array = np.array(value)
 
     # TODO: Rename this method to '_update' ?
     def update(self, data: ArrayLike | None) -> None:
