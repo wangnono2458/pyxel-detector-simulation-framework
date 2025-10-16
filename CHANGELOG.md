@@ -18,6 +18,9 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
   (See [!1118](https://gitlab.com/esa/pyxel/-/merge_requests/1118)).
 * Add parameter 'data_path' in function 'load_image' to access a specific HDU in the FITS file(s).
   (See [!1119](https://gitlab.com/esa/pyxel/-/merge_requests/1119)).
+* In Characteristics, parameter 'pre_amplification' should be applied to channels instead of 
+  parameter 'charge_to_volt_conversion'.
+  (See [!1117](https://gitlab.com/esa/pyxel/-/merge_requests/1117)).
 
 ### Documentation
 
