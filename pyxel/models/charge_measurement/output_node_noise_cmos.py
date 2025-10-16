@@ -90,7 +90,8 @@ def output_node_noise_cmos(
         raise ValueError("'readout_noise_std' must be positive.")
 
     charge_readout_sensitivity = Quantity(
-        detector.characteristics.charge_to_volt_conversion, unit="V/electron"
+        detector.characteristics.charge_to_volt_conversion,
+        unit="V/electron",
     )
     # if isinstance(detector.characteristics.charge_to_volt_conversion, (float, int)):
     #     charge_readout_sensitivity[:] = detector.characteristics.charge_to_volt_conversion

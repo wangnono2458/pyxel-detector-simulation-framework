@@ -209,14 +209,15 @@ def cmos_2x3_with_channels():
             ),
         ),
         characteristics=Characteristics(
-            charge_to_volt_conversion={
+            charge_to_volt_conversion=1e-6,
+            pre_amplification={
                 "OP1": 1.0,
                 "OP2": 1.5,
                 "OP3": 2.0,
                 "OP4": 2.5,
                 "OP5": 3.0,
                 "OP6": 3.5,
-            }
+            },
         ),
         environment=Environment(),
     )
@@ -232,7 +233,7 @@ def test_output_node_noise_cmos_with_channels(cmos_2x3_with_channels: CMOS):
     # Create a test pattern based on channel-specific gains:
     test_pattern = np.array([[1, 1, 1], [1, 1, 1]])
     # Apply gains to the initial test pattern:
-    for channel, gain in detector.characteristics.charge_to_volt_conversion.items():
+    for channel, gain in detector.characteristics.pre_amplification.items():
         slice_y, slice_x = detector.geometry.get_channel_coord(channel)
         # Apply gain to specific pixels based on the channel coordinates
         detector.signal.array[slice_y, slice_x] = test_pattern[slice_y, slice_x] * gain
@@ -247,7 +248,7 @@ def test_output_node_noise_cmos_with_channels(cmos_2x3_with_channels: CMOS):
     new_signal = detector.signal.array
 
     exp_signal = np.array(
-        [[1.09100598, 1.9428603, 3.45815312], [5.44291645, 6.61554205, -1.6689306]]
+        [[1.00000009, 1.5000003, 2.00000073], [2.50000118, 3.00000121, 3.49999852]],
     )
     np.testing.assert_allclose(actual=new_signal, desired=exp_signal, rtol=1e-5)
 
