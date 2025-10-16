@@ -7,68 +7,52 @@
 
 """Charge readout model."""
 
-import numpy as np
+from astropy.units import Quantity
 
 from pyxel.detectors import Detector
 
 
-def apply_gain(pixel_2d: np.ndarray, gain: float) -> np.ndarray:
-    """Apply a gain (in V/e-) to a pixel array (in e-).
+def apply_gain(pixel_2d: Quantity, gain: Quantity) -> Quantity:
+    """Apply an electronic gain (in V/e-) to convert Pixel charges (in e-) into Signal (in V).
 
     Parameters
     ----------
     pixel_2d : ndarray
         2D array of pixels. Unit: e-
     gain : float
-        Gain to apply. Unit: V/e-
+        Gain factor to apply. Unit: V/e-
 
     Returns
     -------
-    ndarray
+    Quantity
         2D array of signals. Unit: V
     """
     new_data_2d = pixel_2d * gain
-
-    return new_data_2d
+    return new_data_2d.to("V")
 
 
 def simple_measurement(detector: Detector, gain: float | None = None) -> None:
-    """Convert the pixel array into signal array.
+    """Convert detector Pixel charge values (in electron) into Signal values (in Volt) using a specified gain.
 
     Notes
     -----
-    If no gain is provided, then its value will be the sensitivity of charge readout
-    provided in the ``Detector`` object.
+    If no gain is provided, the detector's internal ``detector.characteristics.charge_to_volt_conversion`` parameter is used.
 
     Parameters
     ----------
     detector : Detector
         Pyxel Detector object.
     gain : float, optional
-        Gain to apply. By default, this is the sensitivity of charge readout. Unit: V/e-
+        Gain factor to apply. If not provided, the default is ``detector.characteristics.charge_to_volt_conversion``. Unit: V/e-
     """
+
     if gain is None:
-        detector.signal.array = np.zeros_like(detector.pixel.array, dtype=float)
+        gain_to_apply = Quantity(
+            detector.characteristics.charge_to_volt_conversion,
+            unit="V/electron",
+        )
 
-        # If _channels_gain is a single float, apply it uniformly
-        if isinstance(detector.characteristics._charge_to_volt_conversion, float | int):
-            detector.signal.array = (
-                detector.pixel.array
-                * detector.characteristics._charge_to_volt_conversion
-            )
-        else:
-            # Apply channel-specific gains using coordinates
-            for (
-                channel,
-                gain,
-            ) in detector.characteristics.charge_to_volt_conversion.items():
-                slice_y, slice_x = detector.geometry.get_channel_coord(channel)
-                # Apply gain to specific pixels based on the channel coordinates
-                detector.signal.array[slice_y, slice_x] = (
-                    detector.pixel.array[slice_y, slice_x] * gain
-                )
     else:
-        gain = float(gain)
-        detector.signal.array = np.asarray(detector.pixel.array * gain, dtype=float)
+        gain_to_apply = Quantity(gain, unit="V/electron")
 
-    # Apply a gain (in V/e-) to a pixel array (in e-)
+    detector.signal = apply_gain(pixel_2d=Quantity(detector.pixel), gain=gain_to_apply)

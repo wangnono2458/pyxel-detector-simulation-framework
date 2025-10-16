@@ -87,12 +87,8 @@ def ccd_2x2_with_channels() -> CCD:
         ),
         environment=Environment(),
         characteristics=Characteristics(
-            charge_to_volt_conversion={
-                "OP9": 1,
-                "OP13": 2,
-                "OP1": 3,
-                "OP5": 4,
-            }
+            charge_to_volt_conversion=1e-6,
+            pre_amplification={"OP9": 1.0, "OP13": 2.0, "OP1": 3.0, "OP5": 4.0},
         ),
     )
     detector.signal.array = np.zeros(detector.geometry.shape, dtype=float)
@@ -115,10 +111,7 @@ def test_simple_measurement_with_channels(ccd_2x2_with_channels: CCD, gain):
     if gain is None:
         simple_measurement(detector)
         exp_signal = np.array(
-            [
-                [0.22733602, 0.63351668],
-                [2.02876401, 1.5644382],
-            ],
+            [[2.2733602e-07, 3.1675834e-07], [6.7625467e-07, 3.9110955e-07]]
         )
     else:
         simple_measurement(detector, gain=gain)

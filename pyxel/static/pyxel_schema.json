@@ -4842,7 +4842,7 @@
     },
     "ModelChargeMeasurementSimpleMeasurement": {
       "additionalProperties": false,
-      "description": "Convert the pixel array into signal array.",
+      "description": "Convert detector Pixel charge values (in electron) into Signal values (in Volt) using a specified gain.",
       "properties": {
         "arguments": {
           "additionalProperties": false,
@@ -4852,7 +4852,7 @@
           "properties": {
             "gain": {
               "default": null,
-              "description": "Gain to apply. By default, this is the sensitivity of charge readout. Unit: V/e-",
+              "description": "Gain factor to apply. If not provided, the default is ``detector.characteristics.charge_to_volt_conversion``. Unit: V/e-",
               "title": "gain",
               "type": [
                 "number",
