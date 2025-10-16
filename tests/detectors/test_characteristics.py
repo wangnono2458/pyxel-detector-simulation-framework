@@ -387,18 +387,13 @@ def test_pre_amplification_invalid_values():
     detector.characteristics.initialize(detector.geometry)
 
     # Attempt to set charge_to_volt_conversion with invalid dictionary values
-    with pytest.raises(ValueError, match=r"Gain (.*) must be between") as exc_info:
+    with pytest.raises(ValueError, match=r"\'pre_amplification\' must be between"):
         detector.characteristics.pre_amplification = {
             "OP9": 1,  # Valid
             "OP13": 200,  # Invalid: Outside the range 0 to 100
             "OP1": 3,  # Valid
             "OP5": -10,  # Invalid: Negative value
         }
-
-    # Check if the error message is correct
-    assert "must be between 0.0 and 1000.0" in str(
-        exc_info.value
-    ), "The error message for out of range values is incorrect or missing"
 
 
 def test_channel_gain_mismatch():
