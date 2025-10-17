@@ -541,8 +541,10 @@ class APDCharacteristics:
     avalanche_settings : AvalancheSettings
     quantum_efficiency : float, optional
         Quantum efficiency.
-    charge_to_volt : ChargeToVoltSettings, optional
-        TBW.
+    charge_to_volt_conversion : float, optional
+        Sensitivity of charge readout. Unit: V/e-
+    pre_amplification : float, optional
+        Gain of pre-amplifier. Unit: V/V
     full_well_capacity : float, optional
         Full well capacity. Unit: e-
     adc_bit_resolution : int, optional
@@ -560,25 +562,32 @@ class APDCharacteristics:
         # Common parameters #
         #####################
         quantum_efficiency: float | None = None,  # unit: NA
-        charge_to_volt: ChargeToVoltSettings | None = None,
+        charge_to_volt: ChargeToVoltSettings | None = None,  # unit: volt/electron
+        pre_amplification: float | dict[str, float] | None = None,  # unit: V/V
         full_well_capacity: float | None = None,  # unit: electron
         adc_bit_resolution: int | None = None,
         adc_voltage_range: tuple[float, float] | None = None,  # unit: V
     ):
+        if quantum_efficiency is not None and not (0.0 <= quantum_efficiency <= 1.0):
+            raise ValueError("'quantum_efficiency' must be between 0.0 and 1.0.")
+
+        if isinstance(pre_amplification, float) and not (
+            0.0 <= pre_amplification <= 10_000.0
+        ):
+            raise ValueError("'pre_amplification' must be between 0.0 and 10000.0.")
+
+        if full_well_capacity is not None and not (0.0 <= full_well_capacity <= 1.0e7):
+            raise ValueError("'full_well_capacity' must be between 0 and 1e7.")
+
         self._avalanche_settings: AvalancheSettings = avalanche_settings
         self._bias_to_node: ConverterValues | ConverterTable | ConverterFunction = (
             bias_to_node
         )
 
-        if quantum_efficiency and not (0.0 <= quantum_efficiency <= 1.0):
-            raise ValueError("'quantum_efficiency' must be between 0.0 and 1.0.")
-
         if adc_bit_resolution and not (4 <= adc_bit_resolution <= 64):
             raise ValueError("'adc_bit_resolution' must be between 4 and 64.")
         if adc_voltage_range and not len(adc_voltage_range) == 2:
             raise ValueError("Voltage range must have length of 2.")
-        if full_well_capacity and not (0.0 <= full_well_capacity <= 1.0e7):
-            raise ValueError("'full_well_capacity' must be between 0 and 1e7.")
 
         self._quantum_efficiency: float | None = quantum_efficiency
         self._full_well_capacity: float | None = full_well_capacity

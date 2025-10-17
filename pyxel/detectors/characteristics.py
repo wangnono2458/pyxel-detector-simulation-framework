@@ -17,7 +17,9 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import TYPE_CHECKING
 
 import numpy as np
+from typing_extensions import Self, deprecated
 
+from pyxel.detectors import ChargeToVoltSettings
 from pyxel.util import get_size, get_uninitialized_error
 
 if TYPE_CHECKING:
@@ -37,16 +39,16 @@ class Characteristics:
         Gain of pre-amplifier. Unit: V/V
     full_well_capacity : float, optional
         Full well capacity. Unit: e-
-    adc_voltage_range : tuple of floats, optional
-        ADC voltage range. Unit: V
     adc_bit_resolution : int, optional
         ADC bit resolution.
+    adc_voltage_range : tuple of floats, optional
+        ADC voltage range. Unit: V
     """
 
     def __init__(
         self,
         quantum_efficiency: float | None = None,  # unit: NA
-        charge_to_volt_conversion: float | None = None,  # unit: volt/electron
+        charge_to_volt: ChargeToVoltSettings | None = None,  # unit: volt/electron
         pre_amplification: float | dict[str, float] | None = None,  # unit: V/V
         full_well_capacity: float | None = None,  # unit: electron
         adc_bit_resolution: int | None = None,
