@@ -16,6 +16,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
   (See [!1106](https://gitlab.com/esa/pyxel/-/merge_requests/1106)).
 * Improve compatibility of containers 'Photon', 'Pixel', ... with Astropy Quantity.
   (See [!1118](https://gitlab.com/esa/pyxel/-/merge_requests/1118)).
+* Add parameter 'data_path' in function 'load_image' to access a specific HDU in the FITS file(s).
+  (See [!1119](https://gitlab.com/esa/pyxel/-/merge_requests/1119)).
 
 ### Documentation
 
