@@ -21,6 +21,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 * In Characteristics, parameter 'pre_amplification' should be applied to channels instead of 
   parameter 'charge_to_volt_conversion'.
   (See [!1117](https://gitlab.com/esa/pyxel/-/merge_requests/1117)).
+* Speedup pipelines with multiple readout time.
+  (See [!1115](https://gitlab.com/esa/pyxel/-/merge_requests/1115)).
 
 ### Documentation
 
