@@ -672,9 +672,9 @@ class APDCharacteristics:
     #       Refactor these methods
     def initialize(self, geometry: "APDGeometry"):
         self._geometry = geometry
-        charge_to_volt = self.charge_to_volt_conversion
-        if charge_to_volt is not None:
-            self._build_channels_gain(value=charge_to_volt)
+        pre_amplification = self.pre_amplification
+        if pre_amplification is not None:
+            self._build_channels_gain(value=pre_amplification)
 
     @property
     def quantum_efficiency(self) -> float:
@@ -751,13 +751,14 @@ class APDCharacteristics:
         return self.bias_to_node_capacitance(self.avalanche_settings.avalanche_bias)
 
     @property
-    def charge_to_volt_conversion(self) -> float:
+    def charge_to_volt_conversion(self) -> float | np.ndarray:
         """Compute charge-to-voltage conversion factor."""
         if self._charge_to_volt and self._charge_to_volt.has_charge_to_volt():
             return self._charge_to_volt.factor
 
         return detector_gain(
-            capacitance=self.node_capacitance, roic_gain=self.roic_gain
+            capacitance=self.node_capacitance,
+            roic_gain=self.roic_gain,
         )
 
     @property
@@ -820,13 +821,21 @@ class APDCharacteristics:
 
     @property
     def system_gain(self) -> float:
-        """Compute the full system gain based on detector type."""
-        return (
+        """Compute the full system gain (in adu/electron) based on detector type."""
+        # Late import
+        from astropy.units import Quantity
+
+        gain: Quantity = (
             self.quantum_efficiency
-            * self.avalanche_settings.avalanche_gain
-            * self.charge_to_volt_conversion
-            * 2**self.adc_bit_resolution
-        ) / (max(self.adc_voltage_range) - min(self.adc_voltage_range))
+            * Quantity(self.avalanche_settings.avalanche_gain, unit="electron/electron")
+            * Quantity(self.charge_to_volt_conversion, unit="V/electron")
+            * Quantity(2**self.adc_bit_resolution, unit="adu")
+        ) / (
+            np.max(Quantity(self.adc_voltage_range, unit="V"))
+            - np.min(Quantity(self.adc_voltage_range, unit="V"))
+        )
+
+        return float(gain.to("adu/electron").value)
 
     @property
     def numbytes(self) -> int:
@@ -893,9 +902,10 @@ class APDCharacteristics:
             dct["avalanche_settings"]
         )
 
+        param_charge_to_volt: dict | None = dct.get("charge_to_volt_settings")
         charge_to_volt_settings: ChargeToVoltSettings | None = (
-            ChargeToVoltSettings.from_dict(dct["charge_to_volt_settings"])
-            if "charge_to_volt_settings" in dct
+            ChargeToVoltSettings.from_dict(param_charge_to_volt)
+            if param_charge_to_volt is not None
             else None
         )
 

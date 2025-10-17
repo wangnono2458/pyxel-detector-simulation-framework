@@ -939,6 +939,7 @@ def test_bias_to_node_capacitance_valid(bias, expected):
             {
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(2.65, 73.7), (4.0, 60.0)]},
+                "charge_to_volt_settings": None,
                 "avalanche_settings": {
                     "avalanche_gain": 1.0,
                     "common_voltage": None,
@@ -967,6 +968,7 @@ def test_bias_to_node_capacitance_valid(bias, expected):
             {
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(2.65, 73.7), (4.0, 60.0)]},
+                "charge_to_volt_settings": None,
                 "avalanche_settings": {
                     "avalanche_gain": 1.0,
                     "common_voltage": 2.0,

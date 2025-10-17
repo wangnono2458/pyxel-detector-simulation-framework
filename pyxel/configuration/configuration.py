@@ -829,7 +829,7 @@ def to_apd_characteristics(dct: dict | None) -> APDCharacteristics:
 
     charge_to_volt: ChargeToVoltSettings | None = None
     if "charge_to_volt" in new_dct:
-        charge_to_volt = ChargeToVoltSettings.from_dict(dct["charge_to_volt"])
+        charge_to_volt = ChargeToVoltSettings.from_dict(new_dct["charge_to_volt"])
 
     return APDCharacteristics(
         roic_gain=new_dct["roic_gain"],
