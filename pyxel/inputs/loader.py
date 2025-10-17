@@ -9,6 +9,7 @@
 
 import csv
 import sys
+import warnings
 from collections.abc import Sequence
 from contextlib import suppress
 from io import StringIO
@@ -133,14 +134,36 @@ def load_header(
         raise
 
 
-def load_image(filename: str | Path) -> np.ndarray:
-    """Load a 2D image.
+# ruff: noqa: C901
+def load_image(
+    filename: str | Path,
+    data_path: int | str | None = None,
+) -> np.ndarray:
+    """Load a 2D image array from a local or remote file.
+
+    This function reads image data from multiple file formats commonly used in scientific
+    and image processing workflows.
+    The supported formats include binary, text and raster image types such as
+    FITS, NPY, TXT, DATA, JPEG, PNG, BMP, TIFF.
+
+    The ``data_path`` parameter acts as a unified way to select internal data
+    structures within hierarchical file formats such as HDUs in FITS files,
+    groups in HDF5/Zarr/NetCDF files or references in ASDF files.
 
     Parameters
     ----------
     filename : str or Path
-        Filename to read an image.
-        {.npy, .fits, .txt, .data, .jpg, .jpeg, .bmp, .png, .tiff} are accepted.
+        Path or URL of the image file to load.
+        Supported file extensions: ``.npy``, ``.fits``, ``.txt``, ``.data``,
+        ``.jpg``, ``.jpeg``, ``.bmp``, ``.png``, ``.tiff``, ``.tif``.
+    data_path : int or str or None, optional
+        Identifier of the dataset within the file. Depending on the file format, this can be:
+            * an HDU index or name (for FITS),
+            * a group or variable path (for netCDF, HDF5, Zarr),
+            * a reference path (for ASDF).
+
+        If ``None``, the default dataset is loaded.
+        Ignored for flat (non-hierarchical) formats.
 
     Returns
     -------
@@ -189,15 +212,50 @@ def load_image(filename: str | Path) -> np.ndarray:
             # Late import to speed-up general import time
             from astropy.io import fits
 
-            data_2d: np.ndarray = fits.getdata(
-                url_path, use_fsspec=True, fsspec_kwargs=extras
-            )
+            if isinstance(data_path, str):
+                try:
+                    data_2d: np.ndarray = fits.getdata(
+                        url_path,
+                        use_fsspec=True,
+                        fsspec_kwargs=extras,
+                        extname=data_path,
+                    )
+                except KeyError as exc:
+                    raise OSError(f"Cannot access {data_path=} for {url_path}") from exc
+
+            elif isinstance(data_path, int):
+                try:
+                    data_2d = fits.getdata(
+                        url_path,
+                        use_fsspec=True,
+                        fsspec_kwargs=extras,
+                        ext=data_path,
+                    )
+                except IndexError as exc:
+                    raise OSError(f"Cannot access {data_path=} for {url_path}") from exc
+
+            else:
+                data_2d = fits.getdata(
+                    url_path,
+                    use_fsspec=True,
+                    fsspec_kwargs=extras,
+                )
 
         elif suffix.startswith(".npy"):
+            if data_path is not None:
+                warnings.warn(
+                    f"{data_path=} is not used with suffix: {suffix!r}", stacklevel=2
+                )
+
             with fsspec.open(url_path, mode="rb", **extras) as file_handler:
                 data_2d = np.load(file_handler)
 
         elif suffix.startswith((".txt", ".data")):
+            if data_path is not None:
+                warnings.warn(
+                    f"{data_path=} is not used with suffix: {suffix!r}", stacklevel=2
+                )
+
             for sep in ("\t", " ", ",", "|", ";"):
                 with suppress(ValueError):
                     with fsspec.open(url_path, mode="r", **extras) as file_handler:
@@ -209,6 +267,11 @@ def load_image(filename: str | Path) -> np.ndarray:
                 )
 
         elif suffix.startswith((".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif")):
+            if data_path is not None:
+                warnings.warn(
+                    f"{data_path=} is not used with suffix: {suffix!r}", stacklevel=2
+                )
+
             with fsspec.open(url_path, mode="rb", **extras) as file_handler:
                 # Late import to speedup start-up time
                 from PIL import Image
@@ -225,6 +288,7 @@ def load_image(filename: str | Path) -> np.ndarray:
                 "Image format not supported. List of supported image formats: "
                 ".npy, .fits, .txt, .data, .jpg, .jpeg, .bmp, .png, .tiff, .tif."
             )
+
     except Exception as exc:
         if sys.version_info >= (3, 11):
             exc.add_note(

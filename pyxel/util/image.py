@@ -151,6 +151,7 @@ def fit_into_array(
 def load_cropped_and_aligned_image(
     shape: tuple[int, ...],
     filename: str | Path,
+    data_path: int | str | None = None,
     position_x: int = 0,
     position_y: int = 0,
     align: (
@@ -158,32 +159,42 @@ def load_cropped_and_aligned_image(
     ) = None,
     allow_smaller_array: bool = True,
 ) -> np.ndarray:
-    """Load image from file and fit to detector shape.
+    """Load a 2D image from a file and fit it into a detector array.
 
     Parameters
     ----------
     shape: tuple
-        Detector shape.
-    filename: str
+        Target array shape (rows, columns) matching the detector geometry.
+    filename: str or Path
         Path to image file.
-    position_x: tuple
-        Index of starting column, used when fitting image to detector.
-    position_y: tuple
-        Index of starting row, used when fitting image to detector.
-    align: Literal
-        Keyword to align the image to detector. Can be any from:
-        ("center", "top_left", "top_right", "bottom_left", "bottom_right")
+    data_path : int or str or None, optional
+        Identifier of the dataset within the file. Depending on the file format,
+        this can be:
+            * an HDU index or name (for FITS),
+            * a group or variable path (for netCDF, HDF5, Zarr),
+            * a reference path (for ASDF).
+        Ignored for flat (non-hierarchical) formats.
+    position_x: int, optional
+        Column index of the top-left corner where the image will be placed in the detector array.
+    position_y: int, optional
+        Tow index of the top-left corner where the image will be placed in the detector array.
+    align: "center", "top_left", "top_right", "bottom_left", "bottom_right"
+        Alignment mode used to position the imgae relative to the detector shape.
+    allow_smaller_array : bool, optional
+        If ``True`, smaller input arrays are allowed ad will be padded to fit the detector shape.
+        If ``False``, raises an error when the input array is smaller than the target shape.
 
     Returns
     -------
-    cropped_and_aligned_image: ndarray
+    ndarray
+        The cropped, padded and aligned 2D image array, set as read-only.
     """
     # Load 2d image (which can be smaller or
     #                         larger in dimensions than detector imaging area)
     from pyxel.inputs import load_image
 
     try:
-        image_2d: np.ndarray = load_image(filename)
+        image_2d: np.ndarray = load_image(filename, data_path=data_path)
     except OSError as exc:
         if sys.version_info >= (3, 11):
             exc.add_note(f"Cannot open filename: '{filename}'")
