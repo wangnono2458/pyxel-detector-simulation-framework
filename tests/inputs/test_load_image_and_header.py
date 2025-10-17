@@ -140,6 +140,25 @@ def valid_data2d_http_hostname(
 
 
 @pytest.fixture
+def data_2d_multi_hdus(tmp_path: Path) -> Path:
+    """Generate a 2D fits file with multiple HDUs."""
+    filename = tmp_path / "data_multi_hdus.fits"
+
+    primary_2d = np.array([[5, 6], [7, 8]], dtype=np.uint16)
+    secondary_2d = np.array([[9, 10], [11, 12]], dtype=np.uint16)
+
+    hdu_primary = fits.PrimaryHDU(primary_2d, header=fits.Header({"hello": "world"}))
+    hdu_secondary = fits.ImageHDU(
+        secondary_2d, header=fits.Header({"foo": "bar"}), name="OTHER_IMAGE"
+    )
+
+    hdus = fits.HDUList([hdu_primary, hdu_secondary])
+    hdus.writeto(filename)
+
+    return filename
+
+
+@pytest.fixture
 def invalid_data2d_hostname(
     tmp_path: Path, httpserver: pytest_httpserver.HTTPServer
 ) -> str:
@@ -287,6 +306,39 @@ def test_load_image(
 
         # Check 'data_2d
         np.testing.assert_equal(data_2d, exp_data)
+
+
+def test_load_image_with_data_path(data_2d_multi_hdus: Path):
+    """Test function 'load_image' with parameter 'data_path'."""
+    filename: Path = data_2d_multi_hdus
+    assert filename.exists()
+
+    exp_primary_2d = np.array([[5, 6], [7, 8]], dtype=np.uint16)
+    exp_secondary_2d = np.array([[9, 10], [11, 12]], dtype=np.uint16)
+
+    # Load data with 'data_path' param
+    data_2d = load_image(filename)
+    np.testing.assert_equal(data_2d, exp_primary_2d)
+
+    # Load data with 'data_path' as an int
+    data_2d = load_image(filename, data_path=0)
+    np.testing.assert_equal(data_2d, exp_primary_2d)
+
+    data_2d = load_image(filename, data_path=1)
+    np.testing.assert_equal(data_2d, exp_secondary_2d)
+
+    with pytest.raises(OSError, match="Cannot access"):
+        _ = load_image(filename, data_path=2)
+
+    # Load data with 'data_path' as a str
+    data_2d = load_image(filename, data_path="PRIMARY")
+    np.testing.assert_equal(data_2d, exp_primary_2d)
+
+    data_2d = load_image(filename, data_path="OTHER_IMAGE")
+    np.testing.assert_equal(data_2d, exp_secondary_2d)
+
+    with pytest.raises(OSError, match="Cannot access"):
+        _ = load_image(filename, data_path="NOT_EXISTING")
 
 
 @pytest.mark.skip(reason="Fix these tests")
