@@ -332,7 +332,7 @@ def test_pre_amplification_with_channels():
         dtype=float,
     )
     np.testing.assert_allclose(
-        detector.characteristics.channels_pre_amplification, expected_gain_matrix
+        detector.characteristics.pre_amplification_map, expected_gain_matrix
     )
 
     # Change the values and validate again
@@ -358,7 +358,7 @@ def test_pre_amplification_with_channels():
         dtype=float,
     )
     np.testing.assert_allclose(
-        detector.characteristics.channels_pre_amplification, expected_gain_matrix
+        detector.characteristics.pre_amplification_map, expected_gain_matrix
     )
 
 

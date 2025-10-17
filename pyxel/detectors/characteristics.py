@@ -17,13 +17,113 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import TYPE_CHECKING
 
 import numpy as np
-from typing_extensions import Self, deprecated
 
 from pyxel.detectors import ChargeToVoltSettings
 from pyxel.util import get_size, get_uninitialized_error
 
 if TYPE_CHECKING:
     from pyxel.detectors import Geometry
+
+
+def validate_pre_amplification(
+    pre_amplification: int | float | dict[str, int | float] | None,
+) -> None:
+    """Validate the pre-amplification gain value(s).
+
+    Ensure that the pre-amplification gain(s) are within a valid range.
+
+    Parameters
+    ----------
+    pre_amplification : int, float, dict or None
+        Pre-amplifier gain(s). Can be a single value applied to all pixels
+        or a dictionary mapping channel names to individual gains. Unit: V/V
+
+    Raises
+    ------
+    ValueError
+        If one or more gain values are outside the valid range.
+    TypeError
+        If the provided type is unsupported.
+    """
+    if pre_amplification is None:
+        return
+
+    elif isinstance(pre_amplification, int | float) and not (
+        0.0 <= pre_amplification <= 10_000.0
+    ):
+        raise ValueError("'pre_amplification' must be between 0.0 and 10000.0.")
+
+    elif isinstance(pre_amplification, dict):
+        for channel, gain in pre_amplification.items():
+            if not (0.0 <= gain <= 10_000.0):
+                raise ValueError(
+                    f"'pre_amplification' must be between 0.0 and 10000.0. for {channel=}"
+                )
+    else:
+        raise TypeError(
+            "'pre_amplification' must be a number, a dictionary of numbers or None"
+        )
+
+
+def to_pre_amplification_map(
+    pre_amplification: int | float | dict[str, float] | None,
+    geometry: "Geometry",
+) -> float | np.ndarray | None:
+    """Resolve pre-amplification configuration into a number or a 2D array.
+
+    Convert a per-channel pre-amplification gain definition into a 2D array
+    matching the detector geometry.
+    This allows subsequent models to operate channel-wise on pre-amplification values.
+
+    Parameters
+    ----------
+    pre_amplification : int, float, dict or None
+        Pre-amplifier gain(s). Can be a single value applied to all pixels
+        or a dictionary mapping channel names to individual gains. Unit: V/V
+
+    geometry : Geometry
+        Detector geometry definition, including channel layout.
+
+    Returns
+    -------
+    float or ndarray or None
+
+    Raises
+    ------
+    ValueError
+        If the provided channels do not match those in ``geometry``.
+    """
+    # Check
+    if pre_amplification is None:
+        return None
+
+    elif isinstance(pre_amplification, int | float):
+        return pre_amplification
+
+    elif isinstance(pre_amplification, dict):
+        # Perform channel mismatch check after processing all gains
+        if geometry.channels is None:
+            raise ValueError("Missing parameter '.channels' in Geometry.")
+
+        defined_channels = set(geometry.channels.readout_position.keys())
+        input_channels = set(pre_amplification)
+        if defined_channels != input_channels:
+            raise ValueError(
+                "Mismatch between the defined channels in geometry and provided channel gains."
+            )
+
+        gain_map_2d = np.zeros(shape=geometry.shape, dtype=float)
+
+        for channel, gain in pre_amplification.items():
+            slice_y, slice_x = geometry.get_channel_coord(channel)
+            gain_map_2d[slice_y, slice_x] = gain
+
+        return gain_map_2d
+
+    else:
+        raise TypeError(
+            "'pre_amplification' must be a number, a dictionary of numbers or None"
+        )
 
 
 class Characteristics:
@@ -64,10 +164,7 @@ class Characteristics:
                 "'charge_to_volt_conversion' must be between 0.0 and 100.0."
             )
 
-        if isinstance(pre_amplification, float) and not (
-            0.0 <= pre_amplification <= 10_000.0
-        ):
-            raise ValueError("'pre_amplification' must be between 0.0 and 10000.0.")
+        validate_pre_amplification(pre_amplification)
 
         if full_well_capacity is not None and not (0.0 <= full_well_capacity <= 1.0e7):
             raise ValueError("'full_well_capacity' must be between 0 and 1e7.")
@@ -85,10 +182,10 @@ class Characteristics:
         self._quantum_efficiency: float | None = quantum_efficiency
         self._charge_to_volt_conversion: float | None = charge_to_volt_conversion
 
-        # TODO: This variable is available in class 'Characteristics' and 'APDCharacteristics'
-        #       Refactor this
-        self._channels_pre_amplification: float | np.ndarray | None = None
         self._pre_amplification: float | dict[str, float] | None = pre_amplification
+        self._pre_amplification_map: float | np.ndarray | None = (
+            None  # Geometry is not yet defined at this stage
+        )
 
         self._full_well_capacity: float | None = full_well_capacity
 
@@ -118,47 +215,11 @@ class Characteristics:
             and self._adc_bit_resolution == other._adc_bit_resolution
         )
 
-    # TODO: This method exists in class 'Characteristics' and 'APDCharacteristics'
-    #       Refactor this
-    def _build_channels_gain(
-        self, value: int | float | dict[str, float] | None
-    ) -> None:
-        if value is None:
-            self._channels_pre_amplification = None
-
-        elif isinstance(value, float | int):
-            self._channels_pre_amplification = value
-
-        elif isinstance(value, dict):
-            if self._geometry is None:
-                raise ValueError(
-                    "Geometry must be initialized before setting channel gains."
-                )
-
-            if self._geometry.channels is None:
-                raise ValueError("Missing parameter '.channels' in Geometry.")
-
-            value_2d = np.zeros(shape=self._geometry.shape, dtype=float)
-
-            for channel, gain in value.items():
-                slice_y, slice_x = self._geometry.get_channel_coord(channel)
-                value_2d[slice_y, slice_x] = gain
-
-            self._channels_pre_amplification = value_2d
-
-            # Perform channel mismatch check after processing all gains
-            defined_channels = set(self._geometry.channels.readout_position.keys())
-            input_channels = set(value.keys())
-            if defined_channels != input_channels:
-                raise ValueError(
-                    "Mismatch between the defined channels in geometry and provided channel gains."
-                )
-
-    # TODO: This method is similar in 'APDCharacteristics and 'Characteristics'
-    #       Refactor these methods
     def initialize(self, geometry: "Geometry"):
         self._geometry = geometry
-        self._build_channels_gain(value=self._pre_amplification)
+        self._pre_amplification_map = to_pre_amplification_map(
+            self._pre_amplification, geometry=self._geometry
+        )
 
     @property
     def quantum_efficiency(self) -> float:
@@ -205,8 +266,8 @@ class Characteristics:
         self._charge_to_volt_conversion = value
 
     @property
-    def channels_pre_amplification(self) -> float | np.ndarray:
-        if self._channels_pre_amplification is None:
+    def pre_amplification_map(self) -> float | np.ndarray:
+        if self._pre_amplification_map is None:
             raise ValueError(
                 get_uninitialized_error(
                     name="channels_gain",
@@ -214,7 +275,7 @@ class Characteristics:
                 )
             )
 
-        return self._channels_pre_amplification
+        return self._pre_amplification_map
 
     @property
     def pre_amplification(self) -> float | dict[str, float]:
@@ -231,23 +292,17 @@ class Characteristics:
 
     @pre_amplification.setter
     def pre_amplification(self, value: float | dict[str, float]) -> None:
-        """Set voltage pre-amplification gain.."""
-        if isinstance(value, float):
-            if not (0.0 <= value <= 10_000.0):
-                raise ValueError("'pre_amplification' must be between 0.0 and 10000.0.")
+        """Set voltage pre-amplification gain."""
+        if self._geometry is None:
+            raise RuntimeError(
+                "There is no 'Geometry' defined ! Please run method '.initialize(...)'"
+            )
 
-            self._build_channels_gain(value=value)
-            self._pre_amplification = value
+        validate_pre_amplification(value)
+        pre_amplification_map = to_pre_amplification_map(value, geometry=self._geometry)
 
-        elif isinstance(value, dict):
-            for channel, pre_ampli in value.items():
-                if not (0.0 <= pre_ampli <= 10_000.0):
-                    raise ValueError(
-                        f"'pre_amplification' must be between 0.0 and 10000.0. for {channel=}"
-                    )
-
-            self._build_channels_gain(value=value)
-            self._pre_amplification = value
+        self._pre_amplification = value
+        self._pre_amplification_map = pre_amplification_map
 
     @property
     def adc_bit_resolution(self) -> int:
@@ -315,7 +370,7 @@ class Characteristics:
         # TODO: Is it correct ?
         gain: Quantity = (
             self.quantum_efficiency
-            * Quantity(self.channels_pre_amplification, unit="V/V")
+            * Quantity(self.pre_amplification_map, unit="V/V")
             * Quantity(2**self.adc_bit_resolution, unit="adu")
         ) / (
             np.max(Quantity(self.adc_voltage_range, unit="V"))
