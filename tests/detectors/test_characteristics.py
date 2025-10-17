@@ -282,7 +282,7 @@ def test_charge_to_volt_conversion_setter(charge_to_volt_conversion):
     assert obj.charge_to_volt_conversion == charge_to_volt_conversion
 
 
-def test_charge_to_volt_conversion_with_channels():
+def test_pre_amplification_with_channels():
     # Setup the detector with geometry and characteristics
     detector = CCD(
         geometry=CCDGeometry(
@@ -308,13 +308,13 @@ def test_charge_to_volt_conversion_with_channels():
     detector.characteristics.initialize(detector.geometry)
 
     # Set charge_to_volt_conversion with dictionary values and validate
-    detector.characteristics.charge_to_volt_conversion = {
+    detector.characteristics.pre_amplification = {
         "OP9": 1,
         "OP13": 2,
         "OP1": 3,
         "OP5": 4,
     }
-    assert detector.characteristics.charge_to_volt_conversion == {
+    assert detector.characteristics.pre_amplification == {
         "OP9": 1,
         "OP13": 2,
         "OP1": 3,
@@ -332,17 +332,17 @@ def test_charge_to_volt_conversion_with_channels():
         dtype=float,
     )
     np.testing.assert_allclose(
-        detector.characteristics.channels_gain, expected_gain_matrix
+        detector.characteristics.channels_pre_amplification, expected_gain_matrix
     )
 
     # Change the values and validate again
-    detector.characteristics.charge_to_volt_conversion = {
+    detector.characteristics.pre_amplification = {
         "OP9": 1.1,
         "OP13": 2.2,
         "OP1": 3.3,
         "OP5": 4.4,
     }
-    assert detector.characteristics.charge_to_volt_conversion == {
+    assert detector.characteristics.pre_amplification == {
         "OP9": 1.1,
         "OP13": 2.2,
         "OP1": 3.3,
@@ -358,11 +358,11 @@ def test_charge_to_volt_conversion_with_channels():
         dtype=float,
     )
     np.testing.assert_allclose(
-        detector.characteristics.channels_gain, expected_gain_matrix
+        detector.characteristics.channels_pre_amplification, expected_gain_matrix
     )
 
 
-def test_charge_to_volt_conversion_invalid_values():
+def test_pre_amplification_invalid_values():
     detector = CCD(
         geometry=CCDGeometry(
             row=4,
@@ -387,18 +387,13 @@ def test_charge_to_volt_conversion_invalid_values():
     detector.characteristics.initialize(detector.geometry)
 
     # Attempt to set charge_to_volt_conversion with invalid dictionary values
-    with pytest.raises(ValueError, match=r"Gain (.*) must be between") as exc_info:
-        detector.characteristics.charge_to_volt_conversion = {
+    with pytest.raises(ValueError, match=r"\'pre_amplification\' must be between"):
+        detector.characteristics.pre_amplification = {
             "OP9": 1,  # Valid
             "OP13": 200,  # Invalid: Outside the range 0 to 100
             "OP1": 3,  # Valid
             "OP5": -10,  # Invalid: Negative value
         }
-
-    # Check if the error message is correct
-    assert "must be between 0.0 and 100.0" in str(
-        exc_info.value
-    ), "The error message for out of range values is incorrect or missing"
 
 
 def test_channel_gain_mismatch():
@@ -431,7 +426,7 @@ def test_channel_gain_mismatch():
     with pytest.raises(
         ValueError, match=r"Mismatch between the defined channels"
     ) as exc_info:
-        detector.characteristics.charge_to_volt_conversion = {"OP9": 1, "OP13": 2}
+        detector.characteristics.pre_amplification = {"OP9": 1, "OP13": 2}
 
     # Check if the correct error message about mismatched channel counts is raised
     assert (
