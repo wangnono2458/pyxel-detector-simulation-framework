@@ -307,12 +307,20 @@ class Characteristics:
     @property
     def system_gain(self) -> float | np.ndarray:
         """Get system gain."""
+        # Late import
+        from astropy.units import Quantity
+
         # TODO: Is it correct ?
-        return (
+        gain: Quantity = (
             self.quantum_efficiency
-            * self.channels_pre_amplification
-            * 2**self.adc_bit_resolution
-        ) / (max(self.adc_voltage_range) - min(self.adc_voltage_range))
+            * Quantity(self.channels_pre_amplification, unit="V/V")
+            * Quantity(2**self.adc_bit_resolution, unit="adu")
+        ) / (
+            np.max(Quantity(self.adc_voltage_range, unit="V"))
+            - np.min(Quantity(self.adc_voltage_range, unit="V"))
+        )
+
+        return float(gain.to("adu/V").value)
 
     @property
     def numbytes(self) -> int:

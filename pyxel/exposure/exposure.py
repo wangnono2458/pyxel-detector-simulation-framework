@@ -423,6 +423,7 @@ def run_pipeline(
     # Late import to speedup start-up time
     import xarray as xr
     from dask.utils import format_bytes
+    from packaging.version import Version
 
     # if isinstance(detector, CCD):
     #    dynamic.non_destructive_readout = False
@@ -447,7 +448,7 @@ def run_pipeline(
             progress_bar.set_postfix({"size": format_bytes(0)})
             progress_bar.reset(total=num_total_steps)
 
-        buckets_data_tree: xr.DataTree = xr.DataTree()
+        lst = []
 
         # Iterate over the readout steps (time and step) for processing.
         i: int
@@ -478,29 +479,11 @@ def run_pipeline(
             partial_datatree_2d: xr.DataTree = _extract_datatree_2d(detector=detector)
 
             # Concatenate all 'partial_datatree'
-            if buckets_data_tree.is_empty:
-                buckets_data_tree = partial_datatree_2d
-            else:
-                buckets_data_tree = buckets_data_tree.map_over_datasets(
-                    lambda *data: xr.merge(
-                        data, join="outer", compat="no_conflicts"
-                    ),  # function
-                    partial_datatree_2d,
-                )
-
-                # Fix the data type of the 'image' container to match the detector's image dtype.
-                # See #652
-                image_dtype: np.dtype = buckets_data_tree["image"].dtype
-                exp_dtype: np.dtype = detector.image.dtype
-
-                if image_dtype != exp_dtype:
-                    buckets_data_tree["image"] = buckets_data_tree["image"].astype(
-                        dtype=exp_dtype
-                    )
+            lst.append(partial_datatree_2d)
 
             # Update the progress bar after each step.
             if progress_bar is not None:
-                num_bytes = buckets_data_tree.nbytes
+                num_bytes = partial_datatree_2d.nbytes
                 num_bytes += detector.scene.data.nbytes
 
                 if debug:
@@ -511,6 +494,14 @@ def run_pipeline(
 
                 progress_bar.set_postfix({"size": format_bytes(num_bytes)})
                 progress_bar.update(1)
+
+        if Version(xr.__version__) > Version("2025.10.1"):
+            buckets_data_tree: xr.DataTree = xr.concat(lst, dim="time")  # type: ignore[type-var]
+        else:
+            buckets_data_tree = xr.map_over_datasets(
+                lambda *data: xr.concat(data, dim="time"),
+                *lst,
+            )
 
         # Prepare the final dictionary to construct the `DataTree`.
         dct: dict[str, xr.Dataset | xr.DataTree | None] = {}
