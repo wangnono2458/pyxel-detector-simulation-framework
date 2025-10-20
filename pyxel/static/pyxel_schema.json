@@ -158,7 +158,7 @@
             }
           ],
           "default": null,
-          "description": "TBW.",
+          "description": "Sensitivity of charge readout. Unit: V/e-",
           "title": "charge_to_volt"
         },
         "full_well_capacity": {
@@ -169,6 +169,25 @@
             "number",
             "null"
           ]
+        },
+        "pre_amplification": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Gain of pre-amplifier. Unit: V/V",
+          "title": "pre_amplification"
         },
         "quantum_efficiency": {
           "default": null,
@@ -1118,14 +1137,18 @@
             "null"
           ]
         },
-        "charge_to_volt_conversion": {
+        "charge_to_volt": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ChargeToVoltSettings"
+            },
+            {
+              "type": "null"
+            }
+          ],
           "default": null,
           "description": "Sensitivity of charge readout. Unit: V/e-",
-          "title": "charge_to_volt_conversion",
-          "type": [
-            "number",
-            "null"
-          ]
+          "title": "charge_to_volt"
         },
         "full_well_capacity": {
           "default": null,

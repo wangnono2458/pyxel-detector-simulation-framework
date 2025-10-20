@@ -24,30 +24,6 @@ if TYPE_CHECKING:
     from pyxel.detectors import APDGeometry
 
 
-def detector_gain(capacitance: float, roic_gain: float) -> float:
-    """Compute the effective gain of an APD detector.
-
-    The gain is calculated from the ROIC gain and the pixel capacitance.
-
-    Parameters
-    ----------
-    capacitance : float
-        Pixel capacitance in Farads.
-    roic_gain : float
-        Gain of the readout circuit in V/electron.
-
-    Returns
-    -------
-    float
-        Effective detector gain.
-    """
-    # Late import to speedup start-up time
-    import astropy.constants as const
-
-    # TODO: remove roic_gain
-    return roic_gain * (const.e.value / capacitance)
-
-
 def create_func_interpolate(xp: np.ndarray, yp: np.ndarray) -> Callable[[float], float]:
     """Create a 1D linear interpolation function.
 
@@ -545,7 +521,7 @@ class APDCharacteristics:
     avalanche_settings : AvalancheSettings
     quantum_efficiency : float, optional
         Quantum efficiency.
-    charge_to_volt_conversion : float, optional
+    charge_to_volt : float, optional
         Sensitivity of charge readout. Unit: V/e-
     pre_amplification : float, optional
         Gain of pre-amplifier. Unit: V/V
@@ -605,12 +581,6 @@ class APDCharacteristics:
             self.avalanche_settings.avalanche_bias
         )
         self._roic_gain: float = roic_gain
-
-        # TODO: Is it really needed ? or property 'charge_to_volt_conversion' is enough ?
-        self._charge_to_volt_conversion: float = detector_gain(
-            capacitance=self._node_capacitance,
-            roic_gain=self.roic_gain,
-        )
 
         # TODO: This variable is available in class 'Characteristics' and 'APDCharacteristics'
         #       Refactor this
@@ -758,13 +728,14 @@ class APDCharacteristics:
     @property
     def charge_to_volt_conversion(self) -> float | np.ndarray:
         """Compute charge-to-voltage conversion factor."""
-        if self._charge_to_volt and self._charge_to_volt.has_charge_to_volt():
-            return self._charge_to_volt.factor
+        if not self._charge_to_volt:
+            raise ValueError(
+                get_uninitialized_error(
+                    name="charge_to_volt", parent_name="characteristics"
+                )
+            )
 
-        return detector_gain(
-            capacitance=self.node_capacitance,
-            roic_gain=self.roic_gain,
-        )
+        return self._charge_to_volt.value
 
     @property
     def adc_bit_resolution(self) -> int:

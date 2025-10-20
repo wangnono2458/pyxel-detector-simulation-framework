@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from pyxel.detectors import ChargeToVoltSettings
+from pyxel.detectors.charge_to_volt_settings import Factor
 from pyxel.util import get_size, get_uninitialized_error
 
 if TYPE_CHECKING:
@@ -48,10 +49,9 @@ def validate_pre_amplification(
     if pre_amplification is None:
         return
 
-    elif isinstance(pre_amplification, int | float) and not (
-        0.0 <= pre_amplification <= 10_000.0
-    ):
-        raise ValueError("'pre_amplification' must be between 0.0 and 10000.0.")
+    elif isinstance(pre_amplification, int | float):
+        if not (0.0 <= pre_amplification <= 10_000.0):
+            raise ValueError("'pre_amplification' must be between 0.0 and 10000.0.")
 
     elif isinstance(pre_amplification, dict):
         for channel, gain in pre_amplification.items():
@@ -133,7 +133,7 @@ class Characteristics:
     ----------
     quantum_efficiency : float, optional
         Quantum efficiency.
-    charge_to_volt_conversion : float, optional
+    charge_to_volt : ChargeToVoltSettings, optional
         Sensitivity of charge readout. Unit: V/e-
     pre_amplification : float, optional
         Gain of pre-amplifier. Unit: V/V
@@ -157,13 +157,6 @@ class Characteristics:
         if quantum_efficiency is not None and not (0.0 <= quantum_efficiency <= 1.0):
             raise ValueError("'quantum_efficiency' must be between 0.0 and 1.0.")
 
-        if charge_to_volt_conversion is not None and not (
-            0.0 <= charge_to_volt_conversion <= 100.0
-        ):
-            raise ValueError(
-                "'charge_to_volt_conversion' must be between 0.0 and 100.0."
-            )
-
         validate_pre_amplification(pre_amplification)
 
         if full_well_capacity is not None and not (0.0 <= full_well_capacity <= 1.0e7):
@@ -180,7 +173,7 @@ class Characteristics:
                 raise ValueError("Voltage range must have length of 2.")
 
         self._quantum_efficiency: float | None = quantum_efficiency
-        self._charge_to_volt_conversion: float | None = charge_to_volt_conversion
+        self._charge_to_volt: ChargeToVoltSettings | None = charge_to_volt
 
         self._pre_amplification: float | dict[str, float] | None = pre_amplification
         self._pre_amplification_map: float | np.ndarray | None = (
@@ -208,7 +201,7 @@ class Characteristics:
         return (
             type(self) is type(other)
             and self._quantum_efficiency == other._quantum_efficiency
-            and self._charge_to_volt_conversion == other._charge_to_volt_conversion
+            and self._charge_to_volt == other._charge_to_volt
             and self._pre_amplification == other._pre_amplification
             and self._full_well_capacity == other._full_well_capacity
             and self._adc_voltage_range == other._adc_voltage_range
@@ -244,9 +237,9 @@ class Characteristics:
         self._quantum_efficiency = value
 
     @property
-    def charge_to_volt_conversion(self) -> float:
+    def charge_to_volt_conversion(self) -> float | np.ndarray:
         """Get charge to volt conversion parameter."""
-        if self._charge_to_volt_conversion is None:
+        if self._charge_to_volt is None:
             raise ValueError(
                 get_uninitialized_error(
                     name="charge_to_volt_conversion",
@@ -254,16 +247,20 @@ class Characteristics:
                 )
             )
 
-        return self._charge_to_volt_conversion
+        return self._charge_to_volt.value
 
     @charge_to_volt_conversion.setter
-    def charge_to_volt_conversion(self, value: float) -> None:
+    def charge_to_volt_conversion(self, value: float | np.ndarray) -> None:
         """Set charge to volt conversion parameter."""
         if not (0.0 <= value <= 100.0):
             raise ValueError(
                 "'charge_to_volt_conversion' must be between 0.0 and 100.0."
             )
-        self._charge_to_volt_conversion = value
+
+        if self._charge_to_volt is None:
+            self._charge_to_volt = ChargeToVoltSettings(Factor(value))
+        else:
+            self._charge_to_volt.value = value
 
     @property
     def pre_amplification_map(self) -> float | np.ndarray:
@@ -395,7 +392,7 @@ class Characteristics:
         """Get the attributes of this instance as a `dict`."""
         return {
             "quantum_efficiency": self._quantum_efficiency,
-            "charge_to_volt_conversion": self._charge_to_volt_conversion,
+            "charge_to_volt_conversion": self._charge_to_volt,
             "pre_amplification": self._pre_amplification,
             "full_well_capacity": self._full_well_capacity,
             "adc_bit_resolution": self._adc_bit_resolution,
@@ -426,7 +423,9 @@ class Characteristics:
     ) -> dict[str, int | float | str | dict[str, float] | list[float] | None]:
         return {
             "quantum_efficiency": self._quantum_efficiency,
-            "charge_to_volt_conversion": self._charge_to_volt_conversion,
+            "charge_to_volt_conversion": (
+                self._charge_to_volt.to_dict() if self._charge_to_volt else None
+            ),
             "pre_amplification": self._pre_amplification,
             "full_well_capacity": self._full_well_capacity,
             "adc_bit_resolution": self._adc_bit_resolution,

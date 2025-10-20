@@ -27,18 +27,19 @@ class Capacitance:
         Capacitance in fF or a path to an image file containing capacitance data.
     """
 
-    def __init__(self, capacitance: float | str):
+    def __init__(self, capacitance: float | np.ndarray | str):
         capacitance_value: float | np.ndarray
         if isinstance(capacitance, str):
             capacitance_value = load_image(capacitance)
         else:
             capacitance_value = capacitance
 
-        self._capacitance: float | str = capacitance
+        self._capacitance: float | np.ndarray | str = capacitance
         self._value: float | np.ndarray = capacitance_value
 
     def __repr__(self) -> str:
         cls_name = self.__class__.__name__
+
         return f"{cls_name}(capacitance={self._capacitance!r})"
 
     def __eq__(self, other) -> bool:
@@ -62,14 +63,14 @@ class Factor:
         Conversion factor in V/electron or a path to an image file containing factor values.
     """
 
-    def __init__(self, factor: float | str):
+    def __init__(self, factor: float | np.ndarray | str):
         factor_value: float | np.ndarray
         if isinstance(factor, str):
             factor_value = load_image(factor)
         else:
             factor_value = factor
 
-        self._factor: float | str = factor
+        self._factor: float | np.ndarray | str = factor
         self._value: float | np.ndarray = factor_value
 
     def __repr__(self) -> str:
@@ -112,12 +113,16 @@ class ChargeToVoltSettings:
 
         return self._param.capacitance
 
+    @capacitance.setter
+    def capacitance(self, value: float | np.ndarray) -> None:
+        self._param = Capacitance(value)
+
     def has_charge_to_volt(self) -> bool:
         """Check if the Charge-to-Volt factor is directly defined and not derived from the capacitance."""
         return isinstance(self._param, Factor)
 
     @property
-    def factor(self) -> float | np.ndarray:
+    def value(self) -> float | np.ndarray:
         """Return charge-to-voltage conversion factor in V/electron."""
         if isinstance(self._param, Factor):
             return self._param.factor
@@ -142,17 +147,21 @@ class ChargeToVoltSettings:
             else:
                 return value
 
-    def to_dict(self) -> Mapping:
+    @value.setter
+    def value(self, value: float | np.ndarray) -> None:
+        self._param = Factor(value)
+
+    def to_dict(self) -> dict:
         if isinstance(self._param, Capacitance):
-            return {"capacitance": self._param._capacitance}
+            return {"from_capacitance": self._param._capacitance}
         else:
-            return {"factor": self._param._factor}
+            return {"value": self._param._factor}
 
     @classmethod
     def from_dict(cls, dct: Mapping) -> Self:
-        if "capacitance" in dct:
-            return cls(Capacitance(dct["capacitance"]))
-        elif "factor" in dct:
-            return cls(Factor(dct["factor"]))
+        if "from_capacitance" in dct:
+            return cls(Capacitance(dct["from_capacitance"]))
+        elif "value" in dct:
+            return cls(Factor(dct["value"]))
         else:
             raise KeyError
