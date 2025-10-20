@@ -11,7 +11,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from pyxel.detectors import CCD, CCDGeometry, Characteristics, Detector, Environment
+from pyxel.detectors import (
+    CCD,
+    CCDGeometry,
+    Characteristics,
+    ChargeToVoltSettings,
+    Detector,
+    Environment,
+)
 
 
 @pytest.fixture
@@ -29,7 +36,7 @@ def valid_ccd() -> CCD:
         environment=Environment(temperature=100.1),
         characteristics=Characteristics(
             quantum_efficiency=0.1,
-            charge_to_volt_conversion=0.2,
+            charge_to_volt=ChargeToVoltSettings(value=0.2),
             pre_amplification=3.3,
             full_well_capacity=10,
         ),
@@ -78,7 +85,7 @@ def valid_ccd() -> CCD:
                 environment=Environment(temperature=100.1),
                 characteristics=Characteristics(
                     quantum_efficiency=0.1,
-                    charge_to_volt_conversion=0.2,
+                    charge_to_volt=ChargeToVoltSettings(value=0.2),
                     pre_amplification=3.3,
                     full_well_capacity=10,
                 ),
@@ -209,7 +216,7 @@ def comparison(dct, other_dct):
                     "environment": {"temperature": None},
                     "characteristics": {
                         "quantum_efficiency": None,
-                        "charge_to_volt_conversion": None,
+                        "charge_to_volt": None,
                         "pre_amplification": None,
                         "full_well_capacity": None,
                         "adc_bit_resolution": None,
@@ -261,7 +268,7 @@ def comparison(dct, other_dct):
                 environment=Environment(temperature=100.1),
                 characteristics=Characteristics(
                     quantum_efficiency=0.1,
-                    charge_to_volt_conversion=0.2,
+                    charge_to_volt=ChargeToVoltSettings(value=0.2),
                     pre_amplification=3.3,
                     full_well_capacity=10,
                     adc_bit_resolution=16,
@@ -295,6 +302,81 @@ def comparison(dct, other_dct):
                     "photon": {},
                     "scene": None,
                     "pixel": {},
+                    "signal": None,
+                    "image": None,
+                    "charge": {
+                        "array": np.zeros(shape=(100, 120)),
+                        "frame": pd.DataFrame(
+                            columns=[
+                                "charge",
+                                "number",
+                                "init_energy",
+                                "energy",
+                                "init_pos_ver",
+                                "init_pos_hor",
+                                "init_pos_z",
+                                "position_ver",
+                                "position_hor",
+                                "position_z",
+                                "velocity_ver",
+                                "velocity_hor",
+                                "velocity_z",
+                            ],
+                            dtype=float,
+                        ),
+                    },
+                    "data": {},
+                },
+            },
+            id="CCD fully defined DEPRECATED",
+        ),
+        pytest.param(
+            CCD(
+                geometry=CCDGeometry(
+                    row=100,
+                    col=120,
+                    total_thickness=123.1,
+                    pixel_horz_size=12.4,
+                    pixel_vert_size=34.5,
+                    pixel_scale=1.5,
+                ),
+                environment=Environment(temperature=100.1),
+                characteristics=Characteristics(
+                    quantum_efficiency=0.1,
+                    charge_to_volt=ChargeToVoltSettings(value=0.2),
+                    pre_amplification=3.3,
+                    full_well_capacity=10,
+                    adc_bit_resolution=16,
+                    adc_voltage_range=(0.0, 10.0),
+                ),
+            ),
+            {
+                "version": 1,
+                "type": "CCD",
+                "properties": {
+                    "geometry": {
+                        "row": 100,
+                        "col": 120,
+                        "total_thickness": 123.1,
+                        "pixel_horz_size": 12.4,
+                        "pixel_vert_size": 34.5,
+                        "pixel_scale": 1.5,
+                        "channels": None,
+                    },
+                    "environment": {"temperature": 100.1},
+                    "characteristics": {
+                        "quantum_efficiency": 0.1,
+                        "charge_to_volt": {"value": 0.2},
+                        "pre_amplification": 3.3,
+                        "full_well_capacity": 10,
+                        "adc_bit_resolution": 16,
+                        "adc_voltage_range": (0.0, 10.0),
+                    },
+                },
+                "data": {
+                    "photon": {},
+                    "scene": None,
+                    "pixel": None,
                     "signal": None,
                     "image": None,
                     "charge": {
@@ -385,7 +467,7 @@ def test_to_and_from_dict_with_arrays_no_frame(valid_ccd: CCD, klass):
             "environment": {"temperature": 100.1},
             "characteristics": {
                 "quantum_efficiency": 0.1,
-                "charge_to_volt_conversion": 0.2,
+                "charge_to_volt": {"value": 0.2},
                 "pre_amplification": 3.3,
                 "full_well_capacity": 10,
                 "adc_bit_resolution": None,

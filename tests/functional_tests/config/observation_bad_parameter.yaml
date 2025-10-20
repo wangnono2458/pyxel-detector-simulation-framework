@@ -31,7 +31,8 @@ cmos_detector:
     
   characteristics:
     quantum_efficiency: 1.                # -
-    charge_to_volt_conversion: 4.75e-6      # V/e
+    charge_to_volt:
+      value: 4.75e-6      # V/e
     pre_amplification: 1.                   # V/V
     adc_bit_resolution: 16
     adc_voltage_range: [0., 5.]  # From 78.125uV/DN

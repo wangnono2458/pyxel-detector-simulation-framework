@@ -47,7 +47,8 @@ exposure:
     temperature: 100        # K
   characteristics:
     quantum_efficiency: 1.0                # - for charge_generation.simple_conversion
-    charge_to_volt_conversion: 1      # V/e for charge_measurement.simple_measurement
+    charge_to_volt:
+      value: 1                             # V/e for charge_measurement.simple_measurement
     pre_amplification: 1                 # V/V  for readout_electronics.simple_amplifier
     adc_bit_resolution: 16        # for readout_electronics.simple_adc
     adc_voltage_range: [0.,65535.0]     # for readout_electronics.simple_adc

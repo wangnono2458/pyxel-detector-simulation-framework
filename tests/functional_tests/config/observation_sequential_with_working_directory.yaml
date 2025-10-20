@@ -38,7 +38,8 @@ ccd_detector:
 
   characteristics:
     quantum_efficiency: 0.5                 # -
-    charge_to_volt_conversion: 1.e-6        # V/e
+    charge_to_volt:
+      value: 1.0e-6                        # V/e
     pre_amplification: 80                   # V/V
     adc_voltage_range: [0., 10.]
     adc_bit_resolution: 16

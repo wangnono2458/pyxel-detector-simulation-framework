@@ -18,6 +18,7 @@ from pyxel.detectors import (
     CCDGeometry,
     Channels,
     Characteristics,
+    ChargeToVoltSettings,
     CMOSGeometry,
     Environment,
 )
@@ -60,7 +61,9 @@ def cmos_2x3() -> CMOS:
             pixel_horz_size=10.0,
         ),
         environment=Environment(),
-        characteristics=Characteristics(charge_to_volt_conversion=0.01),
+        characteristics=Characteristics(
+            charge_to_volt=ChargeToVoltSettings(value=0.01)
+        ),
     )
     detector.signal.array = np.zeros(detector.geometry.shape, dtype=float)
     return detector
@@ -209,7 +212,7 @@ def cmos_2x3_with_channels():
             ),
         ),
         characteristics=Characteristics(
-            charge_to_volt_conversion=1e-6,
+            charge_to_volt=ChargeToVoltSettings(value=1e-6),
             pre_amplification={
                 "OP1": 1.0,
                 "OP2": 1.5,
@@ -278,7 +281,9 @@ def test_output_node_noise_readout_noise_low_charge_to_volt():
         ),
         environment=Environment(),
         characteristics=Characteristics(
-            charge_to_volt_conversion=1e-6,  # This value is used in 'output_node_noise_cmos'
+            charge_to_volt=ChargeToVoltSettings(
+                value=1e-6  # This value is used in 'output_node_noise_cmos'
+            ),
         ),
     )
     detector.signal.array = np.zeros(detector.geometry.shape, dtype=float)

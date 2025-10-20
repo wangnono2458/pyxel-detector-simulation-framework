@@ -10,7 +10,14 @@ from copy import deepcopy
 import numpy as np
 import pytest
 
-from pyxel.detectors import CCD, CCDGeometry, Channels, Characteristics, Environment
+from pyxel.detectors import (
+    CCD,
+    CCDGeometry,
+    Channels,
+    Characteristics,
+    ChargeToVoltSettings,
+    Environment,
+)
 from pyxel.detectors.channels import Matrix, ReadoutPosition
 
 
@@ -35,7 +42,11 @@ def test_characteristics(
     """Test 'Characteristics.__init__'."""
     obj = Characteristics(
         quantum_efficiency=quantum_efficiency,
-        charge_to_volt_conversion=charge_to_volt_conversion,
+        charge_to_volt=(
+            ChargeToVoltSettings(value=charge_to_volt_conversion)
+            if charge_to_volt_conversion is not None
+            else None
+        ),
         pre_amplification=pre_amplification,
         full_well_capacity=full_well_capacity,
         adc_voltage_range=adc_voltage_range,
@@ -140,7 +151,7 @@ def test_characteristics(
             None,
             None,
             ValueError,
-            r"'charge_to_volt_conversion' must be between 0.0 and 100.0.",
+            r"'charge_to_volt' must be between 0.0 and 100.0.",
         ),
         (
             0.0,
@@ -150,7 +161,7 @@ def test_characteristics(
             None,
             None,
             ValueError,
-            r"'charge_to_volt_conversion' must be between 0.0 and 100.0.",
+            r"'charge_to_volt' must be between 0.0 and 100.0.",
         ),
         (
             0.0,
@@ -239,7 +250,7 @@ def test_characteristics_invalid(
     with pytest.raises(exp_exc, match=exp_msg):
         _ = Characteristics(
             quantum_efficiency=quantum_efficiency,
-            charge_to_volt_conversion=charge_to_volt_conversion,
+            charge_to_volt=ChargeToVoltSettings(value=charge_to_volt_conversion),
             pre_amplification=pre_amplification,
             full_well_capacity=full_well_capacity,
             adc_voltage_range=adc_voltage_range,
@@ -441,12 +452,12 @@ def test_channel_gain_mismatch():
         (
             -0.2,
             ValueError,
-            r"'charge_to_volt_conversion' must be between 0.0 and 100.0.",
+            r"'charge_to_volt' must be between 0.0 and 100.0.",
         ),
         (
             100.2,
             ValueError,
-            r"'charge_to_volt_conversion' must be between 0.0 and 100.0.",
+            r"'charge_to_volt' must be between 0.0 and 100.0.",
         ),
     ],
 )
@@ -523,7 +534,7 @@ def test_full_well_capacity_setter_wrong_inputs(
         pytest.param(
             Characteristics(
                 quantum_efficiency=0.1,
-                charge_to_volt_conversion=0.2,
+                charge_to_volt=ChargeToVoltSettings(value=0.2),
                 pre_amplification=4.4,
             ),
             False,
@@ -532,7 +543,7 @@ def test_full_well_capacity_setter_wrong_inputs(
         pytest.param(
             Characteristics(
                 quantum_efficiency=0.1,
-                charge_to_volt_conversion=0.2,
+                charge_to_volt=ChargeToVoltSettings(value=0.2),
                 pre_amplification=4.4,
                 full_well_capacity=10,
             ),
@@ -542,7 +553,7 @@ def test_full_well_capacity_setter_wrong_inputs(
         pytest.param(
             Characteristics(
                 quantum_efficiency=0.1,
-                charge_to_volt_conversion=0.2,
+                charge_to_volt=ChargeToVoltSettings(value=0.2),
                 pre_amplification=4.4,
                 full_well_capacity=10,
                 adc_voltage_range=(0.0, 10.0),
@@ -557,7 +568,7 @@ def test_is_equal(other_obj, is_equal):
     """Test equality statement for `Characteristics`."""
     obj = Characteristics(
         quantum_efficiency=0.1,
-        charge_to_volt_conversion=0.2,
+        charge_to_volt=ChargeToVoltSettings(value=0.2),
         pre_amplification=4.4,
         full_well_capacity=10,
         adc_voltage_range=(0.0, 10.0),
@@ -576,13 +587,13 @@ def test_is_equal(other_obj, is_equal):
         (
             Characteristics(
                 quantum_efficiency=0.1,
-                charge_to_volt_conversion=0.2,
+                charge_to_volt=ChargeToVoltSettings(value=0.2),
                 pre_amplification=4.4,
                 full_well_capacity=10,
             ),
             {
                 "quantum_efficiency": 0.1,
-                "charge_to_volt_conversion": 0.2,
+                "charge_to_volt": {"value": 0.2},
                 "pre_amplification": 4.4,
                 "full_well_capacity": 10,
                 "adc_bit_resolution": None,
@@ -592,7 +603,7 @@ def test_is_equal(other_obj, is_equal):
         (
             Characteristics(
                 quantum_efficiency=0.1,
-                charge_to_volt_conversion=0.2,
+                charge_to_volt=ChargeToVoltSettings(value=0.2),
                 pre_amplification=4.4,
                 full_well_capacity=10,
                 adc_voltage_range=(0.0, 10.0),
@@ -600,7 +611,7 @@ def test_is_equal(other_obj, is_equal):
             ),
             {
                 "quantum_efficiency": 0.1,
-                "charge_to_volt_conversion": 0.2,
+                "charge_to_volt": {"value": 0.2},
                 "pre_amplification": 4.4,
                 "full_well_capacity": 10,
                 "adc_voltage_range": (0.0, 10.0),
