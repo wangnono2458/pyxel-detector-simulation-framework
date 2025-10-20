@@ -25,6 +25,7 @@ from pyxel.detectors import (
     APDGeometry,
     CCDGeometry,
     Characteristics,
+    ChargeToVoltSettings,
     CMOSGeometry,
     Environment,
     MKIDGeometry,
@@ -439,7 +440,7 @@ def build_configuration(
                     environment=Environment(temperature=173.0),
                     characteristics=Characteristics(
                         quantum_efficiency=0.8,
-                        charge_to_volt_conversion=1e-6,
+                        charge_to_volt=ChargeToVoltSettings(value=1e-6),
                         pre_amplification=100.0,
                         full_well_capacity=100_000,
                         adc_bit_resolution=16,
@@ -738,27 +739,6 @@ def to_environment(dct: dict | None) -> Environment:
     return Environment.from_dict(dct)
 
 
-def to_ccd_characteristics(dct: dict | None) -> Characteristics:
-    """Create a CCDCharacteristics class from a dictionary."""
-    if dct is None:
-        dct = {}
-    return Characteristics(**dct)
-
-
-def to_cmos_characteristics(dct: dict | None) -> Characteristics:
-    """Create a CMOSCharacteristics class from a dictionary."""
-    if dct is None:
-        dct = {}
-    return Characteristics(**dct)
-
-
-def to_mkid_characteristics(dct: dict | None) -> Characteristics:
-    """Create a MKIDCharacteristics class from a dictionary."""
-    if dct is None:
-        dct = {}
-    return Characteristics(**dct)
-
-
 def build_converter(
     dct: dict,
 ) -> "ConverterValues | ConverterTable | ConverterFunction":
@@ -848,7 +828,7 @@ def to_ccd(dct: dict) -> CCD:
     return CCD(
         geometry=to_ccd_geometry(dct["geometry"]),
         environment=to_environment(dct.get("environment")),
-        characteristics=to_ccd_characteristics(dct.get("characteristics")),
+        characteristics=Characteristics.from_dict(dct.get("characteristics")),
     )
 
 
@@ -857,7 +837,7 @@ def to_cmos(dct: dict) -> CMOS:
     return CMOS(
         geometry=to_cmos_geometry(dct["geometry"]),
         environment=to_environment(dct.get("environment")),
-        characteristics=to_cmos_characteristics(dct.get("characteristics")),
+        characteristics=Characteristics.from_dict(dct.get("characteristics")),
     )
 
 
@@ -866,7 +846,7 @@ def to_mkid_array(dct: dict) -> MKID:
     return MKID(
         geometry=to_mkid_geometry(dct["geometry"]),
         environment=to_environment(dct.get("environment")),
-        characteristics=to_mkid_characteristics(dct.get("characteristics")),
+        characteristics=Characteristics.from_dict(dct.get("characteristics")),
     )
 
 

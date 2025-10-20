@@ -731,7 +731,8 @@ class APDCharacteristics:
         if not self._charge_to_volt:
             raise ValueError(
                 get_uninitialized_error(
-                    name="charge_to_volt", parent_name="characteristics"
+                    name="charge_to_volt",
+                    parent_name="characteristics",
                 )
             )
 

@@ -590,13 +590,15 @@ def generate_detectors() -> Iterator[str]:
     yield "@schema(description='Settings for Factor')"
     yield "@dataclass(kw_only=True)"
     yield "class Factor:"
-    yield "  factor: float | str"
+    yield "  value: float | str"
     yield ""
 
     yield "@schema(description='Settings for ChargeToVolt')"
     yield "@dataclass()"
     yield "class ChargeToVoltSettings:"
-    yield "  param: Capacitance | Factor"
+    # yield "  param: Capacitance | Factor"
+    yield "  value: float | str | None = None"
+    yield "  capacitance: float | str | None = None"
 
     # Generate code based on the dependency graph
     ts = TopologicalSorter(graph)

@@ -12,14 +12,14 @@ intrinsic physical and electronic parameters of a detector. These parameters
 include quantum efficiency, charge-to-voltage conversion, pre-amplification,
 full-well capacity, ADC resolution, and voltage range.
 """
-
+import warnings
 from collections.abc import Iterable, Mapping, Sequence
 from typing import TYPE_CHECKING
 
 import numpy as np
+from typing_extensions import Self
 
 from pyxel.detectors import ChargeToVoltSettings
-from pyxel.detectors.charge_to_volt_settings import Factor
 from pyxel.util import get_size, get_uninitialized_error
 
 if TYPE_CHECKING:
@@ -252,13 +252,8 @@ class Characteristics:
     @charge_to_volt_conversion.setter
     def charge_to_volt_conversion(self, value: float | np.ndarray) -> None:
         """Set charge to volt conversion parameter."""
-        if not (0.0 <= value <= 100.0):
-            raise ValueError(
-                "'charge_to_volt_conversion' must be between 0.0 and 100.0."
-            )
-
         if self._charge_to_volt is None:
-            self._charge_to_volt = ChargeToVoltSettings(Factor(value))
+            self._charge_to_volt = ChargeToVoltSettings(value=value)
         else:
             self._charge_to_volt.value = value
 
@@ -392,7 +387,9 @@ class Characteristics:
         """Get the attributes of this instance as a `dict`."""
         return {
             "quantum_efficiency": self._quantum_efficiency,
-            "charge_to_volt_conversion": self._charge_to_volt,
+            "charge_to_volt": (
+                self._charge_to_volt.to_dict() if self._charge_to_volt else None
+            ),
             "pre_amplification": self._pre_amplification,
             "full_well_capacity": self._full_well_capacity,
             "adc_bit_resolution": self._adc_bit_resolution,
@@ -400,10 +397,13 @@ class Characteristics:
         }
 
     @classmethod
-    def from_dict(cls, dct: Mapping):
+    def from_dict(cls, dct: Mapping | None) -> Self:
         """Create a new instance from a `dict`."""
         # Late import to speedup start-up time
         from toolz import dicttoolz
+
+        if dct is None:
+            dct = {}
 
         # TODO: This is a simplistic implementation. Improve this.
         # Extract param 'adc_voltage_range'
@@ -416,7 +416,38 @@ class Characteristics:
             adc_voltage_min, adc_voltage_max = tuple(param)
             adc_voltage_range = adc_voltage_min, adc_voltage_max
 
-        return cls(adc_voltage_range=adc_voltage_range, **new_dct)
+        charge_to_volt: ChargeToVoltSettings | None = None
+        if "charge_to_volt_conversion" in dct:
+            warnings.warn(
+                "Parameter 'charge_to_volt_conversion' is deprecated. "
+                "Use parameter 'charge_to_volt'",
+                DeprecationWarning,
+                stacklevel=1,
+            )
+
+            if "charge_to_volt" in dct:
+                raise ValueError(
+                    "Cannot provide parameter 'charge_to_volt_conversion' and 'charge_to_volt'"
+                )
+
+            charge_to_volt_value = dct["charge_to_volt_conversion"]
+            charge_to_volt = ChargeToVoltSettings(value=charge_to_volt_value)
+
+            new_dct = dicttoolz.dissoc(dct, "charge_to_volt_conversion")
+
+            return cls(charge_to_volt=charge_to_volt, **new_dct)
+
+        charge_to_volt_dct: Mapping | None = new_dct.get("charge_to_volt")
+        new_dct = dicttoolz.dissoc(new_dct, "charge_to_volt")
+
+        if charge_to_volt_dct:
+            charge_to_volt = ChargeToVoltSettings.from_dict(charge_to_volt_dct)
+
+        return cls(
+            charge_to_volt=charge_to_volt,
+            adc_voltage_range=adc_voltage_range,
+            **new_dct,
+        )
 
     def dump(
         self,

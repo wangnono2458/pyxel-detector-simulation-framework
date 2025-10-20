@@ -31,8 +31,10 @@ class Capacitance:
         capacitance_value: float | np.ndarray
         if isinstance(capacitance, str):
             capacitance_value = load_image(capacitance)
-        else:
+        elif isinstance(capacitance, int | float):
             capacitance_value = capacitance
+        else:
+            raise TypeError
 
         self._capacitance: float | np.ndarray | str = capacitance
         self._value: float | np.ndarray = capacitance_value
@@ -59,18 +61,23 @@ class Factor:
 
     Parameters
     ----------
-    factor : float or str
+    value : float or str
         Conversion factor in V/electron or a path to an image file containing factor values.
     """
 
-    def __init__(self, factor: float | np.ndarray | str):
+    def __init__(self, value: float | np.ndarray | str):
         factor_value: float | np.ndarray
-        if isinstance(factor, str):
-            factor_value = load_image(factor)
-        else:
-            factor_value = factor
+        if isinstance(value, str):
+            factor_value = load_image(value)
+        elif isinstance(value, int | float):
+            if not (0.0 <= value <= 100.0):
+                raise ValueError("'charge_to_volt' must be between 0.0 and 100.0.")
 
-        self._factor: float | np.ndarray | str = factor
+            factor_value = value
+        else:
+            raise TypeError
+
+        self._factor: float | np.ndarray | str = value
         self._value: float | np.ndarray = factor_value
 
     def __repr__(self) -> str:
@@ -95,7 +102,21 @@ class ChargeToVoltSettings:
         - a **direct charge-to-volt factor** provided as a pre-computed V/electron value
     """
 
-    def __init__(self, param: Capacitance | Factor, /):
+    def __init__(
+        self,
+        value: float | np.ndarray | str | None = None,
+        from_capacitance: float | np.ndarray | str | None = None,
+    ):
+        param: Capacitance | Factor
+        if value is not None:
+            param = Factor(value)
+
+        elif from_capacitance is not None:
+            param = Capacitance(from_capacitance)
+
+        else:
+            raise ValueError
+
         self._param: Capacitance | Factor = param
 
     def __repr__(self) -> str:
@@ -160,8 +181,8 @@ class ChargeToVoltSettings:
     @classmethod
     def from_dict(cls, dct: Mapping) -> Self:
         if "from_capacitance" in dct:
-            return cls(Capacitance(dct["from_capacitance"]))
+            return cls(from_capacitance=dct["from_capacitance"])
         elif "value" in dct:
-            return cls(Factor(dct["value"]))
+            return cls(value=dct["value"])
         else:
             raise KeyError

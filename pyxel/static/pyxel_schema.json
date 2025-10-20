@@ -1049,22 +1049,6 @@
       ],
       "type": "object"
     },
-    "Capacitance": {
-      "additionalProperties": false,
-      "description": "Settings for Capacitance",
-      "properties": {
-        "capacitance": {
-          "type": [
-            "number",
-            "string"
-          ]
-        }
-      },
-      "required": [
-        "capacitance"
-      ],
-      "type": "object"
-    },
     "Channels": {
       "additionalProperties": false,
       "properties": {
@@ -1195,20 +1179,23 @@
       "additionalProperties": false,
       "description": "Settings for ChargeToVolt",
       "properties": {
-        "param": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Capacitance"
-            },
-            {
-              "$ref": "#/definitions/Factor"
-            }
+        "capacitance": {
+          "default": null,
+          "type": [
+            "number",
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "default": null,
+          "type": [
+            "number",
+            "string",
+            "null"
           ]
         }
       },
-      "required": [
-        "param"
-      ],
       "type": "object"
     },
     "Configuration_Calibration_APD": {
@@ -2246,22 +2233,6 @@
       },
       "required": [
         "output_folder"
-      ],
-      "type": "object"
-    },
-    "Factor": {
-      "additionalProperties": false,
-      "description": "Settings for Factor",
-      "properties": {
-        "factor": {
-          "type": [
-            "number",
-            "string"
-          ]
-        }
-      },
-      "required": [
-        "factor"
       ],
       "type": "object"
     },
