@@ -65,7 +65,7 @@ In this figure above, the detector is split into four quadrants,
 each corresponding to a distinct channel with its own readout node at the respective corner.
 
 Based on the standard readout position, the **channel order** is: ``OP9`` (top-left), ``OP13`` (top-right),
-``OP1`` (bottom-left) and ``OP1`` (bottom-right).
+``OP1`` (bottom-left) and ``OP5`` (bottom-right).
 
 Use in simulation
 =================
