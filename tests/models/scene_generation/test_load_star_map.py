@@ -581,6 +581,7 @@ def test_retrieve_from_vizier_catalog_invalid_catalog_type():
         )
 
 
+@pytest.mark.functional_test
 def test_retrieve_from_vizier_catalog_no_sources():
     """Test case when the region contains no sources."""
     with pytest.raises(ValueError, match="No sources found in catalog"):
