@@ -530,6 +530,7 @@ def test_load_star_map(
     xr.testing.assert_allclose(scene["/list/0"].to_dataset(), exp_ds)
 
 
+@pytest.mark.functional_test
 @pytest.mark.parametrize(
     "catalog_id",
     [
@@ -568,6 +569,7 @@ def test_retrieve_from_vizier_catalog_valid(catalog_id):
         pytest.skip(f"No sources found for {catalog_id.name} catalog: {e}")
 
 
+@pytest.mark.functional_test
 def test_retrieve_from_vizier_catalog_invalid_catalog_type():
     """Test that passing a wrong catalog value raises an error."""
     with pytest.raises(ValueError, match=r"No sources found in catalog"):
