@@ -33,6 +33,20 @@ Data structures
     :show-inheritance:
     :exclude-members:
 
+.. autoclass:: PixelNonVolatile
+    :members:
+    :inherited-members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members:
+
+.. autoclass:: PixelVolatile
+    :members:
+    :inherited-members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members:
+
 .. autoclass:: Phase
     :members:
     :inherited-members:
