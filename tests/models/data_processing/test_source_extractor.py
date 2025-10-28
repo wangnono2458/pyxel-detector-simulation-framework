@@ -51,7 +51,7 @@ def ccd_10x10() -> CCD:
         characteristics=Characteristics(),
     )
     detector.signal.array = np.zeros(detector.geometry.shape, dtype=float)
-    detector.pixel.array = np.zeros(detector.geometry.shape, dtype=float)
+    detector.pixel.non_volatile.array = np.zeros(detector.geometry.shape, dtype=float)
     detector.photon.array = np.zeros(detector.geometry.shape, dtype=float)
     detector.image.array = np.zeros(detector.geometry.shape, dtype=np.uint64)
     detector._readout_properties = ReadoutProperties(times=[1.0])
@@ -59,7 +59,9 @@ def ccd_10x10() -> CCD:
 
 
 def test_source_extractor_pixel(ccd_10x10: CCD):
-    ccd_10x10.pixel.array = np.full(fill_value=1, shape=(10, 10), dtype=float)
+    ccd_10x10.pixel.non_volatile.array = np.full(
+        fill_value=1, shape=(10, 10), dtype=float
+    )
     source_extractor(detector=ccd_10x10, array_type="pixel")
 
 
@@ -90,7 +92,7 @@ def test_source_extractor_charge(ccd_10x10: CCD):
 
 
 def test_source_extractor_incorrect_array_type(ccd_10x10: CCD):
-    ccd_10x10.pixel.array = np.random.rand(10, 10)
+    ccd_10x10.pixel.non_volatile.array = np.random.rand(10, 10)
     """Test to ensure warning isn't triggered for filled array"""
 
     with pytest.raises(ValueError, match=r"Incorrect array_type\. Must be one of"):

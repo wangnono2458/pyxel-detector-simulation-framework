@@ -27,7 +27,7 @@ from pyxel.models.charge_transfer import multiplication_register_cic
 
 def test_multiplication_register_cic(ccd_10x10: CCD):
     detector = ccd_10x10
-    detector.pixel.array = np.zeros(detector.geometry.shape, dtype=float)
+    detector.pixel.non_volatile.array = np.zeros(detector.geometry.shape, dtype=float)
 
     multiplication_register_cic(
         detector=detector, total_gain=0, gain_elements=1, pcic_rate=0.0, scic_rate=0.0

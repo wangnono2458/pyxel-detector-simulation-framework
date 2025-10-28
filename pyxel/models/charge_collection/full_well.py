@@ -24,8 +24,8 @@ def apply_simple_full_well_capacity(array: np.ndarray, fwc: int) -> np.ndarray:
     -------
     ndarray
     """
-    array[array > fwc] = fwc
-    return array
+    array_with_fwc = np.where(array > fwc, fwc, array)
+    return array_with_fwc
 
 
 def simple_full_well(detector: Detector, fwc: int | None = None) -> None:

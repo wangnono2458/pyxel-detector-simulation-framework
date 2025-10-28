@@ -346,7 +346,7 @@ def nghxrg(
         )
 
     # Add the pixels
-    detector.pixel += result_2d
+    detector.pixel.non_volatile += result_2d
 
 
 # TODO: This generates plot. It should be in class `Output`

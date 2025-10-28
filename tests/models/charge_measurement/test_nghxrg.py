@@ -39,7 +39,7 @@ def cmos_10x10() -> CMOS:
 
     # Generate fake pixels
     rs = np.random.RandomState(12345)
-    detector.pixel.array = rs.normal(loc=100, scale=5, size=(10, 10))
+    detector.pixel.non_volatile.array = rs.normal(loc=100, scale=5, size=(10, 10))
 
     return detector
 
@@ -61,7 +61,7 @@ def cmos_10x15() -> CMOS:
 
     # Generate fake pixels
     rs = np.random.RandomState(12345)
-    detector.pixel.array = rs.normal(loc=10000, scale=500, size=(10, 15))
+    detector.pixel.non_volatile.array = rs.normal(loc=10000, scale=500, size=(10, 15))
 
     return detector
 

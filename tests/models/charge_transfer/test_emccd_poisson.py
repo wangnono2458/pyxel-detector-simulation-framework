@@ -7,7 +7,7 @@ from pyxel.models.charge_transfer.emccd_poisson import multiplication_register
 
 def test_multiplication_register(ccd_10x10: CCD):
     detector = ccd_10x10
-    detector.pixel.array = np.zeros(detector.geometry.shape, dtype=float)
+    detector.pixel.non_volatile.array = np.zeros(detector.geometry.shape, dtype=float)
     multiplication_register(detector=detector, total_gain=0.0, gain_elements=1)
 
 

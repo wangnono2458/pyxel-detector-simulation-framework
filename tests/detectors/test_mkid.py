@@ -119,7 +119,7 @@ def test_is_equal_with_arrays(valid_mkid: MKID):
     phase: np.ndarray = np.random.random(size=shape)
 
     valid_mkid.photon.array = photon.copy()
-    valid_mkid.pixel.array = pixel.copy()
+    valid_mkid.pixel.non_volatile.array = pixel.copy()
     valid_mkid.signal.array = signal.copy()
     valid_mkid.image.array = image.copy()
     valid_mkid.phase.array = phase.copy()
@@ -131,7 +131,7 @@ def test_is_equal_with_arrays(valid_mkid: MKID):
     )
 
     other_detector.photon.array = photon.copy()
-    other_detector.pixel.array = pixel.copy()
+    other_detector.pixel.non_volatile.array = pixel.copy()
     other_detector.signal.array = signal.copy()
     other_detector.image.array = image.copy()
     other_detector.phase.array = phase.copy()
@@ -220,7 +220,7 @@ def comparison(dct, other_dct):
                 "data": {
                     "photon": {},
                     "scene": None,
-                    "pixel": None,
+                    "pixel": {},
                     "signal": None,
                     "image": None,
                     "phase": None,
@@ -295,7 +295,7 @@ def comparison(dct, other_dct):
                 "data": {
                     "photon": {},
                     "scene": None,
-                    "pixel": None,
+                    "pixel": {},
                     "signal": None,
                     "image": None,
                     "phase": None,

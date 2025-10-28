@@ -36,14 +36,14 @@ def cmos_10x10() -> CMOS:
         environment=Environment(),
         characteristics=Characteristics(),
     )
-    detector.pixel.array = np.zeros(detector.geometry.shape, dtype=float)
+    detector.pixel.non_volatile.array = np.zeros(detector.geometry.shape, dtype=float)
     return detector
 
 
 def test_simple_ipc_valid(cmos_10x10: CMOS):
     """Test model 'simple_ipc' with valid inputs."""
     detector = cmos_10x10
-    detector.pixel.array = np.array(
+    detector.pixel.non_volatile.array = np.array(
         [
             [
                 35.92755861,

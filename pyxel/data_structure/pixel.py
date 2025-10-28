@@ -8,10 +8,11 @@
 """Pyxel Pixel class."""
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
-from typing_extensions import Any, Self
+from numpy.typing import ArrayLike
+from typing_extensions import Any, Self, overload
 
 from pyxel.data_structure import PixelNonVolatile, PixelVolatile
 from pyxel.data_structure.array import _is_array_initialized
@@ -19,6 +20,7 @@ from pyxel.util import convert_unit, get_size
 
 if TYPE_CHECKING:
     import xarray as xr
+    from astropy.units import Quantity
 
     from pyxel.detectors import Geometry
 
@@ -118,11 +120,34 @@ class Pixel:
             and self._volatile == other._volatile
         )
 
-    def __iadd__(self, other) -> Self:
+    def __iadd__(self, other) -> Self:  # type: ignore[misc]
         raise RuntimeError
 
-    def __add__(self, other) -> Self:
-        raise RuntimeError
+    @overload
+    def __add__(self, other: np.ndarray) -> np.ndarray: ...
+
+    @overload
+    def __add__(self, other: "Quantity") -> "Quantity": ...
+
+    def __add__(
+        self, other: Union[np.ndarray, "Quantity"]
+    ) -> Union[np.ndarray, "Quantity"]:
+        # Late import
+        from astropy.units import Quantity, UnitConversionError
+
+        if isinstance(other, Quantity):
+            try:
+                converted_other: Quantity = other.to(self.unit)
+            except UnitConversionError as exc:
+                raise TypeError(
+                    f"Unit provided '{other.unit}' for bucket {self.__class__.__name__!r} "
+                    f"is not compatible with expected unit '{self.unit}'"
+                ) from exc
+
+            return Quantity(self.array, unit=self.unit) + converted_other
+
+        else:
+            return self.array + other
 
     def __array__(self, dtype: np.dtype | None = None):
         return np.asarray(self.array, dtype=dtype)
@@ -152,15 +177,29 @@ class Pixel:
     def volatile(self) -> PixelVolatile:
         return self._volatile
 
+    @volatile.setter
+    def volatile(self, obj: ArrayLike | PixelVolatile) -> None:
+        if isinstance(obj, PixelVolatile):
+            self.volatile = obj
+        else:
+            self.volatile.array = obj
+
     @property
     def non_volatile(self) -> PixelNonVolatile:
         return self._non_volatile
 
+    @non_volatile.setter
+    def non_volatile(self, obj: ArrayLike | PixelNonVolatile) -> None:
+        if isinstance(obj, PixelNonVolatile):
+            self._non_volatile = obj
+        else:
+            self._non_volatile.array = obj
+
     def empty_non_volatile(self):
-        self._non_volatile.empty()
+        self._non_volatile.array = np.zeros(shape=self._shape, dtype=float)
 
     def empty_volatile(self):
-        self._volatile.empty()
+        self._volatile.array = np.zeros(shape=self._shape, dtype=float)
 
     @property
     def array(self) -> np.ndarray:
@@ -186,9 +225,6 @@ class Pixel:
         if data_2d is None:
             msg: str = self._get_uninitialized_error_message()
             raise ValueError(msg)
-
-        # Force 'data_2d' to be read-only
-        data_2d.setflags(write=False)
 
         return data_2d
 

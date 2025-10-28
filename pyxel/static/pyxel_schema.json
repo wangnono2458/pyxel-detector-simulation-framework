@@ -4842,7 +4842,7 @@
     },
     "ModelChargeMeasurementSimpleMeasurement": {
       "additionalProperties": false,
-      "description": "Convert detector Pixel charge values (in electron) into Signal values (in Volt) using a specified gain.",
+      "description": "Convert detector PixelRead charge values (in electron) into Signal values (in Volt) using a specified gain.",
       "properties": {
         "arguments": {
           "additionalProperties": false,

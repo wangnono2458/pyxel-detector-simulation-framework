@@ -119,7 +119,7 @@ def test_is_equal_with_arrays(valid_cmos: CMOS):
     charge: np.ndarray = np.random.random(size=shape)
 
     valid_cmos.photon.array = photon.copy()
-    valid_cmos.pixel.array = pixel.copy()
+    valid_cmos.pixel.non_volatile.array = pixel.copy()
     valid_cmos.signal.array = signal.copy()
     valid_cmos.image.array = image.copy()
 
@@ -130,7 +130,7 @@ def test_is_equal_with_arrays(valid_cmos: CMOS):
     )
 
     other_detector.photon.array = photon.copy()
-    other_detector.pixel.array = pixel.copy()
+    other_detector.pixel.non_volatile.array = pixel.copy()
     other_detector.signal.array = signal.copy()
     other_detector.image.array = image.copy()
 
@@ -215,7 +215,7 @@ def comparison(dct, other_dct):
                 "data": {
                     "photon": {},
                     "scene": None,
-                    "pixel": None,
+                    "pixel": {},
                     "signal": None,
                     "image": None,
                     "charge": {
@@ -290,7 +290,7 @@ def comparison(dct, other_dct):
                 "data": {
                     "photon": {},
                     "scene": None,
-                    "pixel": None,
+                    "pixel": {},
                     "signal": None,
                     "image": None,
                     "charge": {

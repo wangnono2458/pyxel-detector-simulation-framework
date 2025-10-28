@@ -22,7 +22,7 @@ def ccd_5x5() -> CCD:
         environment=Environment(),
         characteristics=Characteristics(quantum_efficiency=0.9),
     )
-    detector.pixel.array = np.zeros(detector.geometry.shape, dtype=float)
+    detector.pixel.non_volatile.array = np.zeros(detector.geometry.shape, dtype=float)
     return detector
 
 
@@ -56,7 +56,7 @@ def test_fixed_pattern_noise_valid_path(ccd_5x5: CCD, valid_noise_path: str | Pa
     detector = ccd_5x5
 
     array = np.ones((5, 5))
-    detector.pixel.array = array
+    detector.pixel.non_volatile.array = array
     target = array * 0.5
 
     fixed_pattern_noise(detector=detector, filename=valid_noise_path)
