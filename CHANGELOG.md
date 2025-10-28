@@ -31,6 +31,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
   model [`load_psf`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/photon_collection_models.html#load-psf) in 
   [`Photon Collection`](https://esa.gitlab.io/pyxel/doc/stable/references/model_groups/photon_collection_models.html#).
   (See [!1108](https://gitlab.com/esa/pyxel/-/merge_requests/1108)).
+* Refactor model `ktc_noise`.
+  (See [!1116](https://gitlab.com/esa/pyxel/-/merge_requests/1116)).
 
 ### Others
 * In 'metadata.schema.json' add possibility to use 'status: to_review'.

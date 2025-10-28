@@ -46,17 +46,26 @@ def ktc_noise(
 ) -> None:
     """Apply KTC reset noise to detector signal array.
 
+    This model adds thermal reset noise based on the
+    ``detector.characteristics.temperature``
+    and node capacitance.
+
+    The kTC formula can be retrieved here :cite:p:`Goebel_2018`.
+
     Parameters
     ----------
     detector : Detector
         Pyxel detector object.
     node_capacitance : float, optional
         Node capacitance. Unit: F
+        If not provided, it is retrieved from ``detector.characteristics.node_capacitance``.
     seed : int, optional
         Random seed.
 
     Notes
     -----
+    This noise is only applied during the first readout or in destructive readout mode.
+
     For more information, you can find examples here:
 
     * :external+pyxel_data:doc:`use_cases/CMOS/cmos`
@@ -76,16 +85,13 @@ def ktc_noise(
                 " used. Please specify node_capacitance in the model argument!"
             ) from ex
 
-    if not detector.is_first_readout and detector.non_destructive_readout:
-        # Do nothing when this is not the first readout and non-destructive mode
-        return
+    if detector.is_first_readout or not detector.non_destructive_readout:
+        # This it the first readout or the destructive mode
+        with set_random_seed(seed):
+            noise_2d = compute_ktc_noise(
+                temperature=detector.environment.temperature,
+                capacitance=capacitance,
+                shape=detector.geometry.shape,
+            )
 
-    # This it the first readout or the destructive mode
-    with set_random_seed(seed):
-        noise_2d = compute_ktc_noise(
-            temperature=detector.environment.temperature,
-            capacitance=capacitance,
-            shape=detector.geometry.shape,
-        )
-
-    detector.signal += noise_2d
+        detector.signal += noise_2d
