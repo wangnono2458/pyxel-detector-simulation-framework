@@ -56,7 +56,10 @@ models:
     detector: APD
     status: null
     description: >
-      Add kTC reset noise to the signal array of the detector object.
+      Add kTC reset noise to the detector's signal array.
+      This noise originates from thermal fluctuations during the pixel reset phase
+      and is modeled using the standard kTC formula.
+
     config: >
       - name: ktc_noise
         func: pyxel.models.charge_measurement.ktc_noise
