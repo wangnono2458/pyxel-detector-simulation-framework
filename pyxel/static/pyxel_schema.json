@@ -4256,7 +4256,7 @@
           "properties": {
             "node_capacitance": {
               "default": null,
-              "description": "Node capacitance. Unit: F",
+              "description": "Node capacitance. Unit: F If not provided, it is retrieved from ``detector.characteristics.node_capacitance``.",
               "title": "node_capacitance",
               "type": [
                 "number",
