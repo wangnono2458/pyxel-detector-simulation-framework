@@ -535,7 +535,7 @@ class APDCharacteristics:
 
     def __init__(
         self,
-        roic_gain: float,  # unit: V
+        roic_gain: float,  # unit: V/V
         bias_to_node: ConverterValues | ConverterTable | ConverterFunction,
         avalanche_settings: AvalancheSettings,
         #####################

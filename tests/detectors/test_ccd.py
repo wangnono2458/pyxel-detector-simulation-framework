@@ -291,7 +291,7 @@ def comparison(dct, other_dct):
                     "environment": {"temperature": 100.1},
                     "characteristics": {
                         "quantum_efficiency": 0.1,
-                        "charge_to_volt_conversion": 0.2,
+                        "charge_to_volt": {"value": 0.2},
                         "pre_amplification": 3.3,
                         "full_well_capacity": 10,
                         "adc_bit_resolution": 16,
@@ -376,7 +376,7 @@ def comparison(dct, other_dct):
                 "data": {
                     "photon": {},
                     "scene": None,
-                    "pixel": None,
+                    "pixel": {},
                     "signal": None,
                     "image": None,
                     "charge": {

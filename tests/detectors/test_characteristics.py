@@ -17,6 +17,7 @@ from pyxel.detectors import (
     Characteristics,
     ChargeToVoltSettings,
     Environment,
+    Geometry,
 )
 from pyxel.detectors.channels import Matrix, ReadoutPosition
 
@@ -475,6 +476,7 @@ def test_charge_to_volt_conversion_setter_wrong_inputs(
 def test_pre_amplification_setter(pre_amplification):
     """Test setter 'Characteristics.pre_amplification'."""
     obj = Characteristics()
+    obj.initialize(geometry=Geometry(row=2, col=3))
 
     obj.pre_amplification = pre_amplification
     assert obj.pre_amplification == pre_amplification
@@ -492,6 +494,7 @@ def test_pre_amplification_setter_wrong_inputs(
 ):
     """Test setter 'Characteristics.pre_amplification'."""
     obj = Characteristics()
+    obj.initialize(geometry=Geometry(row=2, col=3))
 
     with pytest.raises(exp_exc, match=exp_msg):
         obj.pre_amplification = pre_amplification
