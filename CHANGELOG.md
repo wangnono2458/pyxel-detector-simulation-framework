@@ -23,6 +23,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
   (See [!1117](https://gitlab.com/esa/pyxel/-/merge_requests/1117)).
 * Speedup pipelines with multiple readout time.
   (See [!1115](https://gitlab.com/esa/pyxel/-/merge_requests/1115)).
+* Implementing 'volatile' pixels for non-destructive readout mode.
+  (See [!1120](https://gitlab.com/esa/pyxel/-/merge_requests/1120)).
 
 ### Documentation
 
