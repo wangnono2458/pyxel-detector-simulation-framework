@@ -40,6 +40,8 @@ Data structures
     Photon
     Charge
     Pixel
+    PixelNonVolatile
+    PixelVolatile
     Phase
     Signal
     Image

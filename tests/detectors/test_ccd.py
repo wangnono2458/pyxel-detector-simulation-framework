@@ -122,7 +122,7 @@ def test_is_equal_with_arrays(valid_ccd: CCD):
 
     # Apply the random data to 'valid_ccd' and 'other_detector'
     valid_ccd.photon.array = photon_2d.copy()
-    valid_ccd.pixel.array = pixel_2d.copy()
+    valid_ccd.pixel.non_volatile.array = pixel_2d.copy()
     valid_ccd.signal.array = signal_2d.copy()
     valid_ccd.image.array = image_2d.copy()
 
@@ -133,7 +133,7 @@ def test_is_equal_with_arrays(valid_ccd: CCD):
     )
 
     other_detector.photon.array = photon_2d.copy()
-    other_detector.pixel.array = pixel_2d.copy()
+    other_detector.pixel.non_volatile.array = pixel_2d.copy()
     other_detector.signal.array = signal_2d.copy()
     other_detector.image.array = image_2d.copy()
 
@@ -219,7 +219,7 @@ def comparison(dct, other_dct):
                 "data": {
                     "photon": {},
                     "scene": None,
-                    "pixel": None,
+                    "pixel": {},
                     "signal": None,
                     "image": None,
                     "charge": {
@@ -294,7 +294,7 @@ def comparison(dct, other_dct):
                 "data": {
                     "photon": {},
                     "scene": None,
-                    "pixel": None,
+                    "pixel": {},
                     "signal": None,
                     "image": None,
                     "charge": {
@@ -359,7 +359,7 @@ def test_to_and_from_dict_with_arrays_no_frame(valid_ccd: CCD, klass):
     charge_2d: np.ndarray = np.random.random(size=shape)
 
     valid_ccd.photon.array = photon_2d.copy()
-    valid_ccd.pixel.array = pixel_2d.copy()
+    valid_ccd.pixel.non_volatile.array = pixel_2d.copy()
     valid_ccd.signal.array = signal_2d.copy()
     valid_ccd.image.array = image_2d.copy()
 
@@ -395,7 +395,7 @@ def test_to_and_from_dict_with_arrays_no_frame(valid_ccd: CCD, klass):
         "data": {
             "photon": {"array_2d": photon_2d.copy()},
             "scene": None,
-            "pixel": pixel_2d.copy(),
+            "pixel": {"non_volatile": pixel_2d.copy()},
             "signal": signal_2d.copy(),
             "image": image_2d.copy(),
             "charge": {

@@ -34,7 +34,7 @@ def ccd_10x10() -> CCD:
         characteristics=Characteristics(),
     )
     detector.signal.array = np.zeros(detector.geometry.shape, dtype=float)
-    detector.pixel.array = np.zeros(detector.geometry.shape, dtype=float)
+    detector.pixel.non_volatile.array = np.zeros(detector.geometry.shape, dtype=float)
     detector.photon.array = np.zeros(detector.geometry.shape, dtype=float)
     detector.image.array = np.zeros(detector.geometry.shape, dtype=np.uint64)
     detector._readout_properties = ReadoutProperties(times=[1.0, 2.0])

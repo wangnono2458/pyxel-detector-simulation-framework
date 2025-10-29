@@ -187,6 +187,7 @@ class Exposure:
 
 
 # TODO: This function will be deprecated
+# ruff: noqa: C901
 @deprecated("This function will be removed")
 def _run_exposure_pipeline_deprecated(
     processor: Processor,
@@ -290,6 +291,13 @@ def _run_exposure_pipeline_deprecated(
                 if isinstance(obj, Photon):
                     if obj._array is not None:
                         data_arr: np.ndarray = np.array(obj)
+                        unstacked_result[key].append(data_arr)
+                elif isinstance(obj, Pixel):
+                    if (
+                        obj._non_volatile.array is not None
+                        or obj._volatile.array is not None  # type: ignore[unreachable]
+                    ):
+                        data_arr = np.array(obj)
                         unstacked_result[key].append(data_arr)
                 elif obj._array is not None:
                     data_arr = np.array(obj)

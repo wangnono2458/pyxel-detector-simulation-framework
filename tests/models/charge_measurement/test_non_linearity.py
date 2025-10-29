@@ -185,7 +185,7 @@ def test_simple_physical_non_linearity_with_temperature(
     assert isinstance(temperature, float)
     detector = cmos_5x5
 
-    detector.pixel.array = np.ones(detector.signal.shape)
+    detector.pixel.non_volatile.array = np.ones(detector.signal.shape)
     detector.environment.temperature = temperature
 
     with ctx_manager:
@@ -202,7 +202,7 @@ def test_simple_physical_non_linearity_with_temperature(
 def test_physical_non_linearity_valid(cmos_5x5: CMOS):
     """Test model 'physical_non_linearity' with valid inputs."""
     detector = cmos_5x5
-    detector.pixel.array = np.ones(detector.signal.shape)
+    detector.pixel.non_volatile.array = np.ones(detector.signal.shape)
     physical_non_linearity(
         detector=detector,
         cutoff=2.0,
@@ -419,7 +419,7 @@ def test_physical_non_linearity_with_temperature(
     assert isinstance(temperature, float)
     detector = cmos_5x5
 
-    detector.pixel.array = np.ones(detector.signal.shape)
+    detector.pixel.non_volatile.array = np.ones(detector.signal.shape)
     detector.environment.temperature = temperature
 
     with ctx_manager:

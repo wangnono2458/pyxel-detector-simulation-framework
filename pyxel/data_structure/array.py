@@ -73,7 +73,7 @@ class ArrayBase:
     def __eq__(self, other) -> bool:
         is_true = type(self) is type(other) and self.shape == other.shape
         if is_true and self._array is not None:
-            is_true = np.array_equal(self.array, other.array)
+            is_true = np.array_equal(self.array, other._array)
         return is_true
 
     def __iadd__(self, other: Union[np.ndarray, "Quantity"]) -> Self:

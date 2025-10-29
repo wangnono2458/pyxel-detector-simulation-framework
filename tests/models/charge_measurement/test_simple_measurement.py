@@ -39,7 +39,7 @@ def test_simple_measurement(ccd_5x10: CCD, gain):
     )
 
     detector = ccd_5x10
-    detector.pixel.array = pixel_2d.copy()
+    detector.pixel.non_volatile.array = pixel_2d.copy()
     detector.characteristics.charge_to_volt_conversion = 0.5
 
     if gain is None:
@@ -103,7 +103,7 @@ def test_simple_measurement_with_channels(ccd_2x2_with_channels: CCD, gain):
     )
 
     detector = ccd_2x2_with_channels
-    detector.pixel.array = pixel_2d.copy()
+    detector.pixel.non_volatile.array = pixel_2d.copy()
     detector.characteristics.charge_to_volt_conversion = (
         detector.characteristics.charge_to_volt_conversion
     )

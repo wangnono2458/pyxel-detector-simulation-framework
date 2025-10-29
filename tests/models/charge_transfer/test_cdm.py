@@ -263,7 +263,7 @@ def test_cdm_parallel(
         ]
     )
     detector = ccd_5x5
-    detector.pixel.array = input_array
+    detector.pixel.non_volatile.array = input_array
 
     cdm(
         detector=detector,
@@ -294,7 +294,7 @@ def test_model_cdm_parallel(ccd_5x5: CCD):
     )
 
     detector = ccd_5x5
-    detector.pixel.array = pixel_2d
+    detector.pixel.non_volatile.array = pixel_2d
 
     cdm(
         detector=detector,
@@ -458,7 +458,7 @@ def test_cdm_serial(
         ]
     )
     detector = ccd_5x5
-    detector.pixel.array = input_array
+    detector.pixel.non_volatile.array = input_array
 
     cdm(
         detector=detector,

@@ -110,7 +110,7 @@ def remove_cosmic_rays(
         effective_gain=effective_gain,
         readnoise=readnoise,
     )
-    detector.pixel.array = cleaned_image
+    detector.pixel.non_volatile.array = cleaned_image
 
     # Get current absolute time
     absolute_time = xr.DataArray(

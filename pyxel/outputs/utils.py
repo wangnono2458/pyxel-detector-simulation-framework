@@ -271,6 +271,8 @@ def save_to_files(
     # Late import
     import xarray as xr
 
+    from pyxel.data_structure import Pixel
+
     dct: Mapping[str, list[xr.DataArray]] = defaultdict(list)
 
     for filename in filenames:
@@ -284,7 +286,11 @@ def save_to_files(
         if data_2d is None:
             raise NotImplementedError(f"Unknown {valid_name=}")
 
-        if data_2d._array is None:
+        if isinstance(data_2d, Pixel):
+            if data_2d.non_volatile._array is None and data_2d.volatile._array is None:
+                # TODO: Improve error message
+                raise ValueError(f"Bucket {data_2d=} is uninitialized !")
+        elif data_2d._array is None:
             # TODO: Improve error message
             raise ValueError(f"Bucket {data_2d=} is uninitialized !")
 

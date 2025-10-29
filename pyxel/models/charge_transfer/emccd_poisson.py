@@ -34,7 +34,7 @@ def multiplication_register(
     if total_gain < 0 or gain_elements < 0:
         raise ValueError("Wrong input parameter")
 
-    detector.pixel.array = multiplication_register_poisson(
+    detector.pixel.non_volatile.array = multiplication_register_poisson(
         image_cube=detector.pixel.array,
         total_gain=total_gain,
         gain_elements=gain_elements,

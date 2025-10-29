@@ -15,6 +15,7 @@ import numpy as np
 from .array import ArrayBase
 from .photon import Photon
 from .scene import Scene, SceneCoordinates
+from .pixel_read import PixelNonVolatile, PixelVolatile
 from .pixel import Pixel
 from .signal import Signal
 from .charge import Charge

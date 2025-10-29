@@ -219,10 +219,10 @@ class Detector:
     @pixel.setter
     def pixel(self, obj: ArrayLike | Pixel) -> None:
         """Set the pixel information for the detector."""
-        if isinstance(obj, Pixel):
-            self._pixel = obj
-        else:
-            self.pixel.array = obj
+        if not isinstance(obj, Pixel):
+            raise TypeError
+
+        self._pixel = obj
 
     @property
     def signal(self) -> Signal:
@@ -369,8 +369,9 @@ class Detector:
         self.photon.empty()
         self.charge.empty()
 
+        self.pixel.empty_volatile()
         if reset:
-            self.pixel.empty()
+            self.pixel.empty_non_volatile()
 
         self.signal.empty()
         self.image.empty()

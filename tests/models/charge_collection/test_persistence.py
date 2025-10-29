@@ -38,7 +38,7 @@ def ccd_5x5() -> CCD:
         environment=Environment(),
         characteristics=Characteristics(),
     )
-    detector.pixel.array = np.zeros(detector.geometry.shape, dtype=float)
+    detector.pixel.non_volatile.array = np.zeros(detector.geometry.shape, dtype=float)
     detector._readout_properties = ReadoutProperties(times=[1.0])
     return detector
 
@@ -57,7 +57,7 @@ def cmos_5x5() -> CMOS:
         environment=Environment(),
         characteristics=Characteristics(),
     )
-    detector.pixel.array = np.zeros(detector.geometry.shape, dtype=float)
+    detector.pixel.non_volatile.array = np.zeros(detector.geometry.shape, dtype=float)
     detector._readout_properties = ReadoutProperties(times=[1.0])
     return detector
 

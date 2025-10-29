@@ -63,23 +63,27 @@ def test_with_pixel(empty_detector: CCD, with_unit: bool):
     data_2d = np.array([[1, 2], [3, 4]], dtype=float)
 
     if with_unit:
-        detector.pixel = Quantity(data_2d, unit="electron")
-        detector.pixel += Quantity(data_2d, unit="electron")
-        detector.pixel = detector.pixel + Quantity(data_2d, unit="electron")
+        detector.pixel.non_volatile = Quantity(data_2d, unit="electron")
+        detector.pixel.non_volatile += Quantity(data_2d, unit="electron")
+        detector.pixel.non_volatile = detector.pixel.non_volatile + Quantity(
+            data_2d, unit="electron"
+        )
 
         with pytest.raises(TypeError, match="not compatible with expected unit"):
-            detector.pixel = Quantity(data_2d, unit="volt")
+            detector.pixel.non_volatile = Quantity(data_2d, unit="volt")
 
         with pytest.raises(TypeError, match="not compatible with expected unit"):
-            detector.pixel += Quantity(data_2d, unit="volt")
+            detector.pixel.non_volatile += Quantity(data_2d, unit="volt")
 
         with pytest.raises(TypeError, match="not compatible with expected unit"):
-            detector.pixel = detector.pixel + Quantity(data_2d, unit="volt")
+            detector.pixel.non_volatile = detector.pixel.non_volatile + Quantity(
+                data_2d, unit="volt"
+            )
 
     else:
-        detector.pixel = data_2d
-        detector.pixel += data_2d
-        detector.pixel = detector.pixel + data_2d
+        detector.pixel.non_volatile = data_2d
+        detector.pixel.non_volatile += data_2d
+        detector.pixel.non_volatile = detector.pixel.non_volatile + data_2d
 
     np.testing.assert_equal(data_2d, np.array([[1, 2], [3, 4]], dtype=float))
     np.testing.assert_equal(detector.pixel, 3 * data_2d)

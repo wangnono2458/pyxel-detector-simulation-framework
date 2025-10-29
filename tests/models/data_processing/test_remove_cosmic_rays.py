@@ -77,7 +77,7 @@ def test_data_output(ccd_50x50: CCD):
     """Test output for function 'remove_cosmic_rays'."""
     detector = ccd_50x50
     pixels = create_image_with_cosmics()  # 2d array
-    detector.pixel.array = pixels
+    detector.pixel.non_volatile.array = pixels
     remove_cosmic_rays(detector=detector)
     data = detector.data
 
@@ -99,7 +99,7 @@ def test_ray_removal(ccd_50x50: CCD):
     detector = ccd_50x50
 
     pixels = create_image_with_cosmics()  # 2d array
-    detector.pixel.array = pixels
+    detector.pixel.non_volatile.array = pixels
 
     ###################
     # First iteration #

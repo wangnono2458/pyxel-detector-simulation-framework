@@ -24,8 +24,8 @@ def apply_simple_full_well_capacity(array: np.ndarray, fwc: int) -> np.ndarray:
     -------
     ndarray
     """
-    array[array > fwc] = fwc
-    return array
+    array_with_fwc = np.where(array > fwc, fwc, array)
+    return array_with_fwc
 
 
 def simple_full_well(detector: Detector, fwc: int | None = None) -> None:
@@ -50,4 +50,4 @@ def simple_full_well(detector: Detector, fwc: int | None = None) -> None:
         array=detector.pixel.array, fwc=fwc_input
     )
 
-    detector.pixel.array = charge_array
+    detector.pixel.non_volatile.array = charge_array
