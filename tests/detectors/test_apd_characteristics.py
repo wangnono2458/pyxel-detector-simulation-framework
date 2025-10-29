@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 import astropy.constants as const
 import pytest
+from astropy.units import Quantity, Unit
 
 from pyxel.configuration.configuration import to_apd_characteristics
 from pyxel.detectors import APDCharacteristics
@@ -736,6 +737,7 @@ def test_valid_common_voltage(
     [
         to_apd_characteristics(
             {
+                "charge_to_volt": {"value": 1.0869583677069197e-06},
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(2.65, 73.7)]},
                 "avalanche_settings": {
@@ -748,6 +750,7 @@ def test_valid_common_voltage(
         ),
         to_apd_characteristics(
             {
+                "charge_to_volt": {"value": 1.335147195e-06},
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(4.0, 60.0)]},
                 "avalanche_settings": {
@@ -760,6 +763,7 @@ def test_valid_common_voltage(
         ),
         to_apd_characteristics(
             {
+                "charge_to_volt": {"value": 8.010883169999998e-07},
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(1.0, 100.0)]},
                 "avalanche_settings": {
@@ -778,9 +782,19 @@ def test_charge_to_volt_conversion(characteristics):
     capacitance_farads = characteristics.bias_to_node_capacitance(
         characteristics.avalanche_settings.avalanche_bias
     )
-    expected = characteristics.roic_gain * (const.e.value / capacitance_farads)
 
-    assert characteristics.charge_to_volt_conversion == pytest.approx(expected)
+    electron = Quantity(const.e) / Unit("electron")
+
+    expected = (
+        Quantity(characteristics.roic_gain, unit="V/V")
+        * electron
+        / Quantity(capacitance_farads, unit="fF")
+    )
+    expected_volt_per_electron = expected.to("V/electron").value
+
+    assert characteristics.charge_to_volt_conversion == pytest.approx(
+        expected_volt_per_electron
+    )
 
 
 @pytest.mark.parametrize(
@@ -799,6 +813,7 @@ def test_charge_to_volt_conversion(characteristics):
                 "quantum_efficiency": 0.8,
                 "adc_bit_resolution": 14,
                 "adc_voltage_range": (0.0, 16.0),
+                "charge_to_volt": {"value": 1.335147195e-06},
             }
         ),
         to_apd_characteristics(
@@ -814,6 +829,7 @@ def test_charge_to_volt_conversion(characteristics):
                 "quantum_efficiency": 0.9,
                 "adc_bit_resolution": 16,
                 "adc_voltage_range": (0.0, 16.0),
+                "charge_to_volt": {"value": 1.335147195e-06},
             }
         ),
         to_apd_characteristics(
@@ -831,6 +847,7 @@ def test_charge_to_volt_conversion(characteristics):
                 "quantum_efficiency": 0.7,
                 "adc_bit_resolution": 32,
                 "adc_voltage_range": (0.0, 16.0),
+                "charge_to_volt": {"value": 1.335147195e-06},
             }
         ),
     ],
@@ -939,6 +956,7 @@ def test_bias_to_node_capacitance_valid(bias, expected):
             {
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(2.65, 73.7), (4.0, 60.0)]},
+                "charge_to_volt_settings": None,
                 "avalanche_settings": {
                     "avalanche_gain": 1.0,
                     "common_voltage": None,
@@ -967,6 +985,7 @@ def test_bias_to_node_capacitance_valid(bias, expected):
             {
                 "roic_gain": 0.5,
                 "bias_to_node": {"values": [(2.65, 73.7), (4.0, 60.0)]},
+                "charge_to_volt_settings": None,
                 "avalanche_settings": {
                     "avalanche_gain": 1.0,
                     "common_voltage": 2.0,

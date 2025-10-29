@@ -19,6 +19,7 @@ from pyxel.detectors import (
     APDGeometry,
     CCDGeometry,
     Characteristics,
+    ChargeToVoltSettings,
     CMOSGeometry,
     Detector,
     Environment,
@@ -65,7 +66,7 @@ def detector(request) -> CCD | CMOS | MKID | APD:
             environment=Environment(temperature=100.1),
             characteristics=Characteristics(
                 quantum_efficiency=0.1,
-                charge_to_volt_conversion=0.2,
+                charge_to_volt=ChargeToVoltSettings(value=0.2),
                 pre_amplification=3.3,
                 full_well_capacity=10,
             ),
@@ -88,7 +89,7 @@ def detector(request) -> CCD | CMOS | MKID | APD:
             environment=Environment(temperature=100.1),
             characteristics=Characteristics(
                 quantum_efficiency=0.1,
-                charge_to_volt_conversion=0.2,
+                charge_to_volt=ChargeToVoltSettings(value=0.2),
                 pre_amplification=3.3,
                 full_well_capacity=10,
             ),
@@ -111,7 +112,7 @@ def detector(request) -> CCD | CMOS | MKID | APD:
             environment=Environment(temperature=100.1),
             characteristics=Characteristics(
                 quantum_efficiency=0.1,
-                charge_to_volt_conversion=0.2,
+                charge_to_volt=ChargeToVoltSettings(value=0.2),
                 pre_amplification=3.3,
                 full_well_capacity=10,
             ),

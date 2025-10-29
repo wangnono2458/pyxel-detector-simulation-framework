@@ -13,33 +13,15 @@ from typing import TYPE_CHECKING
 import numpy as np
 from typing_extensions import Self, deprecated
 
+from pyxel.detectors import ChargeToVoltSettings
+from pyxel.detectors.characteristics import (
+    to_pre_amplification_map,
+    validate_pre_amplification,
+)
 from pyxel.util import get_size, get_uninitialized_error
 
 if TYPE_CHECKING:
     from pyxel.detectors import APDGeometry
-
-
-def detector_gain(capacitance: float, roic_gain: float) -> float:
-    """Compute the effective gain of an APD detector.
-
-    The gain is calculated from the ROIC gain and the pixel capacitance.
-
-    Parameters
-    ----------
-    capacitance : float
-        Pixel capacitance in Farads.
-    roic_gain : float
-        Gain of the readout circuit in V/electron.
-
-    Returns
-    -------
-    float
-        Effective detector gain.
-    """
-    # Late import to speedup start-up time
-    import astropy.constants as const
-
-    return roic_gain * (const.e.value / capacitance)
 
 
 def create_func_interpolate(xp: np.ndarray, yp: np.ndarray) -> Callable[[float], float]:
@@ -539,6 +521,10 @@ class APDCharacteristics:
     avalanche_settings : AvalancheSettings
     quantum_efficiency : float, optional
         Quantum efficiency.
+    charge_to_volt : float, optional
+        Sensitivity of charge readout. Unit: V/e-
+    pre_amplification : float, optional
+        Gain of pre-amplifier. Unit: V/V
     full_well_capacity : float, optional
         Full well capacity. Unit: e-
     adc_bit_resolution : int, optional
@@ -549,46 +535,52 @@ class APDCharacteristics:
 
     def __init__(
         self,
-        roic_gain: float,  # unit: V
+        roic_gain: float,  # unit: V/V
         bias_to_node: ConverterValues | ConverterTable | ConverterFunction,
         avalanche_settings: AvalancheSettings,
         #####################
         # Common parameters #
         #####################
         quantum_efficiency: float | None = None,  # unit: NA
+        charge_to_volt: ChargeToVoltSettings | None = None,  # unit: volt/electron
+        pre_amplification: float | dict[str, float] | None = None,  # unit: V/V
         full_well_capacity: float | None = None,  # unit: electron
         adc_bit_resolution: int | None = None,
         adc_voltage_range: tuple[float, float] | None = None,  # unit: V
     ):
+        if quantum_efficiency is not None and not (0.0 <= quantum_efficiency <= 1.0):
+            raise ValueError("'quantum_efficiency' must be between 0.0 and 1.0.")
+
+        validate_pre_amplification(pre_amplification)
+
+        if full_well_capacity is not None and not (0.0 <= full_well_capacity <= 1.0e7):
+            raise ValueError("'full_well_capacity' must be between 0 and 1e7.")
+
         self._avalanche_settings: AvalancheSettings = avalanche_settings
         self._bias_to_node: ConverterValues | ConverterTable | ConverterFunction = (
             bias_to_node
         )
 
-        if quantum_efficiency and not (0.0 <= quantum_efficiency <= 1.0):
-            raise ValueError("'quantum_efficiency' must be between 0.0 and 1.0.")
-
         if adc_bit_resolution and not (4 <= adc_bit_resolution <= 64):
             raise ValueError("'adc_bit_resolution' must be between 4 and 64.")
         if adc_voltage_range and not len(adc_voltage_range) == 2:
             raise ValueError("Voltage range must have length of 2.")
-        if full_well_capacity and not (0.0 <= full_well_capacity <= 1.0e7):
-            raise ValueError("'full_well_capacity' must be between 0 and 1e7.")
 
         self._quantum_efficiency: float | None = quantum_efficiency
+
+        self._pre_amplification: float | dict[str, float] | None = pre_amplification
+        self._pre_amplification_map: float | np.ndarray | None = (
+            None  # Geometry is not yet defined at this stage
+        )
+
         self._full_well_capacity: float | None = full_well_capacity
+        self._charge_to_volt: ChargeToVoltSettings | None = charge_to_volt
         self._adc_voltage_range: tuple[float, float] | None = adc_voltage_range
         self._adc_bit_resolution: int | None = adc_bit_resolution
         self._node_capacitance: float = self.bias_to_node_capacitance(
             self.avalanche_settings.avalanche_bias
         )
         self._roic_gain: float = roic_gain
-
-        # TODO: Is it really needed ? or property 'charge_to_volt_conversion' is enough ?
-        self._charge_to_volt_conversion: float = detector_gain(
-            capacitance=self._node_capacitance,
-            roic_gain=self.roic_gain,
-        )
 
         # TODO: This variable is available in class 'Characteristics' and 'APDCharacteristics'
         #       Refactor this
@@ -606,68 +598,19 @@ class APDCharacteristics:
             and self._bias_to_node == other._bias_to_node
             and self._avalanche_settings == other._avalanche_settings
             and self._quantum_efficiency == other._quantum_efficiency
+            and self._pre_amplification == other._pre_amplification
             and self._full_well_capacity == other._full_well_capacity
             and self._adc_bit_resolution == other._adc_bit_resolution
             and self._adc_voltage_range == other._adc_voltage_range
             and self._avalanche_settings == other._avalanche_settings
+            and self._charge_to_volt == other._charge_to_volt
         )
 
-    # TODO: This method exists in class 'Characteristics' and 'APDCharacteristics'
-    #       Refactor this
-    def _build_channels_gain(self, value: float | dict[str, float] | None):
-        if value is None:
-            self._channels_gain = None
-            return
-
-        if isinstance(value, float):
-            if not (0.0 <= value <= 100.0):
-                raise ValueError(
-                    "'charge_to_volt_conversion' must be between 0.0 and 100.0."
-                )
-            self._channels_gain = value
-            return
-
-        if isinstance(value, dict):
-            if self._geometry is None:
-                raise ValueError(
-                    "Geometry must be initialized before setting channel gains."
-                )
-
-            if self._geometry.channels is None:
-                raise ValueError("Missing parameter '.channels' in Geometry.")
-
-            value_2d = np.zeros(shape=self._geometry.shape, dtype=float)
-
-            for channel, gain in value.items():
-                if not (0.0 <= gain <= 100.0):
-                    raise ValueError(
-                        f"Gain for channel {channel} must be between 0.0 and 100.0."
-                    )
-                slice_y, slice_x = self._geometry.get_channel_coord(channel)
-                value_2d[slice_y, slice_x] = gain
-
-            self._channels_gain = value_2d
-
-            # Perform channel mismatch check after processing all gains
-            defined_channels = set(self._geometry.channels.readout_position.keys())
-            input_channels = set(value.keys())
-            if defined_channels != input_channels:
-                raise ValueError(
-                    "Mismatch between the defined channels in geometry and provided channel gains."
-                )
-            return
-
-        raise TypeError(
-            "Invalid type for 'charge_to_volt_conversion'; expected float or dict."
-        )
-
-    # TODO: This method is similar in 'APDCharacteristics and 'Characteristics'
-    #       Refactor these methods
     def initialize(self, geometry: "APDGeometry"):
         self._geometry = geometry
-        charge_to_volt = self.charge_to_volt_conversion
-        if charge_to_volt is not None:
-            self._build_channels_gain(value=charge_to_volt)
+        self._pre_amplification_map = to_pre_amplification_map(
+            self._pre_amplification, geometry=self._geometry
+        )
 
     @property
     def quantum_efficiency(self) -> float:
@@ -689,6 +632,45 @@ class APDCharacteristics:
             raise ValueError("'quantum_efficiency' values must be between 0.0 and 1.0.")
 
         self._quantum_efficiency = value
+
+    @property
+    def pre_amplification_map(self) -> float | np.ndarray:
+        if self._pre_amplification_map is None:
+            raise ValueError(
+                get_uninitialized_error(
+                    name="channels_gain",
+                    parent_name="characteristics",
+                )
+            )
+
+        return self._pre_amplification_map
+
+    @property
+    def pre_amplification(self) -> float | dict[str, float]:
+        """Get voltage pre-amplification gain."""
+        if self._pre_amplification is None:
+            raise ValueError(
+                get_uninitialized_error(
+                    name="pre_amplification",
+                    parent_name="characteristics",
+                )
+            )
+
+        return self._pre_amplification
+
+    @pre_amplification.setter
+    def pre_amplification(self, value: float | dict[str, float]) -> None:
+        """Set voltage pre-amplification gain."""
+        if self._geometry is None:
+            raise RuntimeError(
+                "There is no 'Geometry' defined ! Please run method '.initialize(...)'"
+            )
+
+        validate_pre_amplification(value)
+        pre_amplification_map = to_pre_amplification_map(value, geometry=self._geometry)
+
+        self._pre_amplification = value
+        self._pre_amplification_map = pre_amplification_map
 
     @property
     def avalanche_settings(self) -> AvalancheSettings:
@@ -744,12 +726,17 @@ class APDCharacteristics:
         return self.bias_to_node_capacitance(self.avalanche_settings.avalanche_bias)
 
     @property
-    def charge_to_volt_conversion(self) -> float:
+    def charge_to_volt_conversion(self) -> float | np.ndarray:
         """Compute charge-to-voltage conversion factor."""
-        capacitance = self.bias_to_node_capacitance(
-            self.avalanche_settings.avalanche_bias
-        )
-        return detector_gain(capacitance=capacitance, roic_gain=self.roic_gain)
+        if not self._charge_to_volt:
+            raise ValueError(
+                get_uninitialized_error(
+                    name="charge_to_volt",
+                    parent_name="characteristics",
+                )
+            )
+
+        return self._charge_to_volt.value
 
     @property
     def adc_bit_resolution(self) -> int:
@@ -811,13 +798,21 @@ class APDCharacteristics:
 
     @property
     def system_gain(self) -> float:
-        """Compute the full system gain based on detector type."""
-        return (
+        """Compute the full system gain (in adu/electron) based on detector type."""
+        # Late import
+        from astropy.units import Quantity
+
+        gain: Quantity = (
             self.quantum_efficiency
-            * self.avalanche_settings.avalanche_gain
-            * self.charge_to_volt_conversion
-            * 2**self.adc_bit_resolution
-        ) / (max(self.adc_voltage_range) - min(self.adc_voltage_range))
+            * Quantity(self.avalanche_settings.avalanche_gain, unit="electron/electron")
+            * Quantity(self.charge_to_volt_conversion, unit="V/electron")
+            * Quantity(2**self.adc_bit_resolution, unit="adu")
+        ) / (
+            np.max(Quantity(self.adc_voltage_range, unit="V"))
+            - np.min(Quantity(self.adc_voltage_range, unit="V"))
+        )
+
+        return float(gain.to("adu/electron").value)
 
     @property
     def numbytes(self) -> int:
@@ -859,7 +854,11 @@ class APDCharacteristics:
             "full_well_capacity": self._full_well_capacity,
             "adc_bit_resolution": self._adc_bit_resolution,
             "adc_voltage_range": self._adc_voltage_range,
+            "charge_to_volt_settings": (
+                self._charge_to_volt.to_dict() if self._charge_to_volt else None
+            ),
         }
+
         return dct
 
     @classmethod
@@ -880,13 +879,25 @@ class APDCharacteristics:
             dct["avalanche_settings"]
         )
 
+        param_charge_to_volt: dict | None = dct.get("charge_to_volt_settings")
+        charge_to_volt_settings: ChargeToVoltSettings | None = (
+            ChargeToVoltSettings.from_dict(param_charge_to_volt)
+            if param_charge_to_volt is not None
+            else None
+        )
+
         new_dct: Mapping = dicttoolz.dissoc(
-            dct, "adc_voltage_range", "bias_to_node", "avalanche_settings"
+            dct,
+            "adc_voltage_range",
+            "bias_to_node",
+            "avalanche_settings",
+            "charge_to_volt_settings",
         )
 
         return cls(
             adc_voltage_range=adc_voltage_range,
             bias_to_node=bias_to_node,
             avalanche_settings=avalanche_settings,
+            charge_to_volt=charge_to_volt_settings,
             **new_dct,
         )

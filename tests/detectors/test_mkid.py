@@ -11,7 +11,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from pyxel.detectors import MKID, Characteristics, Detector, Environment, MKIDGeometry
+from pyxel.detectors import (
+    MKID,
+    Characteristics,
+    ChargeToVoltSettings,
+    Detector,
+    Environment,
+    MKIDGeometry,
+)
 
 
 @pytest.fixture
@@ -29,7 +36,7 @@ def valid_mkid() -> MKID:
         environment=Environment(temperature=100.1),
         characteristics=Characteristics(
             quantum_efficiency=0.1,
-            charge_to_volt_conversion=0.2,
+            charge_to_volt=ChargeToVoltSettings(value=0.2),
             pre_amplification=3.3,
         ),
     )
@@ -77,7 +84,7 @@ def valid_mkid() -> MKID:
                 environment=Environment(temperature=100.1),
                 characteristics=Characteristics(
                     quantum_efficiency=0.1,
-                    charge_to_volt_conversion=0.2,
+                    charge_to_volt=ChargeToVoltSettings(value=0.2),
                     pre_amplification=3.3,
                 ),
             ),
@@ -210,7 +217,7 @@ def comparison(dct, other_dct):
                     "environment": {"temperature": None},
                     "characteristics": {
                         "quantum_efficiency": None,
-                        "charge_to_volt_conversion": None,
+                        "charge_to_volt": None,
                         "pre_amplification": None,
                         "full_well_capacity": None,
                         "adc_bit_resolution": None,
@@ -263,7 +270,7 @@ def comparison(dct, other_dct):
                 environment=Environment(temperature=100.1),
                 characteristics=Characteristics(
                     quantum_efficiency=0.1,
-                    charge_to_volt_conversion=0.2,
+                    charge_to_volt=ChargeToVoltSettings(value=0.2),
                     pre_amplification=3.3,
                     adc_bit_resolution=16,
                     adc_voltage_range=(0.0, 10.0),
@@ -285,7 +292,7 @@ def comparison(dct, other_dct):
                     "environment": {"temperature": 100.1},
                     "characteristics": {
                         "quantum_efficiency": 0.1,
-                        "charge_to_volt_conversion": 0.2,
+                        "charge_to_volt": {"value": 0.2},
                         "pre_amplification": 3.3,
                         "full_well_capacity": None,
                         "adc_bit_resolution": 16,

@@ -457,7 +457,7 @@ models:
   - name: apd_gain
     full_name: APD gain
     detector: APD
-    status: null
+    status: to_review
     description: >
       With this model you can apply APD gain to the a :py:class:`~pyxel.detectors.APD` object.
       Model simply multiplies the values of charge with the avalanche gain,

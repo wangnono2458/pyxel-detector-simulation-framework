@@ -25,6 +25,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
   (See [!1115](https://gitlab.com/esa/pyxel/-/merge_requests/1115)).
 * Implementing 'volatile' pixels for non-destructive readout mode.
   (See [!1120](https://gitlab.com/esa/pyxel/-/merge_requests/1120)).
+* Add capacitance in Characteristics for CCD, CMOS and APD detectors.
+  (See [!1112](https://gitlab.com/esa/pyxel/-/merge_requests/112)).
 
 ### Documentation
 

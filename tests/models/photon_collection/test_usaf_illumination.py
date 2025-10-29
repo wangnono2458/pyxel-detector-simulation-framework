@@ -10,6 +10,7 @@ from pyxel.detectors import (
     CCD,
     CCDGeometry,
     Characteristics,
+    ChargeToVoltSettings,
     Environment,
     ReadoutProperties,
 )
@@ -30,7 +31,7 @@ def test_usaf_illumination():
         environment=Environment(),
         characteristics=Characteristics(
             quantum_efficiency=1.0,
-            charge_to_volt_conversion=1.0e-6,
+            charge_to_volt=ChargeToVoltSettings(value=1e-6),
             pre_amplification=1.0,
             adc_bit_resolution=16,
             adc_voltage_range=(0.0, 10.0),

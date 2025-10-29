@@ -47,7 +47,8 @@ ccd_detector:
 
   characteristics:
     quantum_efficiency: 0.8
-    charge_to_volt_conversion: 1.0e-06  # Unit: [V / e⁻]
+    charge_to_volt:
+      value: 1.0e-06  # Unit: [V / e⁻]
     pre_amplification: 100.0  # Unit: [V / V]
     full_well_capacity: 100000  # Unit: [e⁻]
     adc_bit_resolution: 16  # Unit: [bit]

@@ -9,7 +9,8 @@ cmos_detector:
     col: 2
   environment:
   characteristics:
-    charge_to_volt_conversion: 3.0e-6
+    charge_to_volt:
+      value: 3.0e-6
     pre_amplification: 100
     adc_bit_resolution: 16
     adc_voltage_range: [0.,6.]

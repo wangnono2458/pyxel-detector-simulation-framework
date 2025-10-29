@@ -236,6 +236,10 @@ def generate_class(klass: Klass) -> Iterator[str]:
                     "AvalancheSettings",
                     "AvalancheSettings1 | AvalancheSettings2 | AvalancheSettings3",
                 )
+                .replace(
+                    "pyxel.detectors.charge_to_volt_settings.ChargeToVoltSettings",
+                    "ChargeToVoltSettings",
+                )
             )  # TODO: Fix this. See issue #727
 
             yield f"    {name}: {annotation} = field("
@@ -576,6 +580,25 @@ def generate_detectors() -> Iterator[str]:
     yield "    pixel_reset_voltage: float"
     yield "    avalanche_gain: Literal[None] = None"
     yield ""
+
+    yield "@schema(description='Settings for Capacitance')"
+    yield "@dataclass(kw_only=True)"
+    yield "class Capacitance:"
+    yield "  capacitance: float | str"
+    yield ""
+
+    yield "@schema(description='Settings for Factor')"
+    yield "@dataclass(kw_only=True)"
+    yield "class Factor:"
+    yield "  value: float | str"
+    yield ""
+
+    yield "@schema(description='Settings for ChargeToVolt')"
+    yield "@dataclass()"
+    yield "class ChargeToVoltSettings:"
+    # yield "  param: Capacitance | Factor"
+    yield "  value: float | str | None = None"
+    yield "  capacitance: float | str | None = None"
 
     # Generate code based on the dependency graph
     ts = TopologicalSorter(graph)

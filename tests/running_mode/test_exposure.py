@@ -80,6 +80,7 @@ def test_exposure(folder_data: Path, with_debug: bool, tmp_path: Path):
         },
         coords={"time": [1.0, 2.0, 3.0], "y": [0, 1], "x": [0, 1, 2]},
     )
+    xr.testing.assert_allclose(data_tree["/bucket"].to_dataset(), exp_bucket)
 
     bucket = data_tree["/bucket"].to_dataset()
     xr.testing.assert_allclose(bucket, exp_bucket)
