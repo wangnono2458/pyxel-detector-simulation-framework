@@ -46,6 +46,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
 * Update 'pyproject.toml' for Python 3.14.
   (See [!1110](https://gitlab.com/esa/pyxel/-/merge_requests/1110)
   and [!1111](https://gitlab.com/esa/pyxel/-/merge_requests/1111)).
+* Add missing parameter 'pre_amplification' in APDCharacteristics.to_dict.
+  (See [!1114](https://gitlab.com/esa/pyxel/-/merge_requests/1114)).
 
 
 ## 2.13 / 2025-09-21
