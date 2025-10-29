@@ -48,7 +48,7 @@ from pyxel.util import set_random_seed
 def calculate_avalanche_gain(
     charge_array_2d: np.ndarray,
     init_apd_bias: float,  # PRV - common ==> avalanche_bias
-    charge_to_volt_conversion: float,
+    charge_to_volt_conversion: float | np.ndarray,
     bias_to_gain: Callable,
 ) -> np.ndarray:
     r"""Calculate avalanche gain map from charge array and initial avalanche for an APD detector.

@@ -540,32 +540,6 @@ class AvalancheSettings:
         )
 
 
-class ChargeToVoltSettings:
-    def __init__(self, capacitance: float | str | None, factor: float | str | None):
-        assert (capacitance is not None) ^ (factor is not None)
-        if isinstance(capacitance, str):
-            self._capacitance = load_image_v2(capacitance)
-        else:
-            self._capacitance = capacitance
-        if isinstance(factor, str):
-            self.factor = load_image_v2(factor)
-        else:
-            self.factor = factor
-
-    @property
-    def capacitance(self) -> float | np.ndarray:
-        if self._capacitance is not None:
-            return self._capacitance
-        else:
-            raise ValueError
-
-    def factor(self) -> float | np.ndarray:
-        if self.factor is not None:
-            return self._factor
-        elif self._capacitance is not None:
-            raise NotImplementedError
-
-
 class APDCharacteristics:
     """Characteristic attributes of the APD detector.
 
@@ -583,7 +557,6 @@ class APDCharacteristics:
         Gain of pre-amplifier. Unit: V/V
     full_well_capacity : float, optional
         Full well capacity. Unit: e-
-    charge
     adc_bit_resolution : int, optional
         ADC bit resolution.
     adc_voltage_range : tuple of floats, optional
