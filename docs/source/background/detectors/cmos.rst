@@ -48,6 +48,7 @@ Available models
     * :ref:`Dark current`
     * :ref:`Simple dark current`
     * :ref:`Dark current induced`
+    * :ref:`Avalanche gain`
 * Charge collection
     * :ref:`charge_collection_create_store_detector`
     * :ref:`Simple collection`
