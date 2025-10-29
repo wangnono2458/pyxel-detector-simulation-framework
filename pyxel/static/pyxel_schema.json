@@ -1734,6 +1734,9 @@
                 "$ref": "#/definitions/ModelChargeGenerationApplyQeCurve"
               },
               {
+                "$ref": "#/definitions/ModelChargeGenerationAvalancheGain"
+              },
+              {
                 "$ref": "#/definitions/ModelChargeGenerationChargeBlocks"
               },
               {
@@ -2916,6 +2919,55 @@
         "arguments"
       ],
       "title": "Model 'apply_qe_curve'",
+      "type": "object"
+    },
+    "ModelChargeGenerationAvalancheGain": {
+      "additionalProperties": false,
+      "description": "Apply Avalanche multiplication gain to the charge array of the detector.",
+      "properties": {
+        "arguments": {
+          "additionalProperties": false,
+          "default": {
+            "excess_noise_factor": 1.0,
+            "seed": null
+          },
+          "properties": {
+            "excess_noise_factor": {
+              "default": 1.0,
+              "description": "Multiplication excess noise factor. When equal to 1.0, the avalanche gain is deterministic. When > 1.0, gain fluctuations are modeled using a Gamma distribution.",
+              "title": "excess_noise_factor",
+              "type": "number"
+            },
+            "seed": {
+              "default": null,
+              "description": "Random seed used when simulating stochastic gain variations.",
+              "title": "seed",
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "title": "Parameters",
+          "type": "object"
+        },
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "func": {
+          "const": "pyxel.models.charge_generation.avalanche_gain",
+          "default": "pyxel.models.charge_generation.avalanche_gain",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Model 'avalanche_gain'",
       "type": "object"
     },
     "ModelChargeGenerationChargeBlocks": {

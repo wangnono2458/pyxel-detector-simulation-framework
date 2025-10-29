@@ -735,3 +735,28 @@ Example of configuration file:
     from `Pyxel Data <https://esa.gitlab.io/pyxel-data>`_.
 
 .. autofunction:: pyxel.models.charge_generation.radiation_induced_dark_current
+
+
+.. _Avalanche gain:
+
+Avalanche multiplication gain
+=============================
+
+:guilabel:`Charge` → :guilabel:`Charge`
+
+This model simulates the avalanche multiplication process in Avalanche Photodiode (APD)
+detectors. The gain is computed from the APD bias voltage and charge accumulation, optionally
+including excess noise.
+
+Author: Jean Le Graët, CEA Paris-Saclay <jean.legraet@cea.fr>
+
+.. code-block:: yaml
+
+    - name: avalanche_gain
+      func: pyxel.models.charge_generation.avalanche_gain
+      enabled: true
+      arguments:
+        excess_noise_factor: 1.0  # Default value
+
+.. autofunction:: pyxel.models.charge_generation.avalanche_gain
+

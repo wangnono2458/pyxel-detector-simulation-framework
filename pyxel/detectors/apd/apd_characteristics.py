@@ -324,12 +324,12 @@ class AvalancheSettings:
         else:
             bias_to_gain_func = ConverterFunction(bias_to_gain)
 
-        self._gain_to_bias: ConverterValues | ConverterTable | ConverterFunction = (
-            gain_to_bias_func
-        )
-        self._bias_to_gain: ConverterValues | ConverterTable | ConverterFunction = (
-            bias_to_gain_func
-        )
+        self._gain_to_bias_func: (
+            ConverterValues | ConverterTable | ConverterFunction
+        ) = gain_to_bias_func
+        self._bias_to_gain_func: (
+            ConverterValues | ConverterTable | ConverterFunction
+        ) = bias_to_gain_func
 
         # Case 1: 'avalanche_gain' is provided
         if avalanche_gain is not None:
@@ -395,8 +395,8 @@ class AvalancheSettings:
     def __eq__(self, other) -> bool:
         return (
             type(self) is type(other)
-            and self._gain_to_bias == other._gain_to_bias
-            and self._bias_to_gain == other._bias_to_gain
+            and self._gain_to_bias_func == other._gain_to_bias_func
+            and self._bias_to_gain_func == other._bias_to_gain_func
             and self._avalanche_gain == other._avalanche_gain
             and self._pixel_reset_voltage == other._pixel_reset_voltage
             and self._common_voltage == other._common_voltage
@@ -407,7 +407,7 @@ class AvalancheSettings:
         return (
             f"{cls_name}(avalanche_gain={self._avalanche_gain}, "
             f"pixel_reset_voltage={self._pixel_reset_voltage}, common_voltage={self._common_voltage}, "
-            f"gain_to_bias={self._gain_to_bias!r}, bias_to_gain={self._bias_to_gain!r}"
+            f"gain_to_bias={self._gain_to_bias_func!r}, bias_to_gain={self._bias_to_gain_func!r}"
         )
 
     @property
@@ -424,7 +424,7 @@ class AvalancheSettings:
             )
 
         self._avalanche_gain = value
-        self._avalanche_bias = self._gain_to_bias(value)
+        self._avalanche_bias = self.gain_to_bias(value)
         self._common_voltage = self.pixel_reset_voltage - self.avalanche_gain
 
     @property
@@ -440,7 +440,7 @@ class AvalancheSettings:
         self._pixel_reset_voltage = value
 
         self._avalanche_bias = value - self.common_voltage
-        self._avalanche_gain = self._bias_to_gain(self.avalanche_bias)
+        self._avalanche_gain = self.bias_to_gain(self.avalanche_bias)
 
     @property
     def common_voltage(self) -> float:
@@ -456,20 +456,50 @@ class AvalancheSettings:
         self._common_voltage = value
 
         self._avalanche_bias = self.pixel_reset_voltage - value
-        self._avalanche_gain = self._bias_to_gain(self.avalanche_bias)
+        self._avalanche_gain = self.bias_to_gain(self.avalanche_bias)
 
     @property
     def avalanche_bias(self) -> float:
         """Avalanche bias in V."""
         return self._avalanche_bias
 
+    def gain_to_bias(self, gain: float) -> float:
+        """Convert 'avalanche gain' to 'avalanche bias' (in V).
+
+        Parameters
+        ----------
+        gain : float
+            Avalanche gain
+
+        Returns
+        -------
+        float
+            Avalanche bias
+        """
+        return self._gain_to_bias_func(gain)
+
+    def bias_to_gain(self, bias: float) -> float:
+        """Convert 'avalanche bias' (in V) to 'avalanche gain'.
+
+        Parameters
+        ----------
+        bias : float
+            Avalanche bias.
+
+        Returns
+        -------
+        float
+            Avalanche gain
+        """
+        return self._bias_to_gain_func(bias)
+
     def to_dict(self) -> dict:
         return {
             "avalanche_gain": self._avalanche_gain,
             "pixel_reset_voltage": self._pixel_reset_voltage,
             "common_voltage": self._common_voltage,
-            "gain_to_bias": self._gain_to_bias.to_dict(),
-            "bias_to_gain": self._bias_to_gain.to_dict(),
+            "gain_to_bias": self._gain_to_bias_func.to_dict(),
+            "bias_to_gain": self._bias_to_gain_func.to_dict(),
         }
 
     @classmethod

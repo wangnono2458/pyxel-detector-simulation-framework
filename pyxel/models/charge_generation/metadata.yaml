@@ -516,3 +516,21 @@ models:
           shot_noise: false
     notebooks:
       - examples/models/dark_current_induced/dark_current_induced
+
+  - name: avalanche_gain
+    full_name: Avalanche multiplication gain
+    detector:
+      - APD
+    status: draft
+    authors:
+      - Jean Le Graët, CEA Paris-Saclay <jean.legraet@cea.fr>
+    description: >
+      This model simulates the avalanche multiplication process in Avalanche Photodiode (APD)
+      detectors. The gain is computed from the APD bias voltage and charge accumulation, optionally
+      including excess noise.
+    config: >
+      - name: avalanche
+        func: pyxel.models.charge_generation.avalanche_gain
+        enabled: true
+        arguments:
+          excess_noise_factor: 1.4 # Excess Noise Factor

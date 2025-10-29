@@ -37,6 +37,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
   (See [!1108](https://gitlab.com/esa/pyxel/-/merge_requests/1108)).
 * Refactor model `ktc_noise`.
   (See [!1116](https://gitlab.com/esa/pyxel/-/merge_requests/1116)).
+* Add new model Avalanche gain following gamma distribution from Jean LeGraet, CEA-Saclay.
+  (See [!962](https://gitlab.com/esa/pyxel/-/merge_requests/962)).
 
 ### Others
 * In 'metadata.schema.json' add possibility to use 'status: to_review'.
