@@ -13,7 +13,13 @@ import pytest
 import xarray as xr
 
 from pyxel.calibration import Algorithm, Calibration, sum_of_abs_residuals
-from pyxel.detectors import CCD, CCDGeometry, Characteristics, Environment
+from pyxel.detectors import (
+    CCD,
+    CCDGeometry,
+    Characteristics,
+    ChargeToVoltSettings,
+    Environment,
+)
 from pyxel.observation import ParameterValues
 from pyxel.pipelines import DetectionPipeline, ModelFunction, Processor
 
@@ -31,7 +37,7 @@ def ccd_detector() -> CCD:
         environment=Environment(temperature=238.0),
         characteristics=Characteristics(
             full_well_capacity=90_0000,
-            charge_to_volt_conversion=1e-6,
+            charge_to_volt=ChargeToVoltSettings(value=1e-6),
             adc_bit_resolution=16,
             adc_voltage_range=(0.0, 10.0),
         ),
