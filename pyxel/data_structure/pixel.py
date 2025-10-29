@@ -8,11 +8,11 @@
 """Pyxel Pixel class."""
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import ArrayLike
-from typing_extensions import Any, Self, overload
+from typing_extensions import Any, Self
 
 from pyxel.data_structure import PixelNonVolatile, PixelVolatile
 from pyxel.data_structure.array import _is_array_initialized
@@ -20,7 +20,6 @@ from pyxel.util import convert_unit, get_size
 
 if TYPE_CHECKING:
     import xarray as xr
-    from astropy.units import Quantity
 
     from pyxel.detectors import Geometry
 
@@ -108,7 +107,7 @@ class Pixel:
     def __repr__(self) -> str:
         cls_name = self.__class__.__name__
 
-        if self._non_volatile._array is not None and self._volatile._array is not None:
+        if self._non_volatile._array is not None or self._volatile._array is not None:
             return f"{cls_name}<shape={self.shape}, dtype={self.dtype}>"
 
         return f"{cls_name}<UNINITIALIZED, shape={self.shape}>"
@@ -120,34 +119,23 @@ class Pixel:
             and self._volatile == other._volatile
         )
 
-    def __iadd__(self, other) -> Self:  # type: ignore[misc]
-        raise RuntimeError
+    def __iadd__(self, other):
+        cls_name = self.__class__.__name__
 
-    @overload
-    def __add__(self, other: np.ndarray) -> np.ndarray: ...
+        raise ValueError(
+            f"Bucket '{cls_name}' is read-only. Please set data to "
+            f"'{cls_name.lower()}.{PixelNonVolatile.__name__}' and "
+            f"'{cls_name.lower()}.{PixelVolatile.__name__}'"
+        )
 
-    @overload
-    def __add__(self, other: "Quantity") -> "Quantity": ...
+    def __add__(self, other):
+        cls_name = self.__class__.__name__
 
-    def __add__(
-        self, other: Union[np.ndarray, "Quantity"]
-    ) -> Union[np.ndarray, "Quantity"]:
-        # Late import
-        from astropy.units import Quantity, UnitConversionError
-
-        if isinstance(other, Quantity):
-            try:
-                converted_other: Quantity = other.to(self.unit)
-            except UnitConversionError as exc:
-                raise TypeError(
-                    f"Unit provided '{other.unit}' for bucket {self.__class__.__name__!r} "
-                    f"is not compatible with expected unit '{self.unit}'"
-                ) from exc
-
-            return Quantity(self.array, unit=self.unit) + converted_other
-
-        else:
-            return self.array + other
+        raise ValueError(
+            f"Bucket '{cls_name}' is read-only. Please set data to "
+            f"'{cls_name.lower()}.{PixelNonVolatile.__name__}' and "
+            f"'{cls_name.lower()}.{PixelVolatile.__name__}'"
+        )
 
     def __array__(self, dtype: np.dtype | None = None):
         return np.asarray(self.array, dtype=dtype)
@@ -180,9 +168,9 @@ class Pixel:
     @volatile.setter
     def volatile(self, obj: ArrayLike | PixelVolatile) -> None:
         if isinstance(obj, PixelVolatile):
-            self.volatile = obj
+            self._volatile = obj
         else:
-            self.volatile.array = obj
+            self._volatile.array = obj
 
     @property
     def non_volatile(self) -> PixelNonVolatile:
@@ -228,9 +216,12 @@ class Pixel:
 
         return data_2d
 
-    # @array.setter
-    # def array(self, value) -> None:
-    #     raise NotImplementedError
+    @array.setter
+    def array(self, value) -> None:
+        raise AttributeError(
+            f"'pixel' is read-only. You must set data to '{PixelNonVolatile.__name__}' or "
+            f"'{PixelVolatile.__name__}' containers."
+        )
 
     @property
     def numbytes(self) -> int:
@@ -337,8 +328,9 @@ class Pixel:
         group_name = "Charge Collection"
 
         return (
-            f"The '.array' attribute cannot be retrieved because the '{cls_name}'"
-            " container is not initialized.\nTo resolve this issue, initialize"
+            f"The '{cls_name}.array' attribute cannot be retrieved because the "
+            f"'{PixelNonVolatile.__name__}' and '{PixelVolatile.__name__}' "
+            "containers are not initialized.\nTo resolve this issue, initialize"
             f" '.array' using a model that generates {obj_name} from the "
             f"'{group_name}' group.\n"
             f"Consider using the '{example_model}' model from"

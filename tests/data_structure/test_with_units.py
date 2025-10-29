@@ -83,7 +83,7 @@ def test_with_pixel(empty_detector: CCD, with_unit: bool):
     else:
         detector.pixel.non_volatile = data_2d
         detector.pixel.non_volatile += data_2d
-        detector.pixel.non_volatile = detector.pixel + data_2d
+        detector.pixel.non_volatile = detector.pixel.non_volatile + data_2d
 
     np.testing.assert_equal(data_2d, np.array([[1, 2], [3, 4]], dtype=float))
     np.testing.assert_equal(detector.pixel, 3 * data_2d)
