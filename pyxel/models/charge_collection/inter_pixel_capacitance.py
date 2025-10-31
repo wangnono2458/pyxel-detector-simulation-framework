@@ -112,10 +112,10 @@ def simple_ipc(
         raise TypeError("Expecting a CMOS object for detector.")
 
     array = compute_ipc_convolution(
-        input=detector.pixel.array,
+        input=detector.pixel.non_volatile.array,
         coupling=coupling,
         diagonal_coupling=diagonal_coupling,
         anisotropic_coupling=anisotropic_coupling,
     )
 
-    detector.pixel.non_volatile.array = array
+    detector.pixel.volatile += (array - detector.pixel.non_volatile.array)

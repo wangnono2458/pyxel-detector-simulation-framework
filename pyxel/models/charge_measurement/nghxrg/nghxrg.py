@@ -332,7 +332,7 @@ def nghxrg(
     with set_random_seed(seed):
         # Compute new pixels
         result_2d: np.ndarray = compute_nghxrg(
-            pixel_2d=detector.pixel.array,
+            pixel_2d=detector.pixel.non_volatile.array,
             noise=params,
             detector_shape=(geo.row, geo.col),
             window_pos=(window_pos_y, window_pos_x),
@@ -346,7 +346,7 @@ def nghxrg(
         )
 
     # Add the pixels
-    detector.pixel.non_volatile += result_2d
+    detector.pixel.volatile += result_2d
 
 
 # TODO: This generates plot. It should be in class `Output`

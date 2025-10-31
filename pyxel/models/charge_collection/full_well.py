@@ -47,7 +47,7 @@ def simple_full_well(detector: Detector, fwc: int | None = None) -> None:
         raise ValueError("Full well capacity should be a positive number.")
 
     charge_array = apply_simple_full_well_capacity(
-        array=detector.pixel.array, fwc=fwc_input
+        array=detector.pixel.non_volatile.array, fwc=fwc_input
     )
 
     detector.pixel.non_volatile.array = charge_array
