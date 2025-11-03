@@ -20,19 +20,17 @@ from pyxel.detectors import (
     Environment,
 )
 from pyxel.models.charge_collection import simple_ipc
+from pyxel.models.charge_collection.inter_pixel_capacitance import (
+    compute_ipc_convolution,
+    ipc_kernel,
+)
 
 
 @pytest.fixture
-def cmos_10x10() -> CMOS:
+def cmos_5x5() -> CMOS:
     """Create a valid CCD detector."""
     detector = CMOS(
-        geometry=CMOSGeometry(
-            row=10,
-            col=10,
-            total_thickness=40.0,
-            pixel_vert_size=10.0,
-            pixel_horz_size=10.0,
-        ),
+        geometry=CMOSGeometry(row=5, col=5),
         environment=Environment(),
         characteristics=Characteristics(),
     )
@@ -40,267 +38,85 @@ def cmos_10x10() -> CMOS:
     return detector
 
 
-def test_simple_ipc_valid(cmos_10x10: CMOS):
-    """Test model 'simple_ipc' with valid inputs."""
-    detector = cmos_10x10
-    detector.pixel.non_volatile.array = np.array(
-        [
-            [
-                35.92755861,
-                39.866901,
-                40.21125602,
-                16.53336642,
-                98.25807141,
-                14.77660117,
-                10.38839134,
-                82.91567845,
-                61.20595539,
-                44.99545736,
-            ],
-            [
-                51.56561303,
-                56.22059037,
-                31.52724539,
-                72.13462645,
-                84.85798493,
-                99.95004718,
-                54.87959409,
-                15.4897156,
-                10.71639319,
-                54.65712507,
-            ],
-            [
-                14.999205,
-                32.09393403,
-                5.16630696,
-                47.00578722,
-                93.45200407,
-                95.78382619,
-                49.24008654,
-                30.45493009,
-                65.98544986,
-                81.02105842,
-            ],
-            [
-                71.02466145,
-                37.10067213,
-                0.27268097,
-                65.55902007,
-                2.61932674,
-                14.03845251,
-                5.25876994,
-                29.25754102,
-                96.75829445,
-                41.47556914,
-            ],
-            [
-                6.74229451,
-                89.02694184,
-                51.2699751,
-                17.20487056,
-                57.87485843,
-                73.86680132,
-                5.78593678,
-                44.39522596,
-                53.49792232,
-                97.03850645,
-            ],
-            [
-                24.04553442,
-                26.41334873,
-                90.13179938,
-                37.42229458,
-                87.6545525,
-                26.88294484,
-                53.61090853,
-                62.78018977,
-                48.5720461,
-                53.04157629,
-            ],
-            [
-                17.87004508,
-                96.90631019,
-                67.72783903,
-                83.85671912,
-                26.63495226,
-                32.66135426,
-                72.73868042,
-                31.00822857,
-                87.21205869,
-                93.55887689,
-            ],
-            [
-                39.93814078,
-                22.21643716,
-                49.84485408,
-                84.53971696,
-                19.92218508,
-                68.91319857,
-                47.31780822,
-                91.1972756,
-                98.55693513,
-                27.30498608,
-            ],
-            [
-                24.36348034,
-                22.70919245,
-                92.10489024,
-                98.30190277,
-                56.12779963,
-                86.56174902,
-                28.65707854,
-                54.91590922,
-                3.9133337,
-                99.25525741,
-            ],
-            [
-                69.7156563,
-                6.14548824,
-                83.95726626,
-                79.88813728,
-                54.68671223,
-                78.86641073,
-                63.71629964,
-                36.73631978,
-                54.65512014,
-                56.7133959,
-            ],
-        ]
-    )
-
-    expected_array = np.array(
-        [
-            [
-                44.08622098,
-                42.73208842,
-                40.83840307,
-                44.28024238,
-                66.71501485,
-                42.81526075,
-                35.26611049,
-                55.63481379,
-                54.16551724,
-                48.42865354,
-            ],
-            [
-                46.99992841,
-                43.14278252,
-                39.24850518,
-                60.2860532,
-                78.43888588,
-                78.45206173,
-                52.32955204,
-                32.00030134,
-                34.27840115,
-                50.33879875,
-            ],
-            [
-                35.32136701,
-                29.71108858,
-                26.12622684,
-                47.22511248,
-                74.6509705,
-                72.22348102,
-                48.25354623,
-                38.67425231,
-                55.45328413,
-                64.99164607,
-            ],
-            [
-                52.71299196,
-                36.49627376,
-                26.6719488,
-                41.4824723,
-                33.68134677,
-                28.83272179,
-                23.80884795,
-                38.93021548,
-                68.9079442,
-                59.50923533,
-            ],
-            [
-                36.00312624,
-                56.87208706,
-                48.97120605,
-                37.31338659,
-                48.50356786,
-                48.14429961,
-                28.45727216,
-                42.11763417,
-                59.28642179,
-                71.55494093,
-            ],
-            [
-                35.97356672,
-                45.60422821,
-                67.03094246,
-                55.3308361,
-                59.71667614,
-                44.72638016,
-                47.69387462,
-                54.63583174,
-                57.63538859,
-                59.81040364,
-            ],
-            [
-                38.55827616,
-                63.49235046,
-                68.91828504,
-                66.72486088,
-                44.21960982,
-                43.11411671,
-                56.92620855,
-                56.37819499,
-                73.09377726,
-                73.64391806,
-            ],
-            [
-                39.7026063,
-                39.03476212,
-                60.09323894,
-                67.76647947,
-                48.78023194,
-                53.86002133,
-                57.09655011,
-                71.08337409,
-                75.14375914,
-                53.68974626,
-            ],
-            [
-                33.69354046,
-                38.3826958,
-                71.57903588,
-                80.52151147,
-                67.31639057,
-                65.27345668,
-                51.41297477,
-                48.36817711,
-                42.93002788,
-                65.65481709,
-            ],
-            [
-                49.63795722,
-                38.6459351,
-                66.06237277,
-                73.06893768,
-                64.48210257,
-                66.03472005,
-                58.39195111,
-                44.35264462,
-                50.79020066,
-                55.04593666,
-            ],
-        ]
-    )
-
-    simple_ipc(
-        detector=cmos_10x10,
+def test_ipc_kernel():
+    """Test function 'ipc_kernel'."""
+    result_2d = ipc_kernel(
         coupling=0.1,
         diagonal_coupling=0.05,
         anisotropic_coupling=0.03,
     )
-    print(detector.pixel.array)
-    np.testing.assert_array_almost_equal(detector.pixel.array, expected_array)
+
+    exp_2d = np.array([[0.05, 0.07, 0.05], [0.13, 0.4, 0.13], [0.05, 0.07, 0.05]])
+    np.testing.assert_allclose(result_2d, exp_2d)
+
+
+def test_compute_ipc_convolution():
+    """Test function 'compute_ipc_convolution'."""
+    data_2d = np.array(
+        [
+            [10.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 100.0, 0.0],
+            [0.0, 0.0, 0.0, 00.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+        ]
+    )
+    expected_array = np.array(
+        [
+            [-4.46, 2.048, 0.748, 0.748, 1.54],
+            [1.712, 0.5, 5.00, 7.00, 6.012],
+            [1.012, 0.0, 13.0, -60.0, 14.012],
+            [1.012, 0.0, 5.00, 7.00, 6.012],
+            [1.54, 0.748, 0.748, 0.748, 1.54],
+        ]
+    )
+
+    result_2d = compute_ipc_convolution(
+        data_2d, coupling=0.1, diagonal_coupling=0.05, anisotropic_coupling=0.03
+    )
+
+    np.testing.assert_allclose(result_2d, expected_array, atol=1.0)
+
+
+def test_simple_ipc_valid(cmos_5x5: CMOS):
+    """Test model 'simple_ipc' with valid inputs."""
+    detector = cmos_5x5
+    data_2d = np.array(
+        [
+            [10.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 100.0, 0.0],
+            [0.0, 0.0, 0.0, 00.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+        ]
+    )
+
+    detector.pixel.non_volatile.array = np.array(data_2d)
+
+    expected_array = np.array(
+        [
+            [-4.46, 2.048, 0.748, 0.748, 1.54],
+            [1.712, 0.5, 5.00, 7.00, 6.012],
+            [1.012, 0.0, 13.0, -60.0, 14.012],
+            [1.012, 0.0, 5.00, 7.00, 6.012],
+            [1.54, 0.748, 0.748, 0.748, 1.54],
+        ]
+    )
+
+    # Check before applying the model
+    with pytest.raises(ValueError, match=r"not initialized"):
+        _ = detector.pixel.volatile.array
+
+    # Apply model
+    simple_ipc(
+        detector=cmos_5x5,
+        coupling=0.1,
+        diagonal_coupling=0.05,
+        anisotropic_coupling=0.03,
+    )
+
+    np.testing.assert_allclose(detector.pixel.non_volatile, data_2d)
+    np.testing.assert_allclose(detector.pixel.volatile, expected_array, atol=1.0)
 
 
 @pytest.mark.parametrize(
@@ -330,7 +146,7 @@ def test_simple_ipc_valid(cmos_10x10: CMOS):
     ],
 )
 def test_charge_blocks_inputs(
-    cmos_10x10: CMOS,
+    cmos_5x5: CMOS,
     coupling: float,
     diagonal_coupling: float,
     anisotropic_coupling: float,
@@ -340,7 +156,7 @@ def test_charge_blocks_inputs(
     """Test model 'charge_blocks' with bad inputs."""
     with pytest.raises(exp_exc, match=exp_error):
         simple_ipc(
-            detector=cmos_10x10,
+            detector=cmos_5x5,
             coupling=coupling,
             diagonal_coupling=diagonal_coupling,
             anisotropic_coupling=anisotropic_coupling,
