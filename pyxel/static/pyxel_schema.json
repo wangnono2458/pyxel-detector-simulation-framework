@@ -2677,7 +2677,7 @@
     },
     "ModelChargeCollectionSimpleFullWell": {
       "additionalProperties": false,
-      "description": "Limit the amount of charge in pixel due to full well capacity.",
+      "description": "Apply the full well capacity limit to detector `pixel` bucket.",
       "properties": {
         "arguments": {
           "additionalProperties": false,
@@ -2687,6 +2687,7 @@
           "properties": {
             "fwc": {
               "default": null,
+              "description": "Full well capacity (in electrons). If not provided, the value is read from ``detector.characteristics.full_well_capacity``.",
               "title": "fwc",
               "type": [
                 "integer",
@@ -2718,22 +2719,25 @@
     },
     "ModelChargeCollectionSimpleIpc": {
       "additionalProperties": false,
-      "description": "Convolve pixel array with the IPC kernel.",
+      "description": "Apply a simple Inter-Pixel Capacitance (IPC) model to a CMOS detector.",
       "properties": {
         "arguments": {
           "additionalProperties": false,
           "properties": {
             "anisotropic_coupling": {
               "default": 0.0,
+              "description": "Difference between horizontal and vertical coupling. Default is 0.0.",
               "title": "anisotropic_coupling",
               "type": "number"
             },
             "coupling": {
+              "description": "Coupling coefficient for direct neighbors.",
               "title": "coupling",
               "type": "number"
             },
             "diagonal_coupling": {
               "default": 0.0,
+              "description": "Coupling coefficient for diagonal neighbors. Default is 0.0.",
               "title": "diagonal_coupling",
               "type": "number"
             }

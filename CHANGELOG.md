@@ -9,6 +9,19 @@ Minor releases include updated stdlib stubs from typeshed.
 
 Pyxel doesn't use SemVer anymore, since most minor releases have at least minor backward incompatible changes.
 
+## UNRELEASED
+
+### Core
+
+### Documentation
+
+### Models
+* Fix usage of `pixel.volatile` and `pixel.non_volatile` for models `simple_full_well`, `simple_ipc` and `nghxrg`.
+  (See [!1125](https://gitlab.com/esa/pyxel/-/merge_requests/1125)).
+
+### Others
+
+
 ## 2.14 / 2025-10-30
 
 This release includes a various bug fixes, performance improvements and feature enhancements

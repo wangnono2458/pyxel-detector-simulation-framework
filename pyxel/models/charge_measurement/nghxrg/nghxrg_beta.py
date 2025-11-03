@@ -598,6 +598,10 @@ class HXRGNoise:
             self._log.debug("Generating rd_noise")
             w = self.ref_all
             r = reference_pixel_noise_ratio  # Easier to work with
+
+            if (self.naxis2 - w[0] - w[1]) <= 0 or (self.naxis1 - w[2] - w[3]) <= 0:
+                raise ValueError("Geometry too small")
+
             for z in np.arange(self.naxis3):
                 here_2d = np.zeros((self.naxis2, self.naxis1))
 
