@@ -167,7 +167,7 @@ def _load(
             value = np.array(dataset, dtype=dataset.dtype)
 
             if dataset.dtype == np.dtype(object):
-                value_converted = value.astype(str)
+                value_converted = np.strings.decode(value.tolist())
                 return str(value_converted)
             elif np.isnan(value):
                 return None
