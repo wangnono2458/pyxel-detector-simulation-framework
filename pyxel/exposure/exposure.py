@@ -504,7 +504,7 @@ def run_pipeline(
                 progress_bar.update(1)
 
         if Version(xr.__version__) > Version("2025.10.1"):
-            buckets_data_tree: xr.DataTree = xr.concat(lst, dim="time")  # type: ignore[type-var]
+            buckets_data_tree: xr.DataTree = xr.concat(lst, dim="time")
         else:
             buckets_data_tree = xr.map_over_datasets(
                 lambda *data: xr.concat(data, dim="time"),

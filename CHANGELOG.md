@@ -20,6 +20,8 @@ Pyxel doesn't use SemVer anymore, since most minor releases have at least minor 
   (See [!1125](https://gitlab.com/esa/pyxel/-/merge_requests/1125)).
 
 ### Others
+* Fix issues with Xarray >=2025.11.0.
+  (See [!1128](https://gitlab.com/esa/pyxel/-/merge_requests/1128)).
 
 
 ## 2.14 / 2025-10-30
