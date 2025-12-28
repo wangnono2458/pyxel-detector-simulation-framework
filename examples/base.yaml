@@ -1,0 +1,39 @@
+# Base configuration shared by pipelines
+mode: exposure
+output_root: ./runs
+
+detector:
+  integration_time: 1.0
+
+pipeline:
+  scene:
+    requires: []
+    produces: [scene]
+    models: []
+  photon:
+    requires: [scene]
+    produces: [photon]
+    models: []
+  charge:
+    requires: [photon]
+    produces: [charge]
+    models: []
+  readout:
+    requires: [charge]
+    produces: [image]
+    models: []
+  postproc:
+    requires: [image]
+    produces: [image]
+    models: []
+
+exposure:
+  readout_times: [1.0]
+  snapshot: false
+
+batch:
+  parameters: []
+
+debug:
+  enabled: false
+  dump_dir: ./debug_dumps

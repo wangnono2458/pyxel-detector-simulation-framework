@@ -1,0 +1,38 @@
+# Minimal configuration for the custom simulation pipeline
+
+detector:
+  integration_time: 2.5
+
+pipeline:
+  scene:
+    - name: generate_scene
+      func: mini_framework.models.scene:generate_stub_scene
+      enabled: true
+      arguments:
+        height: 8
+        width: 8
+        level: 5.0
+  photon:
+    - name: collect_photons
+      func: mini_framework.models.photon:collect_stub_photons
+      enabled: true
+      arguments:
+        scale: "${detector.integration_time}"
+  charge:
+    - name: generate_charge
+      func: mini_framework.models.charge:generate_stub_charge
+      enabled: true
+      arguments:
+        quantum_efficiency: 0.8
+  readout:
+    - name: adc
+      func: mini_framework.models.readout:simple_adc_readout
+      enabled: true
+      arguments:
+        gain: 1.2
+        offset: 0.1
+  postproc: []
+
+debug:
+  enabled: true
+  dump_dir: ./debug_dumps
