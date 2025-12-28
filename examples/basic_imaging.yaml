@@ -1,0 +1,84 @@
+mode: exposure
+output_root: ./output
+
+detector:
+  rows: 32
+  cols: 32
+  integration_time: 1.5
+
+exposure:
+  readout_times: [0.0, 1.5]
+  snapshot: false
+
+pipeline:
+  scene_generation:
+    requires: []
+    produces: [scene]
+    models:
+      - name: stars
+        func: point_sources
+        enabled: true
+        arguments:
+          background: 5.0
+          sources:
+            - {x: 10, y: 10, flux: 200.0}
+            - {x: 20, y: 16, flux: 150.0}
+  photon_collection:
+    requires: [scene]
+    produces: [photon]
+    models:
+      - name: psf
+        func: photon_psf_throughput
+        enabled: true
+        arguments:
+          psf_sigma: 1.2
+          throughput: 0.85
+          band_factor: 1.1
+  charge_generation:
+    requires: [photon]
+    produces: [charge]
+    models:
+      - name: qe
+        func: qe_shotnoise
+        enabled: true
+        arguments:
+          quantum_efficiency: 0.9
+  charge_collection:
+    requires: [charge]
+    produces: [charge]
+    models:
+      - name: dark
+        func: add_dark_current
+        enabled: true
+        arguments:
+          dark_current: 0.2
+  charge_measurement:
+    requires: [charge]
+    produces: [pixel]
+    models:
+      - name: read_noise_gain
+        func: read_noise_and_gain
+        enabled: true
+        arguments:
+          read_noise: 3.0
+          system_gain: 1.5
+          bias: 50.0
+  readout_electronics:
+    requires: [pixel]
+    produces: [image]
+    models:
+      - name: quantize
+        func: quantize_clip
+        enabled: true
+        arguments:
+          bit_depth: 14
+          full_well: 15000
+  data_processing:
+    requires: [image]
+    produces: [image]
+    models:
+      - name: stats
+        func: compute_stats
+        enabled: true
+        arguments:
+          output_dir: "${detector.output_dir}"
