@@ -1,0 +1,74 @@
+extends: ./base.yaml
+mode: exposure
+
+detector:
+  integration_time: 2.5
+
+pipeline:
+  scene:
+    requires: []
+    produces: [scene]
+    models:
+      - name: background
+        func: ir_background
+        enabled: true
+        arguments:
+          sky_level: 20.0
+  photon:
+    requires: [scene]
+    produces: [photon]
+    models:
+      - name: throughput
+        func: ir_photon_throughput
+        enabled: true
+        arguments:
+          throughput: 0.9
+  charge:
+    requires: [photon]
+    produces: [charge]
+    models:
+      - name: conversion
+        func: generate_stub_charge
+        enabled: true
+        arguments:
+          quantum_efficiency: 0.7
+      - name: dark
+        func: add_dark_current
+        enabled: true
+        arguments:
+          dark_current: "${env:DARK_CURRENT:0.2}"
+  readout:
+    requires: [charge]
+    produces: [image]
+    models:
+      - name: gain
+        func: simple_adc_readout
+        enabled: true
+        arguments:
+          gain: 1.5
+          offset: "${detector.integration_time}"
+      - name: noise
+        func: add_read_noise
+        enabled: true
+        arguments:
+          sigma: 2.0
+  postproc:
+    requires: [image]
+    produces: [image]
+    models:
+      - name: nonlinearity
+        func: apply_nonlinearity
+        enabled: true
+        arguments:
+          saturation: 60000
+      - name: metrics
+        func: compute_metrics
+        enabled: true
+        arguments: {}
+
+exposure:
+  readout_times: [0.5, 1.0]
+  snapshot: true
+
+debug:
+  enabled: true
